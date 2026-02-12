@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { supabase } from './supabaseClient'
 
-function CreateTask() {
+function CreateTask({ onTaskCreated }) {
   // Form state
   const [form, setForm] = useState({
     title: '',
@@ -43,7 +43,8 @@ function CreateTask() {
         .eq('task_type', form.taskType)
         .single()
 
-      if (fetchError || !template) {
+      if (fetchError) throw fetchError
+      if (!template) {
         setMessage({ 
           type: 'error', 
           text: 'No checkpoint template found for this task type' 
@@ -66,6 +67,23 @@ function CreateTask() {
         return
       }
 
+      // Helper function to adjust checkpoint time to reasonable hours
+      function adjustToReasonableHours(date) {
+        const adjusted = new Date(date)
+        const hour = adjusted.getHours()
+        
+        // If between midnight (0) and 8 AM, move to 9 AM same day
+        if (hour >= 0 && hour < 8) {
+          adjusted.setHours(9, 0, 0, 0)
+        }
+        // If between 10 PM (22) and midnight, move to 9 PM same day
+        else if (hour >= 22) {
+          adjusted.setHours(21, 0, 0, 0)
+        }
+        
+        return adjusted
+      }
+
       // 4. Insert the main task record
       // .toISOString() converts JavaScript Date to ISO 8601 format that Postgres timestamptz expects
       // Example: "2026-02-15T18:30:00.000Z"
@@ -81,36 +99,33 @@ function CreateTask() {
         .select('id')
         .single()
 
-      if (taskError) {
-        setMessage({ type: 'error', text: `Failed to create task: ${taskError.message}` })
-        setLoading(false)
-        return
-      }
+      if (taskError) throw taskError
 
       // 5. Bulk insert all checkpoints at once
       // This is more efficient than inserting one at a time
       // Each checkpoint gets a due date calculated from its percentage_of_time
-      const checkpoints = template.checkpoint_sequence.map((cp, index) => ({
-        task_id: newTask.id,
-        checkpoint_number: index + 1, // 1-indexed for display purposes
-        checkpoint_type: cp.type, // e.g., "outline", "first_draft", "review"
-        // Calculate due date: now + (total_time × percentage)
-        due_date: new Date(now.getTime() + (timeSpanMs * cp.percentage_of_time)).toISOString(),
-        status: 'pending'
-      }))
+      // and adjusted to reasonable working hours
+      const checkpoints = template.checkpoint_sequence.map((cp, index) => {
+        // Calculate raw due date: now + (total_time × percentage)
+        const rawDueDate = new Date(now.getTime() + (timeSpanMs * cp.percentage_of_time))
+        
+        // Adjust to reasonable hours (8 AM - 10 PM)
+        const adjustedDueDate = adjustToReasonableHours(rawDueDate)
+        
+        return {
+          task_id: newTask.id,
+          checkpoint_number: index + 1, // 1-indexed for display purposes
+          checkpoint_type: cp.type, // e.g., "outline", "first_draft", "review"
+          due_date: adjustedDueDate.toISOString(),
+          status: 'pending'
+        }
+      })
 
       const { error: cpError } = await supabase
         .from('checkpoints')
         .insert(checkpoints)
 
-      if (cpError) {
-        setMessage({ 
-          type: 'error', 
-          text: `Task created but checkpoints failed: ${cpError.message}` 
-        })
-        setLoading(false)
-        return
-      }
+      if (cpError) throw cpError
 
       // 6. Success! Clear form and show success message
       setMessage({ 
@@ -124,10 +139,16 @@ function CreateTask() {
         notes: ''
       })
 
+      // Notify parent component that a task was created
+      if (onTaskCreated) {
+        onTaskCreated()
+      }
+
     } catch (err) {
+      console.error('Error creating task:', err)
       setMessage({ 
         type: 'error', 
-        text: `Unexpected error: ${err.message}` 
+        text: '⚠️ Connection error. Please check your internet and try again.' 
       })
     } finally {
       setLoading(false)
@@ -241,14 +262,25 @@ function CreateTask() {
             fontSize: '1.125rem',
             fontWeight: '600',
             color: 'white',
-            backgroundColor: loading ? '#9ca3af' : '#3b82f6',
+            backgroundColor: loading ? '#6b7280' : '#3b82f6',
             border: 'none',
             borderRadius: '0.5rem',
             cursor: loading ? 'not-allowed' : 'pointer',
-            transition: 'background-color 0.2s'
+            transition: 'background-color 0.2s',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '0.75rem'
           }}
         >
-          {loading ? 'Creating...' : 'Create Task'}
+          {loading ? (
+            <>
+              <div className="spinner"></div>
+              Creating...
+            </>
+          ) : (
+            'Create Task'
+          )}
         </button>
       </form>
 
