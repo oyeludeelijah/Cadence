@@ -47,7 +47,7 @@ function CreateTask({ onTaskCreated }) {
       if (!template) {
         setMessage({ 
           type: 'error', 
-          text: 'No checkpoint template found for this task type' 
+          text: '⚠️ Setup incomplete: This task type hasn\'t been configured yet. Please contact support.' 
         })
         setLoading(false)
         return
