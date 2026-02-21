@@ -1,813 +1,506 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { supabase } from '../supabaseClient'
+import { useReveal } from '../hooks/useReveal'
+import DeleteConfirmModal from '../components/DeleteConfirmModal'
+import {
+  getCheckpointStatus,
+  getOverdueText,
+  getTimeUntilDue,
+} from '../utils/checkpointHelpers'
 
+// ─── Checkpoint Card ──────────────────────────────────────────────────────────
+function CheckpointCard({ checkpoint, isCurrent, onToggle, checkpointLoading }) {
+  const ref = useReveal(0.1)
+  const status = getCheckpointStatus(checkpoint)
+  const isCompleted = checkpoint.status === 'completed'
+
+  const borderColor = isCompleted
+    ? 'var(--success)'
+    : isCurrent
+    ? 'var(--warning)'
+    : status === 'overdue'
+    ? 'var(--danger)'
+    : status === 'urgent'
+    ? 'var(--warning)'
+    : 'var(--border-2)'
+
+  return (
+    <div
+      ref={ref}
+      className="glass reveal"
+      style={{
+        padding: 'var(--s4)',
+        borderRadius: 'var(--r-lg)',
+        borderLeft: `3px solid ${borderColor}`,
+        opacity: isCompleted ? 0.6 : 1,
+        transition: 'opacity 0.3s ease',
+        position: 'relative',
+      }}
+    >
+      {/* Current badge */}
+      {isCurrent && !isCompleted && (
+        <div style={{ position: 'absolute', top: 'var(--s2)', right: 'var(--s2)' }}>
+          <span className="badge badge-warning">⚡ Current</span>
+        </div>
+      )}
+
+      <div style={{ display: 'flex', alignItems: 'flex-start', gap: 'var(--s3)' }}>
+        {/* Checkbox */}
+        <button
+          className={`checkbox-btn ${isCompleted ? 'checked' : ''}`}
+          onClick={() => onToggle(checkpoint.id, checkpoint.status)}
+          title={isCompleted ? 'Mark as pending' : 'Mark as complete'}
+          style={{ marginTop: '2px' }}
+        >
+          {isCompleted && <span className="checkmark">✓</span>}
+        </button>
+
+        {/* Content */}
+        <div style={{ flex: 1, minWidth: 0 }}>
+          {/* Status warning banner */}
+          {(status === 'overdue' || status === 'urgent') && !isCompleted && (
+            <div
+              className={`alert ${status === 'overdue' ? 'alert-danger' : 'alert-warning'}`}
+              style={{ marginBottom: 'var(--s2)' }}
+            >
+              <span>{status === 'overdue' ? '⚠️' : '⏰'}</span>
+              <div>
+                <div style={{ fontWeight: 600, fontSize: 'var(--text-xs)' }}>
+                  {status === 'overdue'
+                    ? `Overdue by ${getOverdueText(checkpoint.due_date)}`
+                    : `Due in ${getTimeUntilDue(checkpoint.due_date)}`}
+                </div>
+                <div style={{ fontSize: 'var(--text-xs)', opacity: 0.8, marginTop: '2px' }}>
+                  {status === 'overdue'
+                    ? 'Needs immediate attention'
+                    : 'Complete this checkpoint soon to stay on track'}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Title row */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 'var(--s2)', flexWrap: 'wrap' }}>
+            <div>
+              <h3 style={{
+                fontSize: 'var(--text-base)',
+                fontWeight: 600,
+                color: 'var(--text)',
+                textDecoration: isCompleted ? 'line-through' : 'none',
+                textDecorationColor: 'var(--text-3)',
+                marginBottom: '4px',
+                letterSpacing: '-0.01em',
+                textTransform: 'capitalize',
+              }}>
+                {checkpoint.checkpoint_number}.{' '}
+                {checkpoint.checkpoint_type.replaceAll('_', ' ')}
+              </h3>
+
+              <p style={{
+                fontSize: 'var(--text-sm)',
+                color: status === 'overdue'
+                  ? 'var(--danger)'
+                  : status === 'urgent'
+                  ? 'var(--warning)'
+                  : 'var(--text-3)',
+                margin: 0,
+              }}>
+                Due: {new Date(checkpoint.due_date).toLocaleString('en-GB', {
+                  weekday: 'short', day: 'numeric', month: 'short',
+                  hour: '2-digit', minute: '2-digit', hour12: true,
+                })}
+              </p>
+
+              {checkpoint.completed_at && (
+                <p style={{ fontSize: 'var(--text-xs)', color: 'var(--success)', margin: '4px 0 0' }}>
+                  ✓ Completed {new Date(checkpoint.completed_at).toLocaleString('en-GB', {
+                    day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', hour12: true,
+                  })}
+                </p>
+              )}
+            </div>
+
+            <span className={`badge ${
+              isCompleted           ? 'badge-success' :
+              status === 'overdue'  ? 'badge-danger'  :
+              status === 'urgent'   ? 'badge-warning'  :
+              'badge-accent'
+            }`}>
+              {isCompleted ? 'done' : status}
+            </span>
+          </div>
+
+          {/* Mark Complete button — only on the current (next pending) checkpoint */}
+          {isCurrent && !isCompleted && (
+            <button
+              onClick={() => onToggle(checkpoint.id, checkpoint.status)}
+              disabled={checkpointLoading}
+              className="btn-primary"
+              style={{ marginTop: 'var(--s3)', width: '100%' }}
+            >
+              {checkpointLoading ? (
+                <>
+                  <span className="spinner" style={{ borderTopColor: '#fff' }} />
+                  Saving…
+                </>
+              ) : '✓ Mark Complete'}
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ─── Main Page ────────────────────────────────────────────────────────────────
 function TaskDetailPage() {
-  const { id } = useParams()
+  const { id }   = useParams()
   const navigate = useNavigate()
-  
-  const [task, setTask] = useState(null)
-  const [checkpoints, setCheckpoints] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [checkpointLoading, setCheckpointLoading] = useState(false)
-  const [successMessage, setSuccessMessage] = useState(null)
-  const [undoTimeout, setUndoTimeout] = useState(null)
-  const [undoableCheckpoint, setUndoableCheckpoint] = useState(null)
-  const [undoCountdown, setUndoCountdown] = useState(10)
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
-  const [error, setError] = useState(null)
 
+  const [task, setTask]                     = useState(null)
+  const [checkpoints, setCheckpoints]       = useState([])
+  const [loading, setLoading]               = useState(true)
+  const [checkpointLoading, setCpLoading]   = useState(false)
+  const [toast, setToast]                   = useState(null)   // { type, text, isUndo }
+  const [undoableCheckpoint, setUndoable]   = useState(null)
+  const [showDeleteConfirm, setShowDelete]  = useState(false)
+  const [error, setError]                   = useState(null)
+
+  // useRef for timers — avoids extra re-renders from useState
+  const undoTimeoutRef = useRef(null)
+  const countdownRef   = useRef(null)
+
+  // Cleanup on unmount — prevents state updates after navigation
   useEffect(() => {
-    fetchTaskDetails()
-  }, [id])
+    return () => {
+      clearTimeout(undoTimeoutRef.current)
+      clearInterval(countdownRef.current)
+    }
+  }, [])
 
-  async function fetchTaskDetails() {
+  // ── Toast helper ────────────────────────────────────────────────────────────
+  const showToast = useCallback((text, type = 'success', isUndo = false) => {
+    setToast({ text, type, isUndo })
+    setTimeout(() => setToast(null), 4000)
+  }, [])
+
+  // ── Fetch ──────────────────────────────────────────────────────────────────
+  const fetchTaskDetails = useCallback(async () => {
     setLoading(true)
     try {
-      // Fetch task
       const { data: taskData, error: taskError } = await supabase
-        .from('tasks')
-        .select('*')
-        .eq('id', id)
-        .single()
-
+        .from('tasks').select('*').eq('id', id).single()
       if (taskError) throw taskError
       setTask(taskData)
 
-      // Fetch checkpoints for this task
-      const { data: checkpointsData, error: checkpointsError } = await supabase
-        .from('checkpoints')
-        .select('*')
-        .eq('task_id', id)
+      const { data: cps, error: cpError } = await supabase
+        .from('checkpoints').select('*').eq('task_id', id)
         .order('checkpoint_number', { ascending: true })
-
-      if (checkpointsError) throw checkpointsError
-      setCheckpoints(checkpointsData || [])
+      if (cpError) throw cpError
+      setCheckpoints(cps || [])
       setError(null)
-
-    } catch (error) {
-      console.error('Error fetching task details:', error)
-      setError('⚠️ Connection error. Please check your internet and try again.')
+    } catch (err) {
+      console.error(err)
+      setError('⚠️ Could not load task. Please check your connection and try again.')
     } finally {
       setLoading(false)
     }
-  }
+  }, [id])
 
+  useEffect(() => { fetchTaskDetails() }, [fetchTaskDetails])
+
+  // ── Toggle checkpoint ──────────────────────────────────────────────────────
   async function toggleCheckpointStatus(checkpointId, currentStatus) {
-    // Check if trying to undo outside the 10-second window
+    // Block undo outside the 10-second window
     if (currentStatus === 'completed' && undoableCheckpoint !== checkpointId) {
-      setSuccessMessage('❌ Cannot undo - checkpoint is locked in')
-      setTimeout(() => setSuccessMessage(null), 3000)
+      showToast('⛔ Cannot undo — checkpoint has locked in', 'error')
       return
     }
 
-    setCheckpointLoading(true)
-    
-    const newStatus = currentStatus === 'completed' ? 'pending' : 'completed'
+    setCpLoading(true)
+    const newStatus   = currentStatus === 'completed' ? 'pending' : 'completed'
     const completedAt = newStatus === 'completed' ? new Date().toISOString() : null
 
     try {
       const { error } = await supabase
         .from('checkpoints')
-        .update({ 
-          status: newStatus,
-          completed_at: completedAt
-        })
+        .update({ status: newStatus, completed_at: completedAt })
         .eq('id', checkpointId)
-
       if (error) throw error
 
-      // Refresh checkpoints first to get updated data
       await fetchTaskDetails()
 
-      // Show success message based on action
       if (newStatus === 'completed') {
-        // Clear any existing undo timeout
-        if (undoTimeout) {
-          clearTimeout(undoTimeout)
-        }
+        // Cancel any previous undo countdown
+        clearTimeout(undoTimeoutRef.current)
+        clearInterval(countdownRef.current)
 
-        // Set this checkpoint as undoable
-        setUndoableCheckpoint(checkpointId)
+        setUndoable(checkpointId)
+        setToast({ text: '✅ Checkpoint completed! Tap to undo (10s)', type: 'undo', isUndo: true })
 
-        // Reset countdown to 10 seconds
-        setUndoCountdown(10)
-
-        // Show undo message with countdown
-        setSuccessMessage('✅ Checkpoint completed! [Undo] (10s)')
-
-        // Update countdown every second
-        let secondsLeft = 10
-        const countdownInterval = setInterval(() => {
-          secondsLeft--
-          setUndoCountdown(secondsLeft)
-          if (secondsLeft > 0) {
-            setSuccessMessage(`✅ Checkpoint completed! [Undo] (${secondsLeft}s)`)
+        let secs = 10
+        countdownRef.current = setInterval(() => {
+          secs--
+          if (secs > 0) {
+            setToast({ text: `✅ Checkpoint completed! Tap to undo (${secs}s)`, type: 'undo', isUndo: true })
           } else {
-            clearInterval(countdownInterval)
+            clearInterval(countdownRef.current)
           }
         }, 1000)
 
-        // After 10 seconds, lock it in and show final message
-        const timeout = setTimeout(async () => {
-          clearInterval(countdownInterval)
-          
-          // Check if there's a next checkpoint
-          const updatedCheckpoints = await supabase
-            .from('checkpoints')
-            .select('*')
-            .eq('task_id', id)
-            .eq('status', 'pending')
-            .order('checkpoint_number', { ascending: true })
-            .limit(1)
-
-          const hasNextCheckpoint = updatedCheckpoints.data && updatedCheckpoints.data.length > 0
-          
-          setSuccessMessage(
-            hasNextCheckpoint 
-              ? '✅ Checkpoint completed! Next one is ready.' 
-              : '✅ Checkpoint completed! All checkpoints done.'
-          )
-          
-          // Lock it in - no longer undoable
-          setUndoableCheckpoint(null)
-          
-          // Auto-hide after 3 more seconds
-          setTimeout(() => setSuccessMessage(null), 3000)
-        }, 10000) // 10 seconds
-
-        setUndoTimeout(timeout)
+        undoTimeoutRef.current = setTimeout(async () => {
+          clearInterval(countdownRef.current)
+          const { data } = await supabase
+            .from('checkpoints').select('id')
+            .eq('task_id', id).eq('status', 'pending').limit(1)
+          setToast({
+            text: data?.length > 0 ? '✅ Checkpoint locked in. Next one is ready.' : '🎉 All checkpoints completed!',
+            type: 'success',
+            isUndo: false,
+          })
+          setTimeout(() => setToast(null), 3500)
+          setUndoable(null)
+        }, 10000)
 
       } else {
-        // User undid a checkpoint
-        setSuccessMessage('Checkpoint marked as pending')
-        
-        // Clear undo tracking
-        if (undoTimeout) {
-          clearTimeout(undoTimeout)
-          setUndoTimeout(null)
-        }
-        setUndoableCheckpoint(null)
-        
-        // Auto-hide message after 3 seconds
-        setTimeout(() => setSuccessMessage(null), 3000)
+        // Undo: clear all timers
+        clearTimeout(undoTimeoutRef.current)
+        clearInterval(countdownRef.current)
+        undoTimeoutRef.current = null
+        setUndoable(null)
+        showToast('↩ Checkpoint marked as pending', 'success')
       }
-
-    } catch (error) {
-      console.error('Error updating checkpoint:', error)
-      setSuccessMessage('❌ Error updating checkpoint')
-      setTimeout(() => setSuccessMessage(null), 3000)
+    } catch (err) {
+      console.error(err)
+      showToast('❌ Error updating checkpoint. Try again.', 'error')
     } finally {
-      setCheckpointLoading(false)
+      setCpLoading(false)
     }
   }
 
-  // Handle undo click from success message
-  function handleUndoClick() {
-    if (undoableCheckpoint) {
-      toggleCheckpointStatus(undoableCheckpoint, 'completed')
-    }
-  }
-
-  // Handle task deletion - show confirmation modal
-  function handleDeleteTask() {
-    setShowDeleteConfirm(true)
-  }
-
-  // Confirm and execute deletion
+  // ── Delete task ────────────────────────────────────────────────────────────
   async function confirmDelete() {
-    setShowDeleteConfirm(false)
+    setShowDelete(false)
     setLoading(true)
-
     try {
-      // Delete checkpoints first (foreign key constraint)
-      const { error: checkpointsError } = await supabase
-        .from('checkpoints')
-        .delete()
-        .eq('task_id', id)
-
-      if (checkpointsError) throw checkpointsError
-
-      // Delete the task
-      const { error: taskError } = await supabase
-        .from('tasks')
-        .delete()
-        .eq('id', id)
-
-      if (taskError) throw taskError
-
-      // Navigate back to home with success message
+      await supabase.from('checkpoints').delete().eq('task_id', id)
+      await supabase.from('tasks').delete().eq('id', id)
       navigate('/')
-    } catch (error) {
-      console.error('Error deleting task:', error)
-      setSuccessMessage('❌ Error deleting task')
-      setTimeout(() => setSuccessMessage(null), 3000)
+    } catch (err) {
+      console.error(err)
+      showToast('❌ Error deleting task', 'error')
       setLoading(false)
     }
   }
 
+  // ── Loading / Error screens ────────────────────────────────────────────────
   if (loading) {
     return (
-      <div style={{ minHeight: '100vh', padding: '2rem', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-        <div className="mesh-gradient"></div>
-        <div className="spinner spinner-large" style={{ marginBottom: '1.5rem' }}></div>
-        <p style={{ color: 'var(--text-color)', fontSize: '1.25rem', fontWeight: '500' }}>Loading task details...</p>
+      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 'var(--s3)' }}>
+        <div className="mesh-gradient" />
+        <div className="spinner spinner-large" />
+        <p style={{ color: 'var(--text-2)', fontSize: 'var(--text-base)', fontWeight: 500, margin: 0 }}>
+          Loading task…
+        </p>
       </div>
     )
   }
 
   if (!task) {
     return (
-      <div style={{ minHeight: '100vh', padding: '2rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <div className="mesh-gradient"></div>
+      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div className="mesh-gradient" />
         <div style={{ textAlign: 'center' }}>
-          <p style={{ color: 'var(--text-color)', fontSize: '1.25rem', marginBottom: '1rem' }}>Task not found</p>
-          <button
-            onClick={() => navigate('/')}
-            style={{
-              padding: '0.75rem 1.5rem',
-              fontSize: '1rem',
-              fontWeight: '600',
-              color: 'white',
-              backgroundColor: '#3b82f6',
-              border: 'none',
-              borderRadius: '0.5rem',
-              cursor: 'pointer'
-            }}
-          >
-            Back to Tasks
-          </button>
+          <p style={{ color: 'var(--text-2)', marginBottom: 'var(--s3)', fontSize: 'var(--text-lg)' }}>
+            Task not found
+          </p>
+          <button className="btn-primary" onClick={() => navigate('/')}>← Back to Tasks</button>
         </div>
       </div>
     )
   }
 
-  const completedCheckpoints = checkpoints.filter(cp => cp.status === 'completed').length
-  const totalCheckpoints = checkpoints.length
-  const progressPercentage = totalCheckpoints > 0 ? (completedCheckpoints / totalCheckpoints) * 100 : 0
-  
-  // Find the current (next pending) checkpoint
+  // ── Derived values ─────────────────────────────────────────────────────────
+  const completedCount    = checkpoints.filter(cp => cp.status === 'completed').length
+  const totalCount        = checkpoints.length
+  const progress          = totalCount > 0 ? (completedCount / totalCount) * 100 : 0
   const currentCheckpoint = checkpoints.find(cp => cp.status === 'pending')
+  const isTaskOverdue     = new Date(task.final_deadline) < new Date() && task.status !== 'completed'
 
-  // Helper function to get checkpoint status
-  function getCheckpointStatus(checkpoint) {
-    const now = new Date()
-    const due = new Date(checkpoint.due_date)
-    
-    if (checkpoint.status === 'completed') return 'completed'
-    if (due < now) return 'overdue'
-    
-    const hoursUntilDue = (due - now) / (1000 * 60 * 60)
-    if (hoursUntilDue < 24) return 'urgent'
-    
-    return 'pending'
-  }
-
-  // Helper function to get overdue text
-  function getOverdueText(dueDate) {
-    const now = new Date()
-    const due = new Date(dueDate)
-    const diffMs = now - due
-    const diffHours = Math.floor(diffMs / (1000 * 60 * 60))
-    const diffDays = Math.floor(diffHours / 24)
-
-    if (diffDays > 0) {
-      return `${diffDays} day${diffDays > 1 ? 's' : ''}`
-    } else if (diffHours > 0) {
-      return `${diffHours} hour${diffHours > 1 ? 's' : ''}`
-    } else {
-      return 'just now'
-    }
-  }
-
-  // Helper function to get time until due
-  function getTimeUntilDue(dueDate) {
-    const now = new Date()
-    const due = new Date(dueDate)
-    const diffMs = due - now
-    const diffHours = Math.floor(diffMs / (1000 * 60 * 60))
-
-    if (diffHours < 1) {
-      const diffMinutes = Math.floor(diffMs / (1000 * 60))
-      return `${diffMinutes} minute${diffMinutes !== 1 ? 's' : ''}`
-    } else if (diffHours < 24) {
-      return `${diffHours} hour${diffHours !== 1 ? 's' : ''}`
-    } else {
-      return null // Not urgent
-    }
-  }
+  const toastClass = toast?.type === 'undo'
+    ? 'toast toast-undo'
+    : toast?.type === 'error'
+    ? 'toast toast-error'
+    : 'toast toast-success'
 
   return (
-    <div style={{ minHeight: '100vh', padding: 'var(--container-padding, 2rem)' }}>
-      <div className="mesh-gradient"></div>
-      
-      {/* Global Error Banner */}
+    <div style={{ minHeight: '100vh', padding: 'var(--s6) var(--container-padding)', maxWidth: '900px', margin: '0 auto' }}>
+      <div className="mesh-gradient" />
+
+      {/* ── Toast ─────────────────────────────────────────────────────────────── */}
+      {toast && (
+        <div
+          className={toastClass}
+          onClick={toast.isUndo
+            ? () => undoableCheckpoint && toggleCheckpointStatus(undoableCheckpoint, 'completed')
+            : undefined}
+        >
+          {toast.text}
+        </div>
+      )}
+
+      {/* ── Error ─────────────────────────────────────────────────────────────── */}
       {error && (
-        <div style={{
-          marginBottom: '2rem',
-          padding: '1rem',
-          backgroundColor: '#fee2e2',
-          border: '2px solid #ef4444',
-          borderRadius: '0.5rem',
-          color: '#dc2626',
-          fontWeight: '600',
-          textAlign: 'center',
-          maxWidth: '800px',
-          margin: '0 auto 2rem'
-        }}>
-          {error}
+        <div className="alert alert-danger" style={{ marginBottom: 'var(--s4)' }}>
+          <span>⚠️</span><span>{error}</span>
         </div>
       )}
-      
-      {/* Delete Confirmation Modal */}
+
+      {/* ── Delete modal ──────────────────────────────────────────────────────── */}
       {showDeleteConfirm && (
-        <>
-          {/* Backdrop with blur */}
-          <div 
-            onClick={() => setShowDeleteConfirm(false)}
-            style={{
-              position: 'fixed',
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              backgroundColor: 'rgba(0, 0, 0, 0.5)',
-              backdropFilter: 'blur(3px)',
-              zIndex: 9998,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center'
-            }}
-          />
-          
-          {/* Modal */}
-          <div style={{
-            position: 'fixed',
-            top: '50%',
-            left: '50%',
-            transform: 'translate(-50%, -50%)',
-            zIndex: 9999,
-            width: '90%',
-            maxWidth: '500px'
-          }}>
-            <div className="glass" style={{
-              padding: '2rem',
-              borderRadius: '1rem',
-              border: '2px solid #ef4444'
-            }}>
-              <h2 style={{
-                fontSize: '1.5rem',
-                fontWeight: '700',
-                color: '#ef4444',
-                marginBottom: '1rem'
-              }}>
-                🗑️ Delete Task
-              </h2>
-              
-              <p style={{
-                color: 'var(--text-color)',
-                marginBottom: '0.5rem',
-                fontSize: '1rem'
-              }}>
-                Are you sure you want to delete <strong>"{task?.title}"</strong>?
-              </p>
-              
-              <p style={{
-                color: 'var(--text-secondary)',
-                fontSize: '0.875rem',
-                marginBottom: '1.5rem'
-              }}>
-                This will permanently delete the task and all its checkpoints. This action cannot be undone.
-              </p>
-              
-              <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end' }}>
-                <button
-                  onClick={() => setShowDeleteConfirm(false)}
-                  style={{
-                    padding: '0.75rem 1.5rem',
-                    fontSize: '1rem',
-                    fontWeight: '600',
-                    color: 'var(--text-color)',
-                    backgroundColor: 'var(--glass-bg)',
-                    border: '1px solid var(--glass-border)',
-                    borderRadius: '0.5rem',
-                    cursor: 'pointer',
-                    transition: 'all 0.2s'
-                  }}
-                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--glass-hover)'}
-                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'var(--glass-bg)'}
-                >
-                  Cancel
-                </button>
-                
-                <button
-                  onClick={confirmDelete}
-                  disabled={loading}
-                  style={{
-                    padding: '0.75rem 1.5rem',
-                    fontSize: '1rem',
-                    fontWeight: '600',
-                    color: 'white',
-                    backgroundColor: loading ? '#6b7280' : '#ef4444',
-                    border: 'none',
-                    borderRadius: '0.5rem',
-                    cursor: loading ? 'not-allowed' : 'pointer',
-                    transition: 'all 0.2s',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '0.5rem'
-                  }}
-                  onMouseEnter={(e) => {
-                    if (!loading) e.currentTarget.style.backgroundColor = '#dc2626'
-                  }}
-                  onMouseLeave={(e) => {
-                    if (!loading) e.currentTarget.style.backgroundColor = '#ef4444'
-                  }}
-                >
-                  {loading ? (
-                    <>
-                      <div className="spinner"></div>
-                      Deleting...
-                    </>
-                  ) : (
-                    'Delete'
-                  )}
-                </button>
-              </div>
-            </div>
-          </div>
-        </>
+        <DeleteConfirmModal
+          taskTitle={task.title}
+          loading={loading}
+          onConfirm={confirmDelete}
+          onCancel={() => setShowDelete(false)}
+        />
       )}
-      
-      <div style={{ maxWidth: '900px', margin: '0 auto' }}>
-        {/* Success Message */}
-        {successMessage && (
-          <div 
-            onClick={successMessage.includes('[Undo]') ? handleUndoClick : undefined}
-            style={{
-              position: 'fixed',
-              top: '1rem',
-              left: '50%',
-              transform: 'translateX(-50%)',
-              width: 'max-content',
-              maxWidth: '90%',
-              padding: '1rem 1.5rem',
-              backgroundColor: successMessage.includes('Error') || successMessage.includes('Cannot') ? '#fee2e2' : '#d1fae5',
-              color: successMessage.includes('Error') || successMessage.includes('Cannot') ? '#991b1b' : '#065f46',
-              borderRadius: '0.5rem',
-              boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
-              zIndex: 1000,
-              fontWeight: '600',
-              border: `1px solid ${successMessage.includes('Error') || successMessage.includes('Cannot') ? '#fca5a5' : '#6ee7b7'}`,
-              cursor: successMessage.includes('[Undo]') ? 'pointer' : 'default',
-              transition: 'all 0.2s'
-            }}
-            onMouseEnter={(e) => {
-              if (successMessage.includes('[Undo]')) {
-                e.currentTarget.style.transform = 'scale(1.02)'
-                e.currentTarget.style.boxShadow = '0 6px 16px rgba(0,0,0,0.4)'
-              }
-            }}
-            onMouseLeave={(e) => {
-              if (successMessage.includes('[Undo]')) {
-                e.currentTarget.style.transform = 'scale(1)'
-                e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.3)'
-              }
-            }}
-          >
-            {successMessage}
-          </div>
-        )}
-        {/* Back Button and Delete Button */}
-        <div className="mobile-stack" style={{ display: 'flex', gap: '1rem', marginBottom: '2rem' }}>
-          <button
-            onClick={() => navigate('/')}
-            className="mobile-full-width"
-            style={{
-              padding: '0.5rem 1rem',
-              fontSize: '0.875rem',
-              fontWeight: '500',
-              color: 'var(--text-color)',
-              backgroundColor: 'var(--glass-bg)',
-              border: '1px solid var(--glass-border)',
-              borderRadius: '0.5rem',
-              cursor: 'pointer',
-              transition: 'all 0.2s'
-            }}
-            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--glass-hover)'}
-            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'var(--glass-bg)'}
-          >
-            ← Back to Tasks
-          </button>
 
-          <button
-            onClick={handleDeleteTask}
-            className="mobile-full-width"
-            style={{
-              padding: '0.5rem 1rem',
-              fontSize: '0.875rem',
-              fontWeight: '500',
-              color: 'white',
-              backgroundColor: '#ef4444',
-              border: 'none',
-              borderRadius: '0.5rem',
-              cursor: 'pointer',
-              transition: 'all 0.2s'
-            }}
-            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#dc2626'}
-            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#ef4444'}
-          >
-            🗑️ Delete Task
-          </button>
-        </div>
+      {/* ── Nav bar ───────────────────────────────────────────────────────────── */}
+      <div className="mobile-stack" style={{ display: 'flex', gap: 'var(--s2)', marginBottom: 'var(--s5)' }}>
+        <button className="btn-secondary" onClick={() => navigate('/')}>← Back to Tasks</button>
+        <div style={{ flex: 1 }} />
+        <button className="btn-danger" onClick={() => setShowDelete(true)}>🗑 Delete Task</button>
+      </div>
 
-        {/* Task Header */}
-        <div className="glass" style={{ padding: '2rem', borderRadius: '1rem', marginBottom: '2rem' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '1rem' }}>
-            <h1 style={{ 
-              fontSize: '2rem', 
-              fontWeight: '700',
-              color: 'var(--text-color)'
-            }}>
+      {/* ════════════════════════════════════════════════════════════════════════
+          TASK HEADER
+          ════════════════════════════════════════════════════════════════════ */}
+      <div
+        className="glass"
+        style={{
+          padding: 'var(--s5)',
+          borderRadius: 'var(--r-xl)',
+          marginBottom: 'var(--s5)',
+          borderTop: progress === 100
+            ? '1px solid rgba(16,185,129,0.3)'
+            : isTaskOverdue
+            ? '1px solid rgba(239,68,68,0.3)'
+            : '1px solid rgba(99,102,241,0.2)',
+        }}
+      >
+        {/* Title row */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 'var(--s3)', gap: 'var(--s2)', flexWrap: 'wrap' }}>
+          <div style={{ flex: 1 }}>
+            <p className="section-eyebrow" style={{ marginBottom: '8px' }}>Task Detail</p>
+            <h1 style={{ fontSize: 'clamp(22px, 4vw, 36px)', fontWeight: 700, letterSpacing: '-0.02em', color: 'var(--text)' }}>
               {task.title}
             </h1>
+          </div>
+          <span className={`badge ${
+            progress === 100    ? 'badge-success' :
+            task.status === 'active' ? 'badge-accent'  :
+            'badge-neutral'
+          }`} style={{ fontSize: 'var(--text-xs)' }}>
+            {progress === 100 ? '✓ Complete' : task.status}
+          </span>
+        </div>
+
+        {/* Meta */}
+        <div style={{
+          display: 'flex',
+          gap: 'var(--s4)',
+          flexWrap: 'wrap',
+          fontSize: 'var(--text-sm)',
+          color: 'var(--text-2)',
+          marginBottom: 'var(--s4)',
+          paddingBottom: 'var(--s4)',
+          borderBottom: '1px solid var(--border)',
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <span style={{ color: 'var(--text-3)' }}>Type</span>
             <span style={{
-              padding: '0.5rem 1rem',
-              borderRadius: '0.5rem',
-              fontSize: '0.875rem',
-              fontWeight: '600',
-              backgroundColor: task.status === 'active' ? '#10b98120' : '#6b728020',
-              color: task.status === 'active' ? '#10b981' : '#6b7280'
+              padding: '3px 10px',
+              background: 'var(--accent-dim)',
+              border: '1px solid transparent',
+              borderRadius: 'var(--r-pill)',
+              color: 'var(--accent)',
+              fontWeight: 500,
+              fontSize: 'var(--text-xs)',
+              textTransform: 'capitalize',
             }}>
-              {task.status}
+              {task.task_type.replaceAll('_', ' ')}
             </span>
           </div>
-
-          <div style={{ display: 'flex', gap: '2rem', marginBottom: '1rem', fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
-            <div>
-              <span style={{ fontWeight: '600' }}>Type:</span>{' '}
-              <span style={{
-                padding: '0.25rem 0.75rem',
-                borderRadius: '0.5rem',
-                backgroundColor: 'var(--glass-border)',
-                textTransform: 'capitalize'
-              }}>
-                {task.task_type.replace('_', ' ')}
-              </span>
-            </div>
-            <div>
-              <span style={{ fontWeight: '600' }}>Due:</span>{' '}
-              {new Date(task.final_deadline).toLocaleString()}
-            </div>
-          </div>
-
-          {task.notes && (
-            <div style={{ 
-              marginTop: '1rem',
-              padding: '1rem',
-              backgroundColor: 'var(--glass-border)',
-              borderRadius: '0.5rem'
-            }}>
-              <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
-                <strong>Notes:</strong> {task.notes}
-              </p>
-            </div>
-          )}
-
-          {/* Progress Bar */}
-          <div style={{ marginTop: '1.5rem' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-              <span style={{ fontSize: '0.875rem', fontWeight: '600', color: 'var(--text-color)' }}>
-                Progress
-              </span>
-              <span style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
-                {completedCheckpoints} / {totalCheckpoints} checkpoints
-              </span>
-            </div>
-            <div style={{
-              width: '100%',
-              height: '0.5rem',
-              backgroundColor: 'var(--glass-border)',
-              borderRadius: '0.25rem',
-              overflow: 'hidden'
-            }}>
-              <div style={{
-                width: `${progressPercentage}%`,
-                height: '100%',
-                backgroundColor: '#10b981',
-                transition: 'width 0.3s ease'
-              }}></div>
-            </div>
-          </div>
-        </div>
-
-        {/* Checkpoints */}
-        <div>
-          <h2 style={{ 
-            fontSize: '1.5rem', 
-            fontWeight: '600', 
-            marginBottom: '1rem',
-            color: 'var(--text-color)'
-          }}>
-            Checkpoints
-          </h2>
-
-          {checkpoints.length === 0 ? (
-            <p style={{ color: 'var(--text-secondary)' }}>No checkpoints for this task.</p>
-          ) : (
-            <div style={{ display: 'grid', gap: '1rem' }}>
-              {checkpoints.map((checkpoint) => {
-                const status = getCheckpointStatus(checkpoint)
-                const isCurrent = currentCheckpoint && checkpoint.id === currentCheckpoint.id
-                
-                return (
-                  <div
-                    key={checkpoint.id}
-                    className="glass"
-                    style={{
-                      padding: '1.5rem',
-                      borderRadius: '0.75rem',
-                      opacity: status === 'completed' ? 0.7 : 1,
-                      borderLeft: `4px solid ${
-                        isCurrent ? '#f59e0b' : 
-                        status === 'completed' ? '#10b981' : 
-                        status === 'overdue' ? '#ef4444' : 
-                        status === 'urgent' ? '#f59e0b' : '#3b82f6'
-                      }`,
-                      backgroundColor: isCurrent ? 'rgba(245, 158, 11, 0.05)' : 'var(--glass-bg)',
-                      position: 'relative'
-                    }}
-                  >
-                    {/* Current Badge */}
-                    {isCurrent && (
-                      <div style={{
-                        position: 'absolute',
-                        top: '1rem',
-                        right: '1rem',
-                        padding: '0.25rem 0.75rem',
-                        backgroundColor: '#f59e0b',
-                        color: 'white',
-                        borderRadius: '0.5rem',
-                        fontSize: '0.75rem',
-                        fontWeight: '700',
-                        textTransform: 'uppercase'
-                      }}>
-                        ⚡ Current
-                      </div>
-                    )}
-                    <div style={{ display: 'flex', alignItems: 'start', gap: '1rem' }}>
-                      {/* Checkbox */}
-                      <button
-                        onClick={() => toggleCheckpointStatus(checkpoint.id, checkpoint.status)}
-                        style={{
-                          width: '1.5rem',
-                          height: '1.5rem',
-                          borderRadius: '0.25rem',
-                          border: `2px solid ${checkpoint.status === 'completed' ? '#10b981' : 'var(--glass-border)'}`,
-                          backgroundColor: checkpoint.status === 'completed' ? '#10b981' : 'transparent',
-                          cursor: 'pointer',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          flexShrink: 0,
-                          transition: 'all 0.2s'
-                        }}
-                      >
-                        {checkpoint.status === 'completed' && (
-                          <span style={{ color: 'white', fontSize: '1rem' }}>✓</span>
-                        )}
-                      </button>
-
-                      <div style={{ flex: 1 }}>
-                        {/* Status Warning Banner */}
-                        {(status === 'overdue' || status === 'urgent') && (
-                          <div style={{
-                            backgroundColor: status === 'overdue' ? '#fee2e2' : '#fef3c7',
-                            border: `2px solid ${status === 'overdue' ? '#ef4444' : '#f59e0b'}`,
-                            borderRadius: '0.5rem',
-                            padding: '0.75rem',
-                            marginBottom: '0.75rem',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '0.5rem'
-                          }}>
-                            <span style={{ fontSize: '1.25rem' }}>
-                              {status === 'overdue' ? '⚠️' : '⏰'}
-                            </span>
-                            <div>
-                              <div style={{
-                                fontWeight: '700',
-                                color: status === 'overdue' ? '#dc2626' : '#d97706',
-                                fontSize: '0.875rem'
-                              }}>
-                                {status === 'overdue' 
-                                  ? `OVERDUE by ${getOverdueText(checkpoint.due_date)}`
-                                  : `URGENT - Due in ${getTimeUntilDue(checkpoint.due_date)}`
-                                }
-                              </div>
-                              <div style={{
-                                fontSize: '0.75rem',
-                                color: status === 'overdue' ? '#991b1b' : '#92400e',
-                                marginTop: '0.125rem'
-                              }}>
-                                {status === 'overdue'
-                                  ? 'This checkpoint needs immediate attention'
-                                  : 'Complete this checkpoint soon to stay on track'
-                                }
-                              </div>
-                            </div>
-                          </div>
-                        )}
-
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
-                          <div>
-                            <h3 style={{
-                              fontSize: '1.125rem',
-                              fontWeight: '600',
-                              color: 'var(--text-color)',
-                              textDecoration: checkpoint.status === 'completed' ? 'line-through' : 'none'
-                            }}>
-                              {checkpoint.checkpoint_number}. {checkpoint.checkpoint_type}
-                            </h3>
-                            <p style={{ 
-                              fontSize: '0.875rem', 
-                              color: status === 'overdue' ? '#ef4444' : status === 'urgent' ? '#f59e0b' : 'var(--text-secondary)',
-                              marginTop: '0.25rem'
-                            }}>
-                              Due: {new Date(checkpoint.due_date).toLocaleString()}
-                              {status === 'overdue' && ' (Overdue)'}
-                              {status === 'urgent' && ' (Urgent)'}
-                            </p>
-                            {checkpoint.completed_at && (
-                              <p style={{ fontSize: '0.75rem', color: '#10b981', marginTop: '0.25rem' }}>
-                                Completed: {new Date(checkpoint.completed_at).toLocaleString()}
-                              </p>
-                            )}
-                          </div>
-                          <span style={{
-                            padding: '0.25rem 0.75rem',
-                            borderRadius: '0.5rem',
-                            fontSize: '0.75rem',
-                            fontWeight: '600',
-                            backgroundColor: checkpoint.status === 'completed' ? '#10b98120' : '#3b82f620',
-                            color: checkpoint.status === 'completed' ? '#10b981' : '#3b82f6'
-                          }}>
-                            {checkpoint.status}
-                          </span>
-                        </div>
-
-                        {/* Mark Complete Button for Current Checkpoint */}
-                        {isCurrent && checkpoint.status === 'pending' && (
-                            <button
-                              onClick={() => toggleCheckpointStatus(checkpoint.id, checkpoint.status)}
-                              disabled={checkpointLoading}
-                              style={{
-                                marginTop: '1rem',
-                                padding: '0.75rem 1.5rem',
-                                fontSize: '1rem',
-                                fontWeight: '600',
-                                color: 'white',
-                                backgroundColor: checkpointLoading ? '#6b7280' : '#10b981',
-                                border: 'none',
-                                borderRadius: '0.5rem',
-                                cursor: checkpointLoading ? 'not-allowed' : 'pointer',
-                                transition: 'all 0.2s',
-                                width: '100%',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                gap: '0.75rem'
-                              }}
-                              onMouseEnter={(e) => {
-                                if (!checkpointLoading) {
-                                  e.currentTarget.style.backgroundColor = '#059669'
-                                }
-                              }}
-                              onMouseLeave={(e) => {
-                                if (!checkpointLoading) {
-                                  e.currentTarget.style.backgroundColor = '#10b981'
-                                }
-                              }}
-                            >
-                              {checkpointLoading ? (
-                                <>
-                                  <div className="spinner"></div>
-                                  Updating...
-                                </>
-                              ) : (
-                                '✓ Mark Complete'
-                              )}
-                            </button>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                )
+          <div style={{ color: isTaskOverdue ? 'var(--danger)' : 'var(--text-2)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <span style={{ color: 'var(--text-3)' }}>Deadline</span>
+            <span>
+              {new Date(task.final_deadline).toLocaleString('en-GB', {
+                weekday: 'short', day: 'numeric', month: 'short',
+                year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true,
               })}
-            </div>
-          )}
+              {isTaskOverdue && <span style={{ fontWeight: 600, marginLeft: '6px' }}>· Overdue</span>}
+            </span>
+          </div>
         </div>
+
+        {/* Notes */}
+        {task.notes && (
+          <div style={{
+            padding: 'var(--s2) var(--s3)',
+            background: 'rgba(255,255,255,0.03)',
+            border: '1px solid var(--border)',
+            borderRadius: 'var(--r-md)',
+            marginBottom: 'var(--s4)',
+            fontSize: 'var(--text-sm)',
+            color: 'var(--text-2)',
+          }}>
+            <strong style={{ color: 'var(--text-3)', fontSize: 'var(--text-xs)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Notes</strong>
+            <p style={{ margin: '4px 0 0', lineHeight: 1.6, maxWidth: 'none' }}>{task.notes}</p>
+          </div>
+        )}
+
+        {/* Progress */}
+        <div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+            <span style={{ fontSize: 'var(--text-xs)', fontWeight: 600, color: 'var(--text-3)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+              Progress
+            </span>
+            <span style={{ fontSize: 'var(--text-sm)', fontWeight: 600, color: 'var(--text-2)' }}>
+              {completedCount} / {totalCount} checkpoints
+              {progress === 100 && <span style={{ color: 'var(--success)', marginLeft: '8px' }}>🎉 All done!</span>}
+            </span>
+          </div>
+          <div className="progress-track">
+            <div className="progress-fill" style={{ width: `${progress}%` }} />
+          </div>
+        </div>
+      </div>
+
+      {/* ── Checkpoints ──────────────────────────────────────────────────────── */}
+      <div>
+        <h2 style={{ fontSize: 'var(--text-lg)', fontWeight: 600, marginBottom: 'var(--s4)', color: 'var(--text)', letterSpacing: '-0.01em' }}>
+          Checkpoints
+        </h2>
+
+        {checkpoints.length === 0 ? (
+          <p style={{ color: 'var(--text-3)', fontSize: 'var(--text-sm)', margin: 0 }}>
+            No checkpoints for this task.
+          </p>
+        ) : (
+          <div style={{ display: 'grid', gap: 'var(--s3)' }}>
+            {checkpoints.map(cp => (
+              <CheckpointCard
+                key={cp.id}
+                checkpoint={cp}
+                isCurrent={currentCheckpoint?.id === cp.id}
+                onToggle={toggleCheckpointStatus}
+                checkpointLoading={checkpointLoading}
+              />
+            ))}
+          </div>
+        )}
       </div>
     </div>
   )

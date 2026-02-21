@@ -4,10 +4,27 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Modern React App | Final Year Project</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- SEO -->
+    <title>AI Accountability System — Break Tasks Down, Get Them Done</title>
+    <meta name="description" content="Stop staring at deadlines. Create a task and get an auto-generated checkpoint roadmap that keeps you moving — one step at a time." />
+    <meta name="theme-color" content="#6366f1" />
+
+    <!-- Fonts — preconnect first, then load only what we use -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Inter:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <!-- Anti-FOUC: set theme attribute synchronously before first paint -->
+    <script>
+      (function () {
+        var saved = localStorage.getItem('theme')
+        var preferred = window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark'
+        document.documentElement.setAttribute('data-theme', saved || preferred)
+      })()
+    </script>
   </head>
   <body>
     <div id="root"></div>
