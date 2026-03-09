@@ -21,7 +21,8 @@
     <script>
       (function () {
         var saved = localStorage.getItem('theme')
-        var preferred = window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark'
+        // Default: light. Only go dark if OS explicitly prefers dark.
+        var preferred = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
         document.documentElement.setAttribute('data-theme', saved || preferred)
       })()
     </script>

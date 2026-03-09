@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../supabaseClient'
 import { useReveal } from '../hooks/useReveal'
@@ -84,6 +84,11 @@ function TaskCard({ task, onDelete, onNavigate }) {
             <span className="badge badge-neutral" style={{ textTransform: 'capitalize' }}>
               {task.task_type.replaceAll('_', ' ')}
             </span>
+            {task.checkpoints.some(cp => cp.ai_generated) && (
+              <span className="badge badge-accent" style={{ fontSize: '10px', padding: '2px 8px' }}>
+                AI ✨
+              </span>
+            )}
             <span style={{
               fontSize: 'var(--text-xs)',
               color: isOverdue ? 'var(--danger)' : 'var(--text-3)',
@@ -222,7 +227,7 @@ function UrgencyGroup({ label, emoji, color, tasks, onDelete, onNavigate }) {
 function TaskListPage() {
   const navigate = useNavigate()
 
-  const [tasks, setTasks]                 = useState([])
+  const [tasks, setTasks]                 = useState([])      // ALL tasks (both tabs)
   const [loading, setLoading]             = useState(true)
   const [connectionStatus, setConnection] = useState('Checking…')
   const [activeTab, setActiveTab]         = useState('active')
@@ -256,13 +261,12 @@ function TaskListPage() {
     return () => document.removeEventListener('keydown', onKeyDown)
   }, [showCreateForm])
 
-  // ── Fetch ──────────────────────────────────────────────────────────────────
-  useEffect(() => { fetchTasks() }, [activeTab]) // eslint-disable-line react-hooks/exhaustive-deps
-
-  async function fetchTasks() {
+  // -- Fetch (stable useCallback -- no [activeTab] dependency)
+  // Fetches ALL tasks. Tab filtering is done client-side at render time so
+  // switching tabs never re-fetches and avoids the duplicate-entry race.
+  const fetchTasks = useCallback(async () => {
     setLoading(true)
     try {
-      // Single joined query — avoids N+1
       const { data: tasksData, error: tasksError } = await supabase
         .from('tasks')
         .select('*, checkpoints(*)')
@@ -278,11 +282,11 @@ function TaskListPage() {
 
           const allDone = checkpoints.length > 0 && checkpoints.every(cp => cp.status === 'completed')
 
-          // Reconcile task status if drifted from checkpoint reality
+          // Reconcile task.status with checkpoint reality (fire-and-forget)
           if (allDone && task.status !== 'completed') {
-            await supabase.from('tasks').update({ status: 'completed' }).eq('id', task.id)
+            supabase.from('tasks').update({ status: 'completed' }).eq('id', task.id)
           } else if (!allDone && task.status === 'completed') {
-            await supabase.from('tasks').update({ status: 'active' }).eq('id', task.id)
+            supabase.from('tasks').update({ status: 'active' }).eq('id', task.id)
           }
 
           return {
@@ -294,17 +298,17 @@ function TaskListPage() {
         })
       )
 
-      setTasks(
-        enriched.filter(t => activeTab === 'completed' ? t.isCompleted : !t.isCompleted)
-      )
+      setTasks(enriched)   // store ALL tasks; tab filter applied at render time
       setError(null)
     } catch (err) {
       console.error('Error fetching tasks:', err)
-      setError('⚠️ Connection error. Please check your internet and try again.')
+      setError('Connection error. Please check your internet and try again.')
     } finally {
       setLoading(false)
     }
-  }
+  }, [])  // stable -- no deps change between renders
+
+  useEffect(() => { fetchTasks() }, [fetchTasks])
 
   function handleTaskCreated() {
     fetchTasks()
@@ -338,9 +342,11 @@ function TaskListPage() {
 
   // ── Derived values ─────────────────────────────────────────────────────────
   const isConnected = connectionStatus.includes('Connected')
-  const { dueToday, dueThisWeek, dueLater } = groupTasks(tasks)
-  const hasTasks = tasks.length > 0
-  const overdueCount = tasks.filter(t =>
+  // Filter client-side by tab — tasks state now holds ALL tasks
+  const visibleTasks = tasks.filter(t => activeTab === 'completed' ? t.isCompleted : !t.isCompleted)
+  const { dueToday, dueThisWeek, dueLater } = groupTasks(visibleTasks)
+  const hasTasks = visibleTasks.length > 0
+  const overdueCount = visibleTasks.filter(t =>
     t.nextCheckpoint && getCheckpointStatus(t.nextCheckpoint) === 'overdue'
   ).length
 
@@ -348,7 +354,7 @@ function TaskListPage() {
   const navigateToTask = (id) => navigate(`/tasks/${id}`)
 
   return (
-    <div style={{ minHeight: '100vh', padding: 'var(--s6) var(--container-padding)', maxWidth: 'var(--container-max)', margin: '0 auto' }}>
+    <div style={{ maxWidth: 'var(--container-max)', margin: '0 auto' }}>
       <div className="mesh-gradient" />
 
       {/* ── Delete Modal ───────────────────────────────────────────────────── */}
@@ -361,64 +367,46 @@ function TaskListPage() {
         />
       )}
 
-      {/* ══════════════════════════════════════════════════════════════════════
-          HERO — the Halo Effect. First 50ms sets the entire tone.
-          ══════════════════════════════════════════════════════════════════════ */}
-      <header style={{ marginBottom: 'var(--s8)', paddingBottom: 'var(--s6)', borderBottom: '1px solid var(--border)' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 'var(--s4)' }}>
-          {/* Title */}
+      {/* ── Page header ─────────────────────────────────────────────────────── */}
+      <header style={{ marginBottom: 'var(--s6)', paddingBottom: 'var(--s4)', borderBottom: '1px solid var(--border)' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 'var(--s3)' }}>
           <div>
-            <p className="section-eyebrow" style={{ marginBottom: '10px' }}>AI Accountability System</p>
-            <h1 style={{ fontSize: 'clamp(28px, 5vw, 52px)', fontWeight: 800, letterSpacing: '-0.03em', color: 'var(--text)', lineHeight: 1.05 }}>
-              Your work,<br />
-              <span style={{
-                background: 'linear-gradient(135deg, var(--accent) 0%, #a78bfa 100%)',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                backgroundClip: 'text',
-              }}>
-                broken down.
-              </span>
+            <p className="section-eyebrow" style={{ marginBottom: '6px' }}>Overview</p>
+            <h1 style={{ fontSize: 'clamp(22px, 3vw, 32px)', fontWeight: 800, letterSpacing: '-0.03em', color: 'var(--text)', lineHeight: 1.1 }}>
+              My Tasks
             </h1>
-            <p style={{ marginTop: 'var(--s2)', fontSize: 'var(--text-base)', color: 'var(--text-2)', maxWidth: '480px', lineHeight: 1.65 }}>
-              Stop staring at an overwhelming deadline. Create a task and we'll
-              generate a checkpoint roadmap that keeps you moving — one step at a time.
-            </p>
           </div>
 
-          {/* Status + summary */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--s2)', alignItems: 'flex-end' }}>
-            {/* Connection indicator */}
+          {/* Status pills + connection */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+            {hasTasks && (
+              <>
+                <span className="badge badge-accent">{visibleTasks.length} {activeTab === 'completed' ? 'completed' : 'active'}</span>
+                {overdueCount > 0 && <span className="badge badge-danger">{overdueCount} overdue</span>}
+                {dueToday.length > 0 && <span className="badge badge-warning">{dueToday.length} due today</span>}
+              </>
+            )}
             <div style={{
               display: 'flex',
               alignItems: 'center',
-              gap: '8px',
+              gap: '6px',
               fontSize: 'var(--text-xs)',
               color: isConnected ? 'var(--success)' : 'var(--danger)',
               background: isConnected ? 'var(--success-dim)' : 'var(--danger-dim)',
               border: `1px solid ${isConnected ? 'rgba(16,185,129,0.2)' : 'rgba(239,68,68,0.2)'}`,
               borderRadius: 'var(--r-pill)',
-              padding: '6px 12px',
+              padding: '5px 10px',
               fontWeight: 500,
             }}>
               <span className={`status-dot ${isConnected ? 'connected' : 'disconnected'}`} />
               {connectionStatus}
             </div>
-
-            {/* Summary pills */}
-            {hasTasks && (
-              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
-                <span className="badge badge-accent">{tasks.length} active</span>
-                {overdueCount > 0 && <span className="badge badge-danger">{overdueCount} overdue</span>}
-                {dueToday.length > 0 && <span className="badge badge-warning">{dueToday.length} due today</span>}
-              </div>
-            )}
           </div>
         </div>
 
         {/* Error */}
         {error && (
-          <div className="alert alert-danger" style={{ marginTop: 'var(--s4)' }}>
+          <div className="alert alert-danger" style={{ marginTop: 'var(--s3)' }}>
             <span>⚠️</span>
             <span>{error}</span>
           </div>
@@ -563,19 +551,6 @@ function TaskListPage() {
             />
           )}
 
-          {/* Completed tab — flat list */}
-          {activeTab === 'completed' && tasks.length > 0 && (
-            <div style={{ display: 'grid', gap: 'var(--s3)' }}>
-              {tasks.map(t => (
-                <TaskCard
-                  key={t.id}
-                  task={t}
-                  onDelete={handleDeleteTask}
-                  onNavigate={navigateToTask}
-                />
-              ))}
-            </div>
-          )}
         </>
       )}
     </div>

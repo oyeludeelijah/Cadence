@@ -1,4 +1,4 @@
-# AI-Powered Accountability System 🎯
+# AI Accountability System 🎯
 
 > **Note:** This is a work-in-progress demo for my final year project supervisors. Not all features are complete yet, but the core functionality is there!
 

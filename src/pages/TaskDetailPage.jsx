@@ -121,14 +121,17 @@ function CheckpointCard({ checkpoint, isCurrent, onToggle, checkpointLoading }) 
               )}
             </div>
 
-            <span className={`badge ${
-              isCompleted           ? 'badge-success' :
-              status === 'overdue'  ? 'badge-danger'  :
-              status === 'urgent'   ? 'badge-warning'  :
-              'badge-accent'
-            }`}>
-              {isCompleted ? 'done' : status}
-            </span>
+            {/* Don't render inline badge when the absolute ⚡ Current badge is already showing */}
+            {!(isCurrent && !isCompleted) && (
+              <span className={`badge ${
+                isCompleted           ? 'badge-success' :
+                status === 'overdue'  ? 'badge-danger'  :
+                status === 'urgent'   ? 'badge-warning'  :
+                'badge-accent'
+              }`}>
+                {isCompleted ? '✓ done' : status}
+              </span>
+            )}
           </div>
 
           {/* Mark Complete button — only on the current (next pending) checkpoint */}
@@ -297,8 +300,7 @@ function TaskDetailPage() {
   // ── Loading / Error screens ────────────────────────────────────────────────
   if (loading) {
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 'var(--s3)' }}>
-        <div className="mesh-gradient" />
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 'var(--s16) var(--s4)', gap: 'var(--s3)' }}>
         <div className="spinner spinner-large" />
         <p style={{ color: 'var(--text-2)', fontSize: 'var(--text-base)', fontWeight: 500, margin: 0 }}>
           Loading task…
@@ -309,8 +311,7 @@ function TaskDetailPage() {
 
   if (!task) {
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <div className="mesh-gradient" />
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 'var(--s16) var(--s4)' }}>
         <div style={{ textAlign: 'center' }}>
           <p style={{ color: 'var(--text-2)', marginBottom: 'var(--s3)', fontSize: 'var(--text-lg)' }}>
             Task not found
@@ -335,8 +336,7 @@ function TaskDetailPage() {
     : 'toast toast-success'
 
   return (
-    <div style={{ minHeight: '100vh', padding: 'var(--s6) var(--container-padding)', maxWidth: '900px', margin: '0 auto' }}>
-      <div className="mesh-gradient" />
+    <div style={{ maxWidth: '860px', margin: '0 auto' }}>
 
       {/* ── Toast ─────────────────────────────────────────────────────────────── */}
       {toast && (
@@ -398,13 +398,20 @@ function TaskDetailPage() {
               {task.title}
             </h1>
           </div>
-          <span className={`badge ${
-            progress === 100    ? 'badge-success' :
-            task.status === 'active' ? 'badge-accent'  :
-            'badge-neutral'
-          }`} style={{ fontSize: 'var(--text-xs)' }}>
-            {progress === 100 ? '✓ Complete' : task.status}
-          </span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            {checkpoints.some(cp => cp.ai_generated) && (
+              <span className="badge badge-accent" style={{ fontSize: '10px', padding: '2px 8px' }}>
+                AI ✨
+              </span>
+            )}
+            <span className={`badge ${
+              progress === 100    ? 'badge-success' :
+              task.status === 'active' ? 'badge-accent'  :
+              'badge-neutral'
+            }`} style={{ fontSize: 'var(--text-xs)' }}>
+              {progress === 100 ? '✓ Complete' : task.status}
+            </span>
+          </div>
         </div>
 
         {/* Meta */}
