@@ -204,7 +204,6 @@ function TaskDetailPage() {
       setCheckpoints(cps || [])
       setError(null)
     } catch (err) {
-      console.error(err)
       setError('⚠️ Could not load task. Please check your connection and try again.')
     } finally {
       setLoading(false)
@@ -275,7 +274,6 @@ function TaskDetailPage() {
         showToast('↩ Checkpoint marked as pending', 'success')
       }
     } catch (err) {
-      console.error(err)
       showToast('❌ Error updating checkpoint. Try again.', 'error')
     } finally {
       setCpLoading(false)
@@ -291,7 +289,6 @@ function TaskDetailPage() {
       await supabase.from('tasks').delete().eq('id', id)
       navigate('/')
     } catch (err) {
-      console.error(err)
       showToast('❌ Error deleting task', 'error')
       setLoading(false)
     }

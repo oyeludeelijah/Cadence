@@ -24,12 +24,14 @@ Helps students break large academic tasks (essays, problem sets, exam prep) into
 ```
 src/
 ├── App.jsx
-├── index.css                  # Full design system — source of truth
+├── index.css                  # Full design system — source of truth (~1420 lines)
 ├── supabaseClient.js
 ├── pages/
 │   ├── TaskListPage.jsx       # ~560 lines
 │   └── TaskDetailPage.jsx     # ~515 lines
 ├── components/
+│   ├── AppShell.jsx           # Persistent layout wrapper (sidebar + main area)
+│   ├── Sidebar.jsx            # Collapsible sidebar, nav, theme toggle
 │   ├── CreateTask.jsx         # ~280 lines — ACTIVE component
 │   └── DeleteConfirmModal.jsx # ~91 lines
 ├── hooks/
@@ -43,7 +45,6 @@ vite.config.js                 # Has proxy config for NVIDIA NIM (see AI section
 .env                           # VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY, VITE_NVIDIA_API_KEY
 ```
 
-⚠️ `src/CreateTask.jsx` (root level) is orphaned — ignore it. Active component is `src/components/CreateTask.jsx`
 ⚠️ `DESIGN_SYSTEM.md` is stale — ignore it. Source of truth is `src/index.css`
 
 ---
@@ -182,10 +183,12 @@ Task creation (AI + fallback), urgency grouping, tab switching, checkpoint toggl
 
 - No external state libraries
 - `useRef` for timer IDs
-- Supabase errors surface as user-readable messages
+- Supabase errors surface as user-readable messages (error state banners or toasts) — no `console.error` left in any catch block
+- `navigateToTask` in `TaskListPage` is wrapped in `useCallback([navigate])` for a stable reference
 - Reusable UI → `src/components/`
 - Pure logic → `src/utils/`
 - Custom hooks → `src/hooks/`
+- `groupTasks()` in `TaskListPage` is a module-level pure function — never re-created on render, no `useMemo` needed
 
 ---
 

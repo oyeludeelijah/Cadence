@@ -16,7 +16,7 @@ function CreateTask({ onTaskCreated }) {
     notes:    '',
   })
   const [loading, setLoading]   = useState(false)
-  const [aiActive, setAiActive] = useState(false)  // true while Gemini is generating
+  const [aiActive, setAiActive] = useState(false)  // true while AI is generating
   const [message, setMessage]   = useState(null)   // { type: 'success'|'error', text }
 
   const handleChange = (e) => {
@@ -73,7 +73,7 @@ function CreateTask({ onTaskCreated }) {
 
     setLoading(true)
     try {
-      // ── Step 1: Try Gemini first ────────────────────────────────────────────
+      // ── Step 1: Try AI (NVIDIA NIM) first ────────────────────────────────────
       setAiActive(true)
       const aiCheckpoints = await generateCheckpoints(
         form.title.trim(),
@@ -87,7 +87,7 @@ function CreateTask({ onTaskCreated }) {
       let rawSequence        // array of { checkpoint_type, checkpoint_number, due_date }
 
       if (aiCheckpoints) {
-        // Gemini succeeded
+        // AI succeeded
         checkpointSource = 'ai'
         rawSequence = aiCheckpoints
       } else {
@@ -152,7 +152,6 @@ function CreateTask({ onTaskCreated }) {
       // Delay modal close so user can read the success/AI message before it disappears
       setTimeout(() => { if (onTaskCreated) onTaskCreated() }, 1800)
     } catch (err) {
-      console.error('Error creating task:', err)
       setMessage({ type: 'error', text: '⚠️ Connection error. Please check your internet and try again.' })
     } finally {
       setAiActive(false)

@@ -301,7 +301,6 @@ function TaskListPage() {
       setTasks(enriched)   // store ALL tasks; tab filter applied at render time
       setError(null)
     } catch (err) {
-      console.error('Error fetching tasks:', err)
       setError('Connection error. Please check your internet and try again.')
     } finally {
       setLoading(false)
@@ -333,7 +332,6 @@ function TaskListPage() {
       if (tErr) throw tErr
       await fetchTasks()
     } catch (err) {
-      console.error('Delete error:', err)
       setLoading(false)
     } finally {
       setTaskToDelete(null)
@@ -351,7 +349,7 @@ function TaskListPage() {
   ).length
 
   // Shared navigate handler — stable reference so UrgencyGroup/TaskCard don't get a new fn each render
-  const navigateToTask = (id) => navigate(`/tasks/${id}`)
+  const navigateToTask = useCallback((id) => navigate(`/tasks/${id}`), [navigate])
 
   return (
     <div style={{ maxWidth: 'var(--container-max)', margin: '0 auto' }}>
