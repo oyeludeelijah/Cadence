@@ -1,148 +1,196 @@
 # AI Accountability System 🎯
 
-> **Note:** This is a work-in-progress demo for my final year project supervisors. Not all features are complete yet, but the core functionality is there!
+> **Note:** This is a work-in-progress demo for my final year project supervisors. Core functionality is complete — including AI-powered checkpoint generation.
 
 ## What This Is
 
-Hey there! This is my attempt at solving a problem I (and probably every student ever) face: **procrastination and poor task management**. Instead of just building another to-do list app, I'm creating an AI-powered system that breaks down big scary assignments into manageable checkpoints and actually holds you accountable.
+This is my attempt at solving a problem every student faces: **procrastination and poor task management**. Instead of just building another to-do list app, I've created an AI-powered system that breaks down big academic assignments into manageable, time-bound checkpoints and holds you accountable.
 
-Think of it as having a really organized friend who reminds you to start your essay *before* the night before it's due. Except this friend is a web app and won't judge you for your Netflix binges.
+Think of it as a really organised study partner who plans your essay *before* the night before it's due — except it's a web app, and it runs on a genuine AI model.
+
+---
 
 ## Current Features ✨
 
-### 1. **Smart Task Breakdown**
-- Create a task (like "Write 3000-word essay")
-- The system automatically generates checkpoints based on task type
-- Each checkpoint gets a realistic due date (no more "I'll do it all tomorrow")
-- Checkpoints are adjusted to reasonable hours (because who works at 3 AM? ...okay, students do, but still)
+### 1. **AI-Powered Task Breakdown** *(New)*
+- Create a task (e.g. "Write 3000-word history essay")
+- The system calls an AI model (Meta's Llama 3.1 via NVIDIA NIM) with your title, task type, deadline, and notes
+- Llama generates a contextual checkpoint roadmap in 2–5 seconds
+- If the AI call fails for any reason, it silently falls back to a Supabase template table — task creation never breaks
+- Tasks with AI-generated checkpoints are marked with an **AI ✨** badge on the task list and detail pages
 
-### 2. **4-State Status System**
-I built a color-coded system that tells you exactly where you stand:
-- 🟢 **Completed** - You did it! Gold star for you
-- 🔵 **Pending** - Chill, you've got time
-- 🟠 **Urgent** - Less than 24 hours left, maybe start panicking a little?
-- 🔴 **Overdue** - Yeah... about that deadline...
+### 2. **Smart Task Scheduling**
+- Checkpoints are spaced proportionally across your available time
+- Automatically adjusted to reasonable working hours (9 AM–9 PM)
+- Tight-deadline mode: if the deadline is less than 24 hours away, only one checkpoint is generated to avoid impossible timings
 
-### 3. **Accountability Features**
-- **10-Second Undo Window**: Marked something complete by accident? You've got 10 seconds to undo before it locks in (because I know how trigger-happy we can be with checkboxes)
-- **Visual Progress Tracking**: See exactly how much you've done vs. how much is left
-- **Overdue Warnings**: Big red banners that you can't ignore (trust me, I tried)
+### 3. **4-State Status System**
+A color-coded system that tells you exactly where you stand:
+- 🟢 **Completed** — Done!
+- 🔵 **Pending** — On track, you have time
+- 🟠 **Urgent** — Less than 24 hours left
+- 🔴 **Overdue** — Past due and not complete
 
-### 4. **User Experience Stuff**
-- **Loading Spinners**: So you know the app isn't frozen, just thinking
-- **Error Handling**: Friendly messages when things go wrong (like "check your internet" instead of cryptic error codes)
-- **Mobile Responsive**: Works on your phone because let's be real, that's where you'll use it
-- **Dark Theme**: Because bright white backgrounds at 2 AM are a crime
+### 4. **Accountability Features**
+- **10-Second Undo Window**: Marked something complete by accident? You have 10 seconds to undo before it locks in permanently
+- **Visual Progress Tracking**: Progress bar showing completed vs. remaining checkpoints per task
+- **Overdue Warnings**: Prominent banners you can't ignore
+
+### 5. **User Experience**
+- Loading spinners and skeleton states for all async operations
+- Friendly, readable error messages (not cryptic codes)
+- Mobile responsive (768px breakpoint)
+- Dark/light mode with anti-FOUC (no flash on load)
+- Scroll-reveal animations on cards
+- Real-time connection status indicator
+
+---
 
 ## Tech Stack 🛠️
 
-- **Frontend**: React + Vite
-- **Backend**: Supabase (PostgreSQL database + auth, all in one)
-- **Styling**: Vanilla CSS with glassmorphism (fancy word for "looks like frosted glass")
-- **Routing**: React Router (for navigating between pages)
+| Layer | Technology |
+|---|---|
+| Frontend | React 19.2.0 + Vite 7.3.1 |
+| Routing | React Router DOM 7.13.0 |
+| Backend / DB | Supabase (PostgreSQL + PostgREST) |
+| Styling | Vanilla CSS — custom design system in `src/index.css` |
+| AI | NVIDIA NIM API — `meta/llama-3.1-8b-instruct` via plain `fetch` |
+
+No Tailwind, no component libraries, no external state management (pure hooks).
+
+---
 
 ## How to Run This Thing
 
-1. **Clone the repo** (you probably already did this)
-   ```bash
-   git clone https://github.com/oyeludeelijah/elijah-fyp.git
-   cd "Final year project"
-   ```
+### 1. Clone the repo
+```bash
+git clone https://github.com/oyeludeelijah/elijah-fyp.git
+cd "Final year project"
+```
 
-2. **Install dependencies**
-   ```bash
-   npm install
-   ```
+### 2. Install dependencies
+```bash
+npm install
+```
 
-3. **Set up environment variables**
-   - Create a `.env` file in the root directory
-   - Add your Supabase credentials (get these from your [Supabase Dashboard](https://app.supabase.com)):
-     ```
-     VITE_SUPABASE_URL=your_supabase_project_url
-     VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
-     ```
-   - **Note for supervisors**: If you need access to the demo database, please contact me directly for credentials.
+### 3. Set up environment variables
+Create a `.env` file in the root directory:
+```
+VITE_SUPABASE_URL=your_supabase_project_url
+VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+VITE_NVIDIA_API_KEY=your_nvidia_nim_api_key
+```
 
-4. **Run the dev server**
-   ```bash
-   npm run dev
-   ```
+- **Supabase credentials**: Get from your [Supabase Dashboard](https://app.supabase.com)
+- **NVIDIA NIM API key**: Get for free from [build.nvidia.com](https://build.nvidia.com) → any model page → "Get API Key"
+- **Note for supervisors**: Contact me directly if you need access to the demo database credentials.
 
-5. **Open your browser** to `http://localhost:5173`
+### 4. Run the dev server
+```bash
+npm run dev
+```
+
+### 5. Open your browser
+Go to `http://localhost:5173` (may use `5174` if the port is already in use)
+
+> **Note on the AI proxy:** The app uses a Vite dev-server proxy to forward AI requests to NVIDIA NIM without CORS issues. This is configured in `vite.config.js` and works automatically — no extra setup needed.
+
+---
 
 ## Database Setup 📊
 
-You'll need to create these tables in Supabase:
+You'll need these tables in Supabase:
 
-### `tasks` table
-- `id` (uuid, primary key)
-- `title` (text)
-- `task_type` (text) - e.g., "essay", "problem_set", "exam_prep"
-- `final_deadline` (timestamptz)
-- `notes` (text, nullable)
-- `status` (text) - "active" or "completed"
-- `created_at` (timestamptz)
+### `tasks`
+| Column | Type | Notes |
+|---|---|---|
+| `id` | uuid | primary key |
+| `title` | text | |
+| `task_type` | text | `'essay'` \| `'problem_set'` \| `'exam_prep'` |
+| `final_deadline` | timestamptz | |
+| `notes` | text | nullable |
+| `status` | text | `'active'` \| `'completed'` |
+| `created_at` | timestamptz | |
 
-### `checkpoints` table
-- `id` (uuid, primary key)
-- `task_id` (uuid, foreign key → tasks.id)
-- `checkpoint_number` (integer)
-- `checkpoint_type` (text) - e.g., "outline", "first_draft", "review"
-- `due_date` (timestamptz)
-- `status` (text) - "pending" or "completed"
-- `created_at` (timestamptz)
+### `checkpoints`
+| Column | Type | Notes |
+|---|---|---|
+| `id` | uuid | primary key |
+| `task_id` | uuid | FK → tasks.id |
+| `checkpoint_number` | integer | |
+| `checkpoint_type` | text | e.g. `'Thesis Statement'`, `'First Draft'` |
+| `due_date` | timestamptz | |
+| `status` | text | `'pending'` \| `'completed'` |
+| `completed_at` | timestamptz | nullable |
+| `created_at` | timestamptz | |
+| `ai_generated` | boolean | default `false` — set to `true` when AI generates the checkpoint |
 
-### `task_templates` table
-- `id` (uuid, primary key)
-- `task_type` (text)
-- `checkpoint_sequence` (jsonb) - Array of checkpoint definitions
+### `task_templates` *(fallback only — do not delete)*
+| Column | Type | Notes |
+|---|---|---|
+| `id` | uuid | primary key |
+| `task_type` | text | |
+| `checkpoint_sequence` | jsonb | Array of checkpoint definitions |
 
-**Example template:**
-```json
-[
-  {"type": "outline", "percentage_of_time": 0.2},
-  {"type": "first_draft", "percentage_of_time": 0.5},
-  {"type": "review", "percentage_of_time": 0.8},
-  {"type": "final_draft", "percentage_of_time": 0.95}
-]
-```
+**No cascade deletes** — the app manually deletes checkpoints before the parent task.
+**No RLS** — prototype, open database. Auth is a planned future feature.
+
+---
 
 ## Project Structure 📁
 
 ```
 src/
+├── App.jsx
+├── index.css                  # Full design system — source of truth for all styles
+├── supabaseClient.js
 ├── pages/
-│   ├── TaskListPage.jsx      # Home page with all tasks
-│   └── TaskDetailPage.jsx    # Individual task view with checkpoints
-├── CreateTask.jsx             # Form for creating new tasks
-├── designSystem.js            # Reusable design tokens (colors, buttons, etc.)
-├── supabaseClient.js          # Database connection setup
-├── App.jsx                    # Main app with routing
-└── index.css                  # Global styles + mobile responsiveness
+│   ├── TaskListPage.jsx       # Home — task list, grouping, urgency sections
+│   └── TaskDetailPage.jsx     # Individual task — checkpoints, undo, progress
+├── components/
+│   ├── CreateTask.jsx         # Task creation form with AI integration
+│   └── DeleteConfirmModal.jsx # Confirmation modal for task deletion
+├── hooks/
+│   ├── useReveal.js           # Intersection Observer scroll-reveal hook
+│   └── useTheme.js            # Dark/light mode hook with anti-FOUC
+└── utils/
+    ├── checkpointHelpers.js   # Status logic (getCheckpointStatus, etc.)
+    └── generateCheckpoints.js # NVIDIA NIM AI call with fallback logic
+
+vite.config.js                 # Dev proxy: /nvidia-api → NVIDIA NIM endpoint
 ```
+
+---
 
 ## What's Still Missing 🚧
 
-- **AI Integration**: The "AI-Powered" part is coming soon (currently it's just template-based)
-- **User Authentication**: Right now anyone can see/edit everything (not ideal for production)
-- **Notifications**: Email/push reminders when deadlines approach
-- **Analytics**: Track your productivity patterns over time
-- **Gamification**: Points, streaks, achievements (because who doesn't like fake internet points?)
+- **User Authentication** — Supabase Auth + RLS (right now it's an open prototype)
+- **Edit Task** — Tasks can be created and deleted but not edited
+- **Email Notifications** — Reminders when deadlines approach
+- **Analytics Dashboard** — Track productivity patterns over time
+- **Gamification** — Points, streaks, achievements
+
+---
 
 ## Known Issues 🐛
 
-- If you create a task with a deadline in the past, weird things happen (don't do that)
-- The undo timer doesn't persist if you refresh the page (working on it)
-- No data validation on the backend yet (trust me, it's on the list)
+- Undo timer doesn't survive a page refresh
+- Failed task deletions don't show a user-visible error on the list page
+- Very short deadlines (< 24h) can produce edge-case checkpoint timings
+- Backend has no data validation yet
+
+---
 
 ## Why This Matters (For My Thesis)
 
-This project explores how breaking down large tasks into smaller, time-bound checkpoints can improve student accountability and reduce procrastination. The system enforces a structured approach to task completion while maintaining flexibility for different task types.
+This project explores how AI-assisted task decomposition and time-bound checkpoints can improve student accountability and reduce procrastination. The system enforces a structured approach to task completion while remaining flexible across different task types (essays, problem sets, exam prep).
 
-Key research questions:
-1. Does automated task breakdown reduce procrastination?
-2. Can visual progress tracking improve task completion rates?
-3. What's the optimal checkpoint spacing for different task types?
+**Key research questions:**
+1. Does automated, AI-generated task breakdown reduce procrastination compared to manual planning?
+2. Can visual progress tracking and urgency cues improve checkpoint completion rates?
+3. What is the optimal checkpoint spacing for different academic task types?
+
+---
 
 ## Contact
 
@@ -150,5 +198,5 @@ If you're a supervisor reading this and have questions (or found bugs), feel fre
 
 ---
 
-**Last Updated**: February 2026  
-**Status**: Demo/Prototype  
+**Last Updated**: March 2026
+**Status**: Demo / Prototype — AI integration complete, auth not yet implemented

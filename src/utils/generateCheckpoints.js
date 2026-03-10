@@ -116,13 +116,21 @@ Rules:
       return null
     }
 
-    // Normalise — enforce status:'pending' and ensure checkpoint_number exists
-    return parsed.map((cp, i) => ({
-      checkpoint_type:   cp.checkpoint_type,
-      checkpoint_number: cp.checkpoint_number ?? i + 1,
-      due_date:          cp.due_date,
-      status:            'pending',
-    }))
+    // Normalise — enforce status:'pending', ensure checkpoint_number exists,
+    // and fix the time to 17:00 (5 PM) on the AI-chosen date.
+    // The AI reliably picks correct dates but always repeats the same time of
+    // day — we strip that and use a clean, consistent 5 PM deadline instead.
+    return parsed.map((cp, i) => {
+      const aiDate = new Date(cp.due_date)
+      // Keep the AI's date (year / month / day), set time to 17:00 local time
+      aiDate.setHours(17, 0, 0, 0)
+      return {
+        checkpoint_type:   cp.checkpoint_type,
+        checkpoint_number: cp.checkpoint_number ?? i + 1,
+        due_date:          aiDate.toISOString(),
+        status:            'pending',
+      }
+    })
   } catch (err) {
     console.warn('[generateCheckpoints] NVIDIA call failed — falling back to templates:', err.message)
     return null
