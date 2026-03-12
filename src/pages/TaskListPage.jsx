@@ -235,6 +235,9 @@ function TaskListPage() {
   const [showDeleteConfirm, setShowDelete]= useState(false)
   const [taskToDelete, setTaskToDelete]   = useState(null)
   const [error, setError]                 = useState(null)
+  const [formIsDirty, setFormDirty]       = useState(false)   // true once user edits any field
+  const [showCancelConfirm, setCancelConfirm] = useState(false) // discard-form popup
+  const [isClosing, setIsClosing]         = useState(false)    // true during dismissal animation
 
   // ── Connection check ────────────────────────────────────────────────────────
   useEffect(() => {
@@ -255,11 +258,38 @@ function TaskListPage() {
   // ── Close modal on Escape key ───────────────────────────────────────────────
   useEffect(() => {
     function onKeyDown(e) {
-      if (e.key === 'Escape' && showCreateForm) setShowCreate(false)
+      if (e.key !== 'Escape') return
+      if (showCancelConfirm) { setCancelConfirm(false); return }      // Esc dismisses confirm → back to form
+      if (showCreateForm && !isClosing) {
+        if (formIsDirty) setCancelConfirm(true)
+        else executeClose()
+      }
     }
     document.addEventListener('keydown', onKeyDown)
     return () => document.removeEventListener('keydown', onKeyDown)
-  }, [showCreateForm])
+  }, [showCreateForm, formIsDirty, showCancelConfirm])
+
+  // ── Guard close — show confirm if form has been touched ─────────────────────
+  function executeClose() {
+    setIsClosing(true)
+    setTimeout(() => {
+      setShowCreate(false)
+      setIsClosing(false)
+      setFormDirty(false)
+      setCancelConfirm(false)
+    }, 300) // matches CSS animación duration
+  }
+
+  function handleRequestClose() {
+    if (isClosing) return
+    if (formIsDirty) setCancelConfirm(true)
+    else             executeClose()
+  }
+
+  function handleConfirmCancel() {
+    setCancelConfirm(false)
+    executeClose()
+  }
 
   // -- Fetch (stable useCallback -- no [activeTab] dependency)
   // Fetches ALL tasks. Tab filtering is done client-side at render time so
@@ -311,7 +341,7 @@ function TaskListPage() {
 
   function handleTaskCreated() {
     fetchTasks()
-    setShowCreate(false)
+    executeClose()
   }
 
   function handleDeleteTask(task) {
@@ -443,25 +473,78 @@ function TaskListPage() {
       {/* ── Create Task Modal ───────────────────────────────────────────────────
            position:fixed lifts it above all content.
            Closes on: backdrop click · Escape key · × button.
+           If form is dirty, backdrop/× shows a discard-confirm popup instead.
           ─────────────────────────────────────────────────────────────────── */}
       {showCreateForm && (
         <div
-          className="modal-overlay"
+          className={`modal-overlay ${isClosing ? 'closing' : ''}`}
           role="dialog"
           aria-modal="true"
           aria-label="Create new task"
-          onClick={(e) => { if (e.target === e.currentTarget) setShowCreate(false) }}
+          onClick={(e) => { if (e.target === e.currentTarget) handleRequestClose() }}
         >
-          <div className="modal-panel glass">
+          <div className={`modal-panel glass ${isClosing ? 'closing' : ''}`}>
             <button
               className="modal-close-btn"
-              onClick={() => setShowCreate(false)}
+              onClick={handleRequestClose}
               aria-label="Close"
             >
               ×
             </button>
-            <CreateTask onTaskCreated={handleTaskCreated} />
+            <CreateTask onTaskCreated={handleTaskCreated} onDirtyChange={setFormDirty} />
           </div>
+
+          {/* ── Discard-confirm popup — only when form is dirty ─────────────── */}
+          {showCancelConfirm && (
+            <div
+              onClick={(e) => { if (e.target === e.currentTarget) setCancelConfirm(false) }}
+              style={{
+                position: 'absolute',
+                inset: 0,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                padding: 'var(--s4)',
+                background: 'rgba(4, 4, 12, 0.60)',
+                backdropFilter: 'blur(6px)',
+                WebkitBackdropFilter: 'blur(6px)',
+                zIndex: 10,
+                animation: 'modalBackdropIn 0.2s ease both',
+              }}
+            >
+              <div
+                className="glass"
+                style={{
+                  padding: 'var(--s4) var(--s4) var(--s3)',
+                  borderRadius: 'var(--r-xl)',
+                  maxWidth: '340px',
+                  width: '100%',
+                  textAlign: 'center',
+                  borderTop: '2px solid var(--warning)',
+                  boxShadow: '0 24px 64px rgba(0,0,0,0.5)',
+                  animation: 'modalPanelIn 0.25s cubic-bezier(0.25,0.46,0.45,0.94) both',
+                }}
+              >
+                <p style={{ fontSize: '28px', marginBottom: 'var(--s1)', lineHeight: 1 }}>✋</p>
+                <h3 style={{ fontSize: 'var(--text-lg)', fontWeight: 700, marginBottom: 'var(--s1)', color: 'var(--text)' }}>
+                  Discard this form?
+                </h3>
+                <p style={{ fontSize: 'var(--text-sm)', color: 'var(--text-2)', marginBottom: 'var(--s3)', maxWidth: 'none' }}>
+                  You've started filling in a task. Leaving now will lose everything you've typed.
+                </p>
+                <button
+                  className="btn-danger"
+                  onClick={handleConfirmCancel}
+                  style={{ width: '100%', marginBottom: 'var(--s2)' }}
+                >
+                  Yes, discard form
+                </button>
+                <p style={{ fontSize: 'var(--text-xs)', color: 'var(--text-3)', margin: 0 }}>
+                  Click the dim area to keep editing
+                </p>
+              </div>
+            </div>
+          )}
         </div>
       )}
 

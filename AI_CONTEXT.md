@@ -134,6 +134,10 @@ stream:      false
 
 **Undo system:** 10s countdown toast → locks out after expiry → timer in `useRef`
 
+**Modals:**
+- Opening and closing animations (300ms–350ms duration)
+- Discard guard: if a user touches a form but tries to close it, a confirmation popup appears to prevent data loss.
+
 **Task reconciliation:** On fetch, if all checkpoints are done but `task.status` is `'active'` → updates DB to `'completed'`
 
 **`adjustToWorkingHours(rawDate, deadline, spanMs)`** in `CreateTask.jsx`:
