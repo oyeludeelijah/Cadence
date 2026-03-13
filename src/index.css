@@ -678,11 +678,6 @@ input, select, textarea {
   to   { opacity: 1; }
 }
 
-@keyframes modalBackdropOut {
-  from { opacity: 1; }
-  to   { opacity: 0; }
-}
-
 @keyframes modalPanelIn {
   from {
     opacity: 0;
@@ -691,17 +686,6 @@ input, select, textarea {
   to {
     opacity: 1;
     transform: translateY(0) scale(1);
-  }
-}
-
-@keyframes modalPanelOut {
-  from {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-  to {
-    opacity: 0;
-    transform: translateY(20px) scale(0.98);
   }
 }
 
@@ -720,9 +704,6 @@ input, select, textarea {
   animation: modalBackdropIn var(--dur-base) var(--ease-out) both;
   overflow-y: auto;            /* lets tall forms scroll on small screens */
 }
-.modal-overlay.closing {
-  animation: modalBackdropOut 0.3s var(--ease-out) both;
-}
 
 /* Panel */
 .modal-panel {
@@ -739,9 +720,6 @@ input, select, textarea {
   box-shadow:
     0 32px 80px rgba(0, 0, 0, 0.6),
     0 0 0 1px rgba(255, 255, 255, 0.04);
-}
-.modal-panel.closing {
-  animation: modalPanelOut 0.25s var(--ease-in) both;
 }
 
 /* Close button */
