@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { supabase } from '../supabaseClient'
 import { generateCheckpoints } from '../utils/generateCheckpoints'
 
@@ -8,7 +8,7 @@ const TASK_TYPE_OPTIONS = [
   { value: 'exam_prep',   label: 'Exam Prep' },
 ]
 
-function CreateTask({ onTaskCreated }) {
+function CreateTask({ onTaskCreated, onIsDirtyChange }) {
   const [form, setForm] = useState({
     title:    '',
     taskType: 'essay',
@@ -18,6 +18,12 @@ function CreateTask({ onTaskCreated }) {
   const [loading, setLoading]   = useState(false)
   const [aiActive, setAiActive] = useState(false)  // true while AI (NVIDIA NIM) is generating
   const [message, setMessage]   = useState(null)   // { type: 'success'|'error', text }
+
+  // ─── Dirty Check — notify parent if form has content ───────────────────────
+  useEffect(() => {
+    const isDirty = form.title.trim() !== '' || form.notes.trim() !== '' || form.dueDate !== ''
+    if (onIsDirtyChange) onIsDirtyChange(isDirty)
+  }, [form, onIsDirtyChange])
 
   const handleChange = (e) => {
     const { name, value } = e.target

@@ -21,7 +21,8 @@ Helps students break large academic tasks (essays, problem sets, exam prep) into
 
 ## File structure
 
-```
+api/
+└── nvidia.js                  # Vercel serverless proxy for production AI
 src/
 ├── App.jsx
 ├── index.css                  # Full design system — source of truth
@@ -39,9 +40,10 @@ src/
     ├── checkpointHelpers.js   # getCheckpointStatus(), getOverdueText(), getTimeUntilDue()
     └── generateCheckpoints.js # AI checkpoint generation via NVIDIA NIM — COMPLETE
 
-vite.config.js                 # Has proxy config for NVIDIA NIM (see AI section)
-.env                           # VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY, VITE_NVIDIA_API_KEY
-```
+vite.config.js                 # Has proxy config for local dev AI
+vercel.json                    # Rewrite rule for production AI proxy
+.env                           # VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY (Local dev only: VITE_NVIDIA_API_KEY)
+
 
 ⚠️ `DESIGN_SYSTEM.md` is stale — ignore it. Source of truth is `src/index.css`
 
@@ -72,15 +74,16 @@ Replaces `task_templates` as the checkpoint source. When a user creates a task, 
 **Endpoint:** `https://integrate.api.nvidia.com/v1/chat/completions` (OpenAI-compatible)
 **API key:** stored in `.env` as `VITE_NVIDIA_API_KEY` (starts with `nvapi-`)
 
-**CORS solution:** NVIDIA NIM does not allow direct browser-to-API requests. A Vite dev-server proxy is configured in `vite.config.js`:
-```js
-'/nvidia-api': {
-  target: 'https://integrate.api.nvidia.com/v1',
-  changeOrigin: true,
-  rewrite: (path) => path.replace(/^\/nvidia-api/, ''),
-}
-```
-The fetch call in `generateCheckpoints.js` uses `/nvidia-api/chat/completions` — the proxy rewrites it server-side so no CORS error occurs.
+**CORS solution:** NVIDIA NIM does not allow direct browser-to-API requests.
+- **Local Development:** A Vite dev-server proxy is configured in `vite.config.js`. The fetch call in `generateCheckpoints.js` uses `/nvidia-api/chat/completions` — the proxy rewrites it to NVIDIA's endpoint.
+- **Production (Vercel):** Since Vite proxies don't exist in production, the app uses a Vercel serverless function (`api/nvidia.js`) as a proxy. A `vercel.json` rewrite rule maps `/nvidia-api/(.*)` to `/api/nvidia`, maintaining the same fetch path used in local development.
+
+**Production URL:** `elijah-fyp.vercel.app` (AI feature confirmed working in production)
+
+**Deployment Requirements:**
+- `api/nvidia.js` must exist as the server-side proxy
+- `vercel.json` must contain the rewrite rule
+- `NVIDIA_API_KEY` must be set in Vercel environment variables (server-side only, no `VITE_` prefix)
 
 **Key file:** `src/utils/generateCheckpoints.js`
 - Exports: `generateCheckpoints(taskTitle, taskType, deadlineDate, notes)`

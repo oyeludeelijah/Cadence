@@ -236,6 +236,11 @@ function TaskListPage() {
   const [taskToDelete, setTaskToDelete]   = useState(null)
   const [error, setError]                 = useState(null)
 
+  // ─── Modal + Dirty States ──────────────────────────────────────────────────
+  const [isCreateDirty, setIsCreateDirty] = useState(false)
+  const [isModalClosing, setIsModalClosing] = useState(false)
+  const [showDiscardConfirm, setShowDiscardConfirm] = useState(false)
+
   // ── Connection check ────────────────────────────────────────────────────────
   useEffect(() => {
     async function check() {
@@ -252,14 +257,39 @@ function TaskListPage() {
     check()
   }, [])
 
+  const performCloseModal = useCallback(() => {
+    setShowDiscardConfirm(false)
+    setIsModalClosing(true)
+    // Matches var(--dur-fast) in CSS
+    setTimeout(() => {
+      setShowCreate(false)
+      setIsModalClosing(false)
+      setIsCreateDirty(false)
+    }, 250)
+  }, [])
+
+  const handleCloseAttempt = useCallback(() => {
+    if (isCreateDirty) {
+      setShowDiscardConfirm(true)
+    } else {
+      performCloseModal()
+    }
+  }, [isCreateDirty, performCloseModal])
+
   // ── Close modal on Escape key ───────────────────────────────────────────────
   useEffect(() => {
     function onKeyDown(e) {
-      if (e.key === 'Escape' && showCreateForm) setShowCreate(false)
+      if (e.key === 'Escape') {
+        if (showDiscardConfirm) {
+          setShowDiscardConfirm(false)
+        } else if (showCreateForm) {
+          handleCloseAttempt()
+        }
+      }
     }
     document.addEventListener('keydown', onKeyDown)
     return () => document.removeEventListener('keydown', onKeyDown)
-  }, [showCreateForm])
+  }, [showCreateForm, showDiscardConfirm, handleCloseAttempt])
 
   // -- Fetch (stable useCallback -- no [activeTab] dependency)
   // Fetches ALL tasks. Tab filtering is done client-side at render time so
@@ -311,7 +341,7 @@ function TaskListPage() {
 
   function handleTaskCreated() {
     fetchTasks()
-    setShowCreate(false)
+    performCloseModal() // use animated close for consistency
   }
 
   function handleDeleteTask(task) {
@@ -354,6 +384,29 @@ function TaskListPage() {
   return (
     <div style={{ maxWidth: 'var(--container-max)', margin: '0 auto' }}>
       <div className="mesh-gradient" />
+
+      {/* ── Discard Confirm Popup ── */}
+      {showDiscardConfirm && (
+        <div 
+          className="discard-confirm-overlay"
+          onClick={(e) => { if (e.target === e.currentTarget) setShowDiscardConfirm(false) }}
+        >
+          <div className="discard-confirm-panel">
+            <h4>Discard Changes?</h4>
+            <p>You have unsaved task details. Are you sure you want to exit?</p>
+            <button 
+              className="btn-danger" 
+              style={{ width: '100%', padding: '10px' }}
+              onClick={performCloseModal}
+            >
+              Yes, Discard All
+            </button>
+            <div className="discard-confirm-footer">
+              Click anywhere outside to keep editing
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ── Delete Modal ───────────────────────────────────────────────────── */}
       {showDeleteConfirm && taskToDelete && (
@@ -446,21 +499,21 @@ function TaskListPage() {
           ─────────────────────────────────────────────────────────────────── */}
       {showCreateForm && (
         <div
-          className="modal-overlay"
+          className={`modal-overlay ${isModalClosing ? 'closing' : ''}`}
           role="dialog"
           aria-modal="true"
           aria-label="Create new task"
-          onClick={(e) => { if (e.target === e.currentTarget) setShowCreate(false) }}
+          onClick={(e) => { if (e.target === e.currentTarget) handleCloseAttempt() }}
         >
-          <div className="modal-panel glass">
+          <div className={`modal-panel glass ${isModalClosing ? 'closing' : ''}`}>
             <button
               className="modal-close-btn"
-              onClick={() => setShowCreate(false)}
+              onClick={handleCloseAttempt}
               aria-label="Close"
             >
               ×
             </button>
-            <CreateTask onTaskCreated={handleTaskCreated} />
+            <CreateTask onTaskCreated={handleTaskCreated} onIsDirtyChange={setIsCreateDirty} />
           </div>
         </div>
       )}
