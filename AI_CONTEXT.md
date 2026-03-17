@@ -60,6 +60,10 @@ vercel.json                    # Rewrite rule for production AI proxy
 - No auth — anon key used directly
 - Task list uses joined query: `select('*, checkpoints(*)')`
 
+**Check Constraints (applied directly in Supabase SQL editor):**
+- `tasks`: title not empty, `task_type` must be `'essay'|'problem_set'|'exam_prep'`, `status` must be `'active'|'completed'`
+- `checkpoints`: `checkpoint_number > 0`, `status` must be `'pending'|'completed'`, `checkpoint_type` not empty
+
 ---
 
 ## AI feature — COMPLETE AND WORKING
@@ -133,14 +137,18 @@ stream:      false
 - `urgent` → amber (< 24h until due)
 - `overdue` → red (past due, not complete)
 
-**Undo system:** 10s countdown toast → locks out after expiry → timer in `useRef`
+**Undo system:** 10s countdown toast → locks out after expiry → timer in `useRef`. Persisted to `sessionStorage` (keyed by task ID) so it survives page refreshes.
 
 **Task reconciliation:** On fetch, if all checkpoints are done but `task.status` is `'active'` → updates DB to `'completed'`
 
 **`adjustToWorkingHours(rawDate, deadline, spanMs)`** in `CreateTask.jsx`:
-- Clamps checkpoint times to 9 AM–9 PM
-- Skips adjustment entirely if deadline span < 24h (to avoid pushing checkpoints past the deadline on tight windows)
-- Safety net: never adjusts past the final deadline
+- Clamps checkpoint times to 9 AM–9 PM.
+- Skips/relaxes adjustment entirely if deadline span < 24h (to avoid pushing checkpoints past the deadline).
+- Safety net: ensures adjusted time is in the future and strictly before the final deadline; otherwise defaults to safe proportional fallback.
+
+**AI Normalization** in `generateCheckpoints.js`:
+- For long-term tasks (> 36h), forces 5 PM consistency.
+- For short-term tasks (< 36h), trusts the AI's proportional timing to prevent "impossible" deadlines.
 
 ---
 
@@ -152,9 +160,7 @@ Task creation (AI + fallback), urgency grouping, tab switching, checkpoint toggl
 
 ## Known bugs — do not make these worse
 
-- Undo timer doesn't survive page refresh
-- Failed deletes don't show user-visible error on the list page
-- Very short deadlines produce odd checkpoint times (partially mitigated by `adjustToWorkingHours`)
+- Undo timer might drift slightly (ms level) after a refresh due to `Math.ceil` rounding, but functionally correct.
 
 ---
 
