@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { supabase } from '../supabaseClient'
 import { useReveal } from '../hooks/useReveal'
 import DeleteConfirmModal from '../components/DeleteConfirmModal'
+import EditTask from '../components/EditTask'
 import {
   getCheckpointStatus,
   getOverdueText,
@@ -171,6 +172,7 @@ function TaskDetailPage() {
   const [toast, setToast]                   = useState(null)   // { type, text, isUndo }
   const [undoableCheckpoint, setUndoable]   = useState(null)
   const [showDeleteConfirm, setShowDelete]  = useState(false)
+  const [showEditModal, setShowEdit]        = useState(false)
   const [error, setError]                   = useState(null)
 
   // useRef for timers — avoids extra re-renders from useState
@@ -418,10 +420,40 @@ function TaskDetailPage() {
         />
       )}
 
+      {/* ── Edit modal ────────────────────────────────────────────────────────── */}
+      {showEditModal && (
+        <>
+          {/* Backdrop */}
+          <div className="modal-overlay" onClick={() => setShowEdit(false)} style={{ alignItems: 'center' }} />
+
+          {/* Panel */}
+          <div
+            style={{
+              position: 'fixed',
+              top: '50%',
+              left: '50%',
+              transform: 'translate(-50%, -50%)',
+              zIndex: 9999,
+              width: '90%',
+              maxWidth: '520px',
+              maxHeight: '90vh',
+              overflowY: 'auto',
+            }}
+          >
+            <EditTask
+              task={task}
+              onSaved={() => { setShowEdit(false); fetchTaskDetails() }}
+              onCancel={() => setShowEdit(false)}
+            />
+          </div>
+        </>
+      )}
+
       {/* ── Nav bar ───────────────────────────────────────────────────────────── */}
       <div className="mobile-stack" style={{ display: 'flex', gap: 'var(--s2)', marginBottom: 'var(--s5)' }}>
         <button className="btn-secondary" onClick={() => navigate('/')}>← Back to Tasks</button>
         <div style={{ flex: 1 }} />
+        <button className="btn-secondary" onClick={() => setShowEdit(true)}>✏️ Edit</button>
         <button className="btn-danger" onClick={() => setShowDelete(true)}>🗑 Delete Task</button>
       </div>
 

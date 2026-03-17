@@ -32,11 +32,16 @@ A color-coded system that tells you exactly where you stand:
 - 🔴 **Overdue** — Past due and not complete
 
 ### 4. **Accountability Features**
-- **10-Second Undo Window**: Marked something complete by accident? You have 10 seconds to undo before it locks in permanently
+- **10-Second Undo Window**: Marked something complete by accident? You have 10 seconds to undo before it locks in permanently. This timer **survives page refreshes** via `sessionStorage`.
 - **Visual Progress Tracking**: Progress bar showing completed vs. remaining checkpoints per task
 - **Overdue Warnings**: Prominent banners you can't ignore
 
-### 5. **User Experience**
+### 5. **User Authentication & Security**
+- **Secure Sign In/Up**: Full authentication system using Supabase Auth.
+- **Row-Level Security (RLS)**: Users can only see and modify their own tasks and checkpoints.
+- **Data Integrity**: SQL check constraints ensure valid task types, statuses, and non-empty titles.
+
+### 6. **Refined User Experience**
 - Loading spinners and skeleton states for all async operations
 - Friendly, readable error messages (not cryptic codes)
 - Mobile responsive (768px breakpoint)
@@ -133,7 +138,7 @@ You'll need these tables in Supabase:
 | `checkpoint_sequence` | jsonb | Array of checkpoint definitions |
 
 **No cascade deletes** — the app manually deletes checkpoints before the parent task.
-**No RLS** — prototype, open database. Auth is a planned future feature.
+**RLS is enabled** — users can only see and manage their own data. Auth uses Supabase email/password.
 
 ---
 
@@ -164,7 +169,6 @@ vite.config.js                 # Dev proxy: /nvidia-api → NVIDIA NIM endpoint
 
 ## What's Still Missing 🚧
 
-- **User Authentication** — Supabase Auth + RLS (right now it's an open prototype)
 - **Edit Task** — Tasks can be created and deleted but not edited
 - **Email Notifications** — Reminders when deadlines approach
 - **Analytics Dashboard** — Track productivity patterns over time
@@ -174,10 +178,8 @@ vite.config.js                 # Dev proxy: /nvidia-api → NVIDIA NIM endpoint
 
 ## Known Issues 🐛
 
-- Undo timer doesn't survive a page refresh
-- Failed task deletions don't show a user-visible error on the list page
-- Very short deadlines (< 24h) can produce edge-case checkpoint timings
-- Backend has no data validation yet
+- Undo timer might drift slightly (ms level) after a refresh due to rounding, but it is functionally correct.
+- Very short deadlines (< 24h) can produce edge-case checkpoint timings.
 
 ---
 
@@ -199,4 +201,4 @@ If you're a supervisor reading this and have questions (or found bugs), feel fre
 ---
 
 **Last Updated**: March 2026
-**Status**: Demo / Prototype — AI integration complete, auth not yet implemented
+**Status**: Demo / Prototype — AI integration and User Authentication complete.
