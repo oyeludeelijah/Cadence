@@ -9,6 +9,9 @@ import {
   getTimeUntilDue,
 } from '../utils/checkpointHelpers'
 
+// Storage key for persisting the undo window across page refreshes
+const undoStorageKey = (taskId) => `undo_checkpoint_${taskId}`
+
 // ─── Checkpoint Card ──────────────────────────────────────────────────────────
 function CheckpointCard({ checkpoint, isCurrent, onToggle, checkpointLoading }) {
   const ref = useReveal(0.1)
@@ -182,6 +185,51 @@ function TaskDetailPage() {
     }
   }, [])
 
+  // ── Restore undo state after page refresh ───────────────────────────────────
+  useEffect(() => {
+    const stored = sessionStorage.getItem(undoStorageKey(id))
+    if (!stored) return
+
+    let parsed
+    try { parsed = JSON.parse(stored) } catch { return }
+
+    const { checkpointId, expiresAt } = parsed
+    const remaining = expiresAt - Date.now()
+
+    if (remaining <= 0) {
+      sessionStorage.removeItem(undoStorageKey(id))
+      return
+    }
+
+    // Restore the undo window with the accurate remaining time
+    setUndoable(checkpointId)
+    setToast({ text: `✅ Checkpoint completed! Tap to undo (${Math.ceil(remaining / 1000)}s)`, type: 'undo', isUndo: true })
+
+    countdownRef.current = setInterval(() => {
+      const timeLeft = Math.ceil((expiresAt - Date.now()) / 1000)
+      if (timeLeft > 0) {
+        setToast({ text: `✅ Checkpoint completed! Tap to undo (${timeLeft}s)`, type: 'undo', isUndo: true })
+      } else {
+        clearInterval(countdownRef.current)
+      }
+    }, 1000)
+
+    undoTimeoutRef.current = setTimeout(async () => {
+      clearInterval(countdownRef.current)
+      sessionStorage.removeItem(undoStorageKey(id))
+      const { data } = await supabase
+        .from('checkpoints').select('id')
+        .eq('task_id', id).eq('status', 'pending').limit(1)
+      setToast({
+        text: data?.length > 0 ? '✅ Checkpoint locked in. Next one is ready.' : '🎉 All checkpoints completed!',
+        type: 'success',
+        isUndo: false,
+      })
+      setTimeout(() => setToast(null), 3500)
+      setUndoable(null)
+    }, remaining)
+  }, [id]) // eslint-disable-line react-hooks/exhaustive-deps
+
   // ── Toast helper ────────────────────────────────────────────────────────────
   const showToast = useCallback((text, type = 'success', isUndo = false) => {
     setToast({ text, type, isUndo })
@@ -238,14 +286,18 @@ function TaskDetailPage() {
         clearTimeout(undoTimeoutRef.current)
         clearInterval(countdownRef.current)
 
+        // Persist undo window so it survives a page refresh
+        const expiresAt = Date.now() + 10000
+        sessionStorage.setItem(undoStorageKey(id), JSON.stringify({ checkpointId, expiresAt }))
+
         setUndoable(checkpointId)
         setToast({ text: '✅ Checkpoint completed! Tap to undo (10s)', type: 'undo', isUndo: true })
 
-        let secs = 10
+        // Use absolute expiresAt so the counter stays accurate if the component re-renders
         countdownRef.current = setInterval(() => {
-          secs--
-          if (secs > 0) {
-            setToast({ text: `✅ Checkpoint completed! Tap to undo (${secs}s)`, type: 'undo', isUndo: true })
+          const timeLeft = Math.ceil((expiresAt - Date.now()) / 1000)
+          if (timeLeft > 0) {
+            setToast({ text: `✅ Checkpoint completed! Tap to undo (${timeLeft}s)`, type: 'undo', isUndo: true })
           } else {
             clearInterval(countdownRef.current)
           }
@@ -253,6 +305,7 @@ function TaskDetailPage() {
 
         undoTimeoutRef.current = setTimeout(async () => {
           clearInterval(countdownRef.current)
+          sessionStorage.removeItem(undoStorageKey(id))
           const { data } = await supabase
             .from('checkpoints').select('id')
             .eq('task_id', id).eq('status', 'pending').limit(1)
@@ -266,10 +319,11 @@ function TaskDetailPage() {
         }, 10000)
 
       } else {
-        // Undo: clear all timers
+        // Undo: clear all timers and remove persisted state
         clearTimeout(undoTimeoutRef.current)
         clearInterval(countdownRef.current)
         undoTimeoutRef.current = null
+        sessionStorage.removeItem(undoStorageKey(id))
         setUndoable(null)
         showToast('↩ Checkpoint marked as pending', 'success')
       }

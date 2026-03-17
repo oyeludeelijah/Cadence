@@ -345,12 +345,14 @@ function TaskListPage() {
   }
 
   function handleDeleteTask(task) {
+    setError(null) // Clear any old errors
     setTaskToDelete(task)
     setShowDelete(true)
   }
 
   async function confirmDelete() {
     if (!taskToDelete) return
+    setError(null)
     setShowDelete(false)
     setLoading(true)
     try {
@@ -362,6 +364,7 @@ function TaskListPage() {
       if (tErr) throw tErr
       await fetchTasks()
     } catch (err) {
+      setError(`❌ Could not delete "${taskToDelete.title}". Please try again.`)
       setLoading(false)
     } finally {
       setTaskToDelete(null)
@@ -414,7 +417,7 @@ function TaskListPage() {
           taskTitle={taskToDelete.title}
           loading={loading}
           onConfirm={confirmDelete}
-          onCancel={() => setShowDelete(false)}
+          onCancel={() => { setShowDelete(false); setError(null); }}
         />
       )}
 

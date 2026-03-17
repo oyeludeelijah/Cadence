@@ -116,14 +116,25 @@ Rules:
       return null
     }
 
-    // Normalise — enforce status:'pending', ensure checkpoint_number exists,
-    // and fix the time to 17:00 (5 PM) on the AI-chosen date.
-    // The AI reliably picks correct dates but always repeats the same time of
-    // day — we strip that and use a clean, consistent 5 PM deadline instead.
+    // Normalise — enforce status:'pending', ensure checkpoint_number exists.
+    // RULE: For major tasks (> 36h away), we fix the time to 17:00 (5 PM) for consistency.
+    // For short-term tasks (< 36h), we trust the AI's proportional timing to avoid 
+    // pushing checkpoints past the deadline or too close to "now".
+    const spanMs = deadlineDate.getTime() - new Date().getTime()
     return parsed.map((cp, i) => {
       const aiDate = new Date(cp.due_date)
-      // Keep the AI's date (year / month / day), set time to 17:00 local time
-      aiDate.setHours(17, 0, 0, 0)
+      
+      if (spanMs > (36 * 60 * 60 * 1000)) {
+        // Long-term task: Fix to 5 PM local time
+        aiDate.setHours(17, 0, 0, 0)
+      } else {
+        // Tight deadline: Trust the AI's proportional timing (it knows "now")
+        // Just ensure it's not in the past
+        if (aiDate < new Date()) {
+          aiDate.setTime(new Date().getTime() + (spanMs / (parsed.length + 1)))
+        }
+      }
+
       return {
         checkpoint_type:   cp.checkpoint_type,
         checkpoint_number: cp.checkpoint_number ?? i + 1,

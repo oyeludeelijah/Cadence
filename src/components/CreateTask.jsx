@@ -46,17 +46,29 @@ function CreateTask({ onTaskCreated, onIsDirtyChange }) {
    */
   function adjustToWorkingHours(rawDate, deadline, spanMs) {
     const TWENTY_FOUR_HOURS = 24 * 60 * 60 * 1000
+    const now = new Date()
 
-    // Rule 1: skip adjustment for tight deadlines
-    if (spanMs < TWENTY_FOUR_HOURS) return rawDate
+    // Rule 1: skip adjustment for tight deadlines (< 24h)
+    // proportional timing is more important than "sleep" for emergencies
+    if (spanMs < TWENTY_FOUR_HOURS) {
+      return rawDate > now && rawDate < deadline ? rawDate : new Date(now.getTime() + (deadline - now) / 2)
+    }
 
     const d = new Date(rawDate)
     const h = d.getHours()
-    if (h >= 0 && h < 9)  d.setHours(9,  0, 0, 0)
-    if (h >= 22)           d.setHours(21, 0, 0, 0)
 
-    // Rule 2: safety net — never push past the deadline
-    return d < deadline ? d : rawDate
+    if (h < 9) {
+      d.setHours(9, 0, 0, 0)
+    } else if (h >= 21) {
+      d.setHours(21, 0, 0, 0)
+    }
+
+    // Rule 2: safety net — never push past the deadline or into the past
+    // If adjusted time is invalid, fall back to unadjusted rawDate (if valid)
+    // or else halfway between now and deadline.
+    if (d > now && d < deadline) return d
+    if (rawDate > now && rawDate < deadline) return rawDate
+    return new Date(now.getTime() + (deadline - now) / 2)
   }
 
   const handleSubmit = async (e) => {
