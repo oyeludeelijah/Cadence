@@ -153,9 +153,9 @@ function TaskCard({ task, onDelete, onNavigate }) {
         )
         return (
           <div className={`alert ${isOverdueCp ? 'alert-danger' : 'alert-warning'}`}>
-            <span>{isOverdueCp ? '⚠️' : '⏰'}</span>
-            <div>
-              <div style={{ fontWeight: 600, marginBottom: '2px' }}>
+            <span style={{ flexShrink: 0 }}>{isOverdueCp ? '⚠️' : '⏰'}</span>
+            <div style={{ minWidth: 0 }}>
+              <div style={{ fontWeight: 600, marginBottom: '2px', wordBreak: 'break-word' }}>
                 {isOverdueCp
                   ? `Overdue by ${getOverdueText(nextCp.due_date)}`
                   : `Due in ${getTimeUntilDue(nextCp.due_date)}`} — <span style={{ textTransform: 'capitalize' }}>{nextCp.checkpoint_type}</span>
@@ -180,9 +180,9 @@ function TaskCard({ task, onDelete, onNavigate }) {
           color: 'var(--text-3)',
           margin: 0,
           overflow: 'hidden',
-          textOverflow: 'ellipsis',
-          whiteSpace: 'nowrap',
-          maxWidth: '100%',
+          display: '-webkit-box',
+          WebkitLineClamp: 2,
+          WebkitBoxOrient: 'vertical',
         }}>
           {task.notes}
         </p>
@@ -213,7 +213,7 @@ function UrgencyGroup({ label, emoji, color, tasks, onDelete, onNavigate }) {
           {tasks.length}
         </span>
       </div>
-      <div style={{ display: 'grid', gap: 'var(--s3)' }}>
+      <div style={{ display: 'grid', gap: 'var(--s3)', gridTemplateColumns: 'minmax(0, 1fr)' }}>
         {/* Pass onNavigate directly — no extra wrapper lambda */}
         {tasks.map(t => (
           <TaskCard key={t.id} task={t} onDelete={onDelete} onNavigate={onNavigate} />
