@@ -24,16 +24,20 @@ Helps students break large academic tasks (essays, problem sets, exam prep) into
 api/
 └── nvidia.js                  # Vercel serverless proxy for production AI
 src/
-├── App.jsx
+├── App.jsx                    # Route guard — shows AuthPage if no session, AppShell+Routes if authenticated
 ├── index.css                  # Full design system — source of truth
 ├── supabaseClient.js
 ├── pages/
+│   ├── AuthPage.jsx           # Sign In / Sign Up page (tab toggle, existing design system classes)
 │   ├── TaskListPage.jsx       # ~560 lines
 │   └── TaskDetailPage.jsx     # ~515 lines
 ├── components/
-│   ├── CreateTask.jsx         # ~280 lines — ACTIVE component
+│   ├── CreateTask.jsx         # ~290 lines — attaches user_id on task insert
+│   ├── AppShell.jsx           # Persistent layout wrapper (sidebar + main)
+│   ├── Sidebar.jsx            # Shows user email + Sign Out button
 │   └── DeleteConfirmModal.jsx # ~91 lines
 ├── hooks/
+│   ├── useAuth.js             # Wraps Supabase session — returns { session, loading, user }
 │   ├── useReveal.js
 │   └── useTheme.js
 └── utils/
@@ -56,8 +60,11 @@ vercel.json                    # Rewrite rule for production AI proxy
 - **task_templates** — `id`, `task_type`, `checkpoint_sequence` (JSONB) — fallback only, do not remove
 
 - No cascade deletes — app manually deletes checkpoints before task
-- No RLS — open database (prototype)
-- No auth — anon key used directly
+- **RLS is enabled** on both `tasks` and `checkpoints` tables
+  - `tasks_owner` policy: `auth.uid() = user_id`
+  - `checkpoints_owner` policy: via parent task's `user_id`
+- Auth uses Supabase email/password (email confirmation disabled for prototype)
+- `tasks` has a `user_id uuid` column referencing `auth.users(id)`
 - Task list uses joined query: `select('*, checkpoints(*)')`
 
 **Check Constraints (applied directly in Supabase SQL editor):**
@@ -154,7 +161,7 @@ stream:      false
 
 ## What's fully working
 
-Task creation (AI + fallback), urgency grouping, tab switching, checkpoint toggle, 10s undo, deletion, progress bars, 4-state status, dark/light mode + anti-FOUC, scroll-reveal, mobile responsive (768px), connection indicator, loading/error states, AI badge on task cards and detail page.
+Task creation (AI + fallback), urgency grouping, tab switching, checkpoint toggle, 10s undo (survives refresh), deletion with user-visible errors, progress bars, 4-state status, dark/light mode + anti-FOUC, scroll-reveal, mobile responsive (768px), connection indicator, loading/error states, AI badge on task cards and detail page, **user authentication (email/password sign-up + sign-in + sign-out)**, **RLS — users only see their own tasks**.
 
 ---
 
@@ -166,7 +173,6 @@ Task creation (AI + fallback), urgency grouping, tab switching, checkpoint toggl
 
 ## Not built yet
 
-- User authentication (Supabase Auth + RLS)
 - Edit task
 - Email notifications
 - Analytics dashboard

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../supabaseClient'
 import { generateCheckpoints } from '../utils/generateCheckpoints'
+import { useAuth } from '../hooks/useAuth'
 
 const TASK_TYPE_OPTIONS = [
   { value: 'essay',       label: 'Essay' },
@@ -9,6 +10,7 @@ const TASK_TYPE_OPTIONS = [
 ]
 
 function CreateTask({ onTaskCreated, onIsDirtyChange }) {
+  const { user } = useAuth()
   const [form, setForm] = useState({
     title:    '',
     taskType: 'essay',
@@ -143,6 +145,7 @@ function CreateTask({ onTaskCreated, onIsDirtyChange }) {
           final_deadline: deadline.toISOString(),
           notes:          form.notes.trim() || null,
           status:         'active',
+          user_id:        user.id,
         })
         .select('id')
         .single()

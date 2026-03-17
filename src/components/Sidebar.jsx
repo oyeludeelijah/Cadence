@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { useTheme } from '../hooks/useTheme'
+import { useAuth }  from '../hooks/useAuth'
+import { supabase } from '../supabaseClient'
 
 // ── SVG Icons (inline — no external dependency) ──────────────────────────────
 const IconTasks     = () => (
@@ -62,6 +64,7 @@ export function Sidebar({ mobileOpen, onMobileClose }) {
   const navigate  = useNavigate()
   const location  = useLocation()
   const { theme, toggle } = useTheme()
+  const { user }  = useAuth()
 
   // Persist collapsed state
   const [collapsed, setCollapsed] = useState(() => {
@@ -178,10 +181,43 @@ export function Sidebar({ mobileOpen, onMobileClose }) {
           </div>
           {!collapsed && (
             <div className="sidebar-user-info">
-              <span className="sidebar-user-name">Student</span>
-              <span className="sidebar-user-sub">No account yet</span>
+              <span className="sidebar-user-name" title={user?.email}>
+                {user?.email?.split('@')[0] ?? 'Student'}
+              </span>
+              <span className="sidebar-user-sub" style={{ fontSize: '10px' }}>
+                {user?.email ?? ''}
+              </span>
             </div>
           )}
+          {/* Sign Out — icon when collapsed, icon + text when expanded */}
+          <button
+            onClick={() => supabase.auth.signOut()}
+            title="Sign out"
+            style={{
+              marginLeft: collapsed ? 0 : 'auto',
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer',
+              color: 'var(--text-3)',
+              padding: '4px',
+              borderRadius: 'var(--r-sm)',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '4px',
+              fontSize: 'var(--text-xs)',
+              flexShrink: 0,
+              transition: 'color 0.2s',
+            }}
+            onMouseEnter={e => e.currentTarget.style.color = 'var(--danger)'}
+            onMouseLeave={e => e.currentTarget.style.color = 'var(--text-3)'}
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+              <polyline points="16 17 21 12 16 7" />
+              <line x1="21" y1="12" x2="9" y2="12" />
+            </svg>
+            {!collapsed && 'Sign out'}
+          </button>
         </div>
 
       </aside>
