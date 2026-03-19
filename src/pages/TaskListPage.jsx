@@ -265,7 +265,7 @@ function TaskListPage() {
       setShowCreate(false)
       setIsModalClosing(false)
       setIsCreateDirty(false)
-    }, 250)
+    }, 180)
   }, [])
 
   const handleCloseAttempt = useCallback(() => {
@@ -502,7 +502,7 @@ function TaskListPage() {
           ─────────────────────────────────────────────────────────────────── */}
       {showCreateForm && (
         <div
-          className={`modal-overlay ${isModalClosing ? 'closing' : ''}`}
+          className={`modal-overlay bottom-sheet ${isModalClosing ? 'closing' : ''}`}
           role="dialog"
           aria-modal="true"
           aria-label="Create new task"

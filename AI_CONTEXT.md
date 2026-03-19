@@ -16,6 +16,7 @@ Helps students break large academic tasks (essays, problem sets, exam prep) into
 - No state management library — pure useState, useEffect, useCallback, useRef
 - JavaScript/JSX throughout
 - **No extra AI packages** — AI calls use plain `fetch` via a Vite proxy (see AI section below)
+- **Supabase Edge Functions + pg_cron** with Resend for hourly automated email reminders
 
 ---
 
@@ -29,10 +30,11 @@ src/
 ├── supabaseClient.js
 ├── pages/
 │   ├── AuthPage.jsx           # Sign In / Sign Up page (tab toggle, existing design system classes)
-│   ├── TaskListPage.jsx       # ~560 lines
-│   └── TaskDetailPage.jsx     # ~515 lines
+│   ├── TaskListPage.jsx       # ~615 lines
+│   └── TaskDetailPage.jsx     # ~600 lines
 ├── components/
 │   ├── CreateTask.jsx         # ~290 lines — attaches user_id on task insert
+│   ├── EditTask.jsx           # ~160 lines — pre-filled edit form (metadata only)
 │   ├── AppShell.jsx           # Persistent layout wrapper (sidebar + main)
 │   ├── Sidebar.jsx            # Shows user email + Sign Out button
 │   └── DeleteConfirmModal.jsx # ~91 lines
@@ -47,7 +49,10 @@ src/
 vite.config.js                 # Has proxy config for local dev AI
 vercel.json                    # Rewrite rule for production AI proxy
 .env                           # VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY (Local dev only: VITE_NVIDIA_API_KEY)
-
+supabase/
+└── functions/
+    └── send-reminders/
+        └── index.ts           # Edge Function pinged via pg_cron hourly to send Resend emails
 
 ⚠️ `DESIGN_SYSTEM.md` is stale — ignore it. Source of truth is `src/index.css`
 
@@ -56,7 +61,7 @@ vercel.json                    # Rewrite rule for production AI proxy
 ## Database
 
 - **tasks** — `id`, `title`, `task_type` ('essay'|'problem_set'|'exam_prep'), `final_deadline`, `notes`, `status` ('active'|'completed'), `created_at`
-- **checkpoints** — `id`, `task_id` (FK), `checkpoint_number`, `checkpoint_type`, `due_date`, `status` ('pending'|'completed'), `completed_at`, `created_at`, `ai_generated` (boolean, default false)
+- **checkpoints** — `id`, `task_id` (FK), `checkpoint_number`, `checkpoint_type`, `due_date`, `status` ('pending'|'completed'), `completed_at`, `created_at`, `ai_generated` (boolean, default false), `reminder_sent_urgent` (boolean, default false), `reminder_sent_overdue` (boolean, default false)
 - **task_templates** — `id`, `task_type`, `checkpoint_sequence` (JSONB) — fallback only, do not remove
 
 - No cascade deletes — app manually deletes checkpoints before task
@@ -70,6 +75,10 @@ vercel.json                    # Rewrite rule for production AI proxy
 **Check Constraints (applied directly in Supabase SQL editor):**
 - `tasks`: title not empty, `task_type` must be `'essay'|'problem_set'|'exam_prep'`, `status` must be `'active'|'completed'`
 - `checkpoints`: `checkpoint_number > 0`, `status` must be `'pending'|'completed'`, `checkpoint_type` not empty
+
+**Custom SQL / Ext:**
+- `pg_cron` enabled for hourly jobs
+- `get_pending_reminders(time_window_iso TEXT)`: An RPC using `SECURITY DEFINER` to safely perform cross-schema joins (`public.checkpoints` -> `auth.users`) to get emails securely for edge functions.
 
 ---
 
@@ -161,7 +170,7 @@ stream:      false
 
 ## What's fully working
 
-Task creation (AI + fallback), urgency grouping, tab switching, checkpoint toggle, 10s undo (survives refresh), deletion with user-visible errors, progress bars, 4-state status, dark/light mode + anti-FOUC, scroll-reveal, mobile responsive (768px), connection indicator, loading/error states, AI badge on task cards and detail page, **user authentication (email/password sign-up + sign-in + sign-out)**, **RLS — users only see their own tasks**.
+Task creation (AI + fallback), **Edit task (metadata updates — Confirmed ✅)**, urgency grouping, tab switching, checkpoint toggle, 10s undo (survives refresh), deletion with user-visible errors, progress bars, 4-state status, dark/light mode + anti-FOUC, scroll-reveal, mobile responsive (768px), connection indicator, loading/error states, AI badge on task cards and detail page, **user authentication (email/password sign-up + sign-in + sign-out)**, **RLS — users only see their own tasks**, **Automated Email Notifications (Supabase Edge function via pg_cron + Resend)** with anti-spam database tracking.
 
 ---
 
@@ -173,8 +182,6 @@ Task creation (AI + fallback), urgency grouping, tab switching, checkpoint toggl
 
 ## Not built yet
 
-- Edit task
-- Email notifications
 - Analytics dashboard
 - Gamification
 

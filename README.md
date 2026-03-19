@@ -31,23 +31,32 @@ A color-coded system that tells you exactly where you stand:
 - 🟠 **Urgent** — Less than 24 hours left
 - 🔴 **Overdue** — Past due and not complete
 
-### 4. **Accountability Features**
+### 4. **Edit Task Management** *(New)*
+- Securely update task titles, types, deadlines, and notes
+- Meta-only updates: system preserves your existing checkpoint progress — no messy regeneration
+- Smart date validation: handles local timezones correctly and prevents past-deadlines
+
+### 5. **Accountability Features**
 - **10-Second Undo Window**: Marked something complete by accident? You have 10 seconds to undo before it locks in permanently. This timer **survives page refreshes** via `sessionStorage`.
 - **Visual Progress Tracking**: Progress bar showing completed vs. remaining checkpoints per task
 - **Overdue Warnings**: Prominent banners you can't ignore
 
-### 5. **User Authentication & Security**
-- **Secure Sign In/Up**: Full authentication system using Supabase Auth.
-- **Row-Level Security (RLS)**: Users can only see and modify their own tasks and checkpoints.
-- **Data Integrity**: SQL check constraints ensure valid task types, statuses, and non-empty titles.
+### 6. **User Authentication & Security**
+- **Secure Sign In/Up**: Full authentication system using Supabase Auth
+- **Row-Level Security (RLS)**: Users can only see and modify their own tasks and checkpoints
+- **Data Integrity**: SQL check constraints ensure valid task types, statuses, and non-empty titles
 
-### 6. **Refined User Experience**
+### 7. **Refined User Experience**
+- Mobile responsive (768px breakpoint) with **bottom-sheet interaction patterns** for new tasks
 - Loading spinners and skeleton states for all async operations
-- Friendly, readable error messages (not cryptic codes)
-- Mobile responsive (768px breakpoint)
+- Fast, snappy animations (refined motion tokens in `index.css`)
 - Dark/light mode with anti-FOUC (no flash on load)
-- Scroll-reveal animations on cards
 - Real-time connection status indicator
+
+### 8. **Automated Reminders** *(New)*
+- **Smart Triggers:** Edge Functions check every hour via `pg_cron` for checkpoints due within 24 hours or that are overdue.
+- **Idempotent Delivery:** The system tracks which emails have already been sent to prevent flooding users' inboxes.
+- **Reliable Dispatch:** Delivered securely via the Resend API.
 
 ---
 
@@ -57,9 +66,10 @@ A color-coded system that tells you exactly where you stand:
 |---|---|
 | Frontend | React 19.2.0 + Vite 7.3.1 |
 | Routing | React Router DOM 7.13.0 |
-| Backend / DB | Supabase (PostgreSQL + PostgREST) |
+| Backend / DB | Supabase (PostgreSQL, PostgREST, Edge Functions, pg_cron) |
 | Styling | Vanilla CSS — custom design system in `src/index.css` |
 | AI | NVIDIA NIM API — `meta/llama-3.1-8b-instruct` via plain `fetch` |
+| Email Service | Resend API |
 
 No Tailwind, no component libraries, no external state management (pure hooks).
 
@@ -129,6 +139,8 @@ You'll need these tables in Supabase:
 | `completed_at` | timestamptz | nullable |
 | `created_at` | timestamptz | |
 | `ai_generated` | boolean | default `false` — set to `true` when AI generates the checkpoint |
+| `reminder_sent_urgent` | boolean | default `false` — prevents edge function from repeatedly emailing |
+| `reminder_sent_overdue` | boolean | default `false` — prevents edge function from repeatedly emailing |
 
 ### `task_templates` *(fallback only — do not delete)*
 | Column | Type | Notes |
@@ -154,6 +166,7 @@ src/
 │   └── TaskDetailPage.jsx     # Individual task — checkpoints, undo, progress
 ├── components/
 │   ├── CreateTask.jsx         # Task creation form with AI integration
+│   ├── EditTask.jsx           # Task edit form (metadata only)
 │   └── DeleteConfirmModal.jsx # Confirmation modal for task deletion
 ├── hooks/
 │   ├── useReveal.js           # Intersection Observer scroll-reveal hook
@@ -169,8 +182,6 @@ vite.config.js                 # Dev proxy: /nvidia-api → NVIDIA NIM endpoint
 
 ## What's Still Missing 🚧
 
-- **Edit Task** — Tasks can be created and deleted but not edited
-- **Email Notifications** — Reminders when deadlines approach
 - **Analytics Dashboard** — Track productivity patterns over time
 - **Gamification** — Points, streaks, achievements
 
