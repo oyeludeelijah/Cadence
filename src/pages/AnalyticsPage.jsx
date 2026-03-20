@@ -2,83 +2,93 @@ import { useState, useEffect, useCallback, useMemo } from 'react'
 import { supabase } from '../supabaseClient'
 import { useAuth }  from '../hooks/useAuth'
 
-// ─── computeMetrics — pure function, runs on every allTasks change ────────────
-// All metrics derived client-side from the tasks + checkpoints payload.
-// Returns a single `metrics` object consumed by the card and chart sections.
-function computeMetrics(tasks) {
-  const allCps       = tasks.flatMap(t => t.checkpoints || [])
-  const completedCps = allCps.filter(cp => cp.status === 'completed' && cp.completed_at)
+// ─── computeMetrics ─────────────────────────────────────────────────────────
+// Pure function — all analytics derived from the fetched tasks+checkpoints array.
+// Called via useMemo so it only re-runs when allTasks changes.
+function computeMetrics(allTasks) {
+  // Flatten all checkpoints across every task
+  const allCheckpoints = allTasks.flatMap(t => t.checkpoints || [])
+  const completed      = allCheckpoints.filter(cp => cp.status === 'completed' && cp.completed_at)
 
-  // ── Summary ────────────────────────────────────────────────────────────────
-  const totalTasks     = tasks.length
-  const completedTasks = tasks.filter(t => t.status === 'completed').length
+  // ── Summary stats ──────────────────────────────────────────────────────────
+  const totalTasks     = allTasks.length
+  const completedTasks = allTasks.filter(t => t.status === 'completed').length
+  const totalCPs       = allCheckpoints.length
+  const completedCPs   = completed.length
 
-  const onTimeCount = completedCps.filter(
+  // On-time: completed_at strictly before due_date
+  const onTimeCount = completed.filter(
     cp => new Date(cp.completed_at) < new Date(cp.due_date)
   ).length
-  const onTimeRate = completedCps.length > 0
-    ? Math.round((onTimeCount / completedCps.length) * 100)
-    : null
+  const onTimeRate = completedCPs > 0
+    ? Math.round((onTimeCount / completedCPs) * 100)
+    : null   // null = not enough data
 
-  // ── Streak — consecutive calendar days (backwards from today) ─────────────
+  // ── Streak — consecutive calendar days (desc from today) with ≥1 completion ─
   const completionDays = new Set(
-    completedCps.map(cp => {
-      const d = new Date(cp.completed_at)
-      return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`
-    })
+    completed.map(cp => new Date(cp.completed_at).toDateString())
   )
   let streak = 0
   const today = new Date()
   for (let i = 0; i < 365; i++) {
     const d = new Date(today)
     d.setDate(today.getDate() - i)
-    if (completionDays.has(`${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`)) streak++
-    else break
+    if (completionDays.has(d.toDateString())) {
+      streak++
+    } else if (i > 0) {
+      break  // gap found — streak ends
+    }
   }
 
   // ── AI vs Template ─────────────────────────────────────────────────────────
-  const aiCps  = completedCps.filter(cp =>  cp.ai_generated)
-  const tmplCps = completedCps.filter(cp => !cp.ai_generated)
+  const aiCompleted  = completed.filter(cp => cp.ai_generated)
+  const tplCompleted = completed.filter(cp => !cp.ai_generated)
 
-  const countOnTime = arr => arr.filter(
-    cp => new Date(cp.completed_at) < new Date(cp.due_date)
-  ).length
-
-  const aiOnTimeRate   = aiCps.length   > 0 ? Math.round((countOnTime(aiCps)   / aiCps.length)   * 100) : null
-  const tmplOnTimeRate = tmplCps.length > 0 ? Math.round((countOnTime(tmplCps) / tmplCps.length) * 100) : null
-
-  // ── Procrastination Index ─────────────────────────────────────────────────
-  // Mean delta in hours: completed_at − due_date.
-  // Negative = completed early (good).  Positive = completed late (bad).
-  let procrastinationHours = null
-  if (completedCps.length > 0) {
-    const sum = completedCps.reduce((acc, cp) => {
-      return acc + (new Date(cp.completed_at) - new Date(cp.due_date)) / 3_600_000
-    }, 0)
-    procrastinationHours = sum / completedCps.length
+  function onTimeRateFor(group) {
+    if (group.length === 0) return null
+    const n = group.filter(cp => new Date(cp.completed_at) < new Date(cp.due_date)).length
+    return Math.round((n / group.length) * 100)
   }
 
-  // ── Distribution buckets (Early / On-Time / Late) ──────────────────────────
-  // Early  : completed > 1 h before due  → delta < −1
-  // On-Time: within ±1 h window          → −1 ≤ delta ≤ 1
-  // Late   : completed > 1 h after due   → delta > 1
-  const buckets = { early: 0, onTime: 0, late: 0 }
-  completedCps.forEach(cp => {
-    const deltaH = (new Date(cp.completed_at) - new Date(cp.due_date)) / 3_600_000
-    if      (deltaH < -1) buckets.early++
-    else if (deltaH <=  1) buckets.onTime++
-    else                   buckets.late++
-  })
+  const aiOnTimeRate  = onTimeRateFor(aiCompleted)
+  const tplOnTimeRate = onTimeRateFor(tplCompleted)
+
+  // ── Procrastination Index ──────────────────────────────────────────────────
+  // Mean of (completed_at − due_date) in hours across all completed checkpoints.
+  // Negative = completed early; positive = completed late.
+  const deltas = completed.map(cp =>
+    (new Date(cp.completed_at) - new Date(cp.due_date)) / (1000 * 60 * 60)
+  )
+  const procrastinationIndex = deltas.length > 0
+    ? deltas.reduce((a, b) => a + b, 0) / deltas.length
+    : null   // null = no data
+
+  // Distribution buckets (±1 h boundary)
+  const early  = deltas.filter(d => d < -1).length
+  const onTime = deltas.filter(d => d >= -1 && d <= 1).length
+  const late   = deltas.filter(d => d > 1).length
 
   return {
-    totalTasks, completedTasks,
-    onTimeRate, onTimeCount,
+    // Summary
+    totalTasks,
+    completedTasks,
+    totalCPs,
+    completedCPs,
+    onTimeRate,
     streak,
-    aiOnTimeRate,   aiTotal:   aiCps.length,   aiOnTimeCount:   countOnTime(aiCps),
-    tmplOnTimeRate, tmplTotal: tmplCps.length,  tmplOnTimeCount: countOnTime(tmplCps),
-    procrastinationHours,
-    buckets,
-    totalCompleted: completedCps.length,
+    // AI vs Template
+    aiOnTimeRate,
+    tplOnTimeRate,
+    aiSampleSize:  aiCompleted.length,
+    tplSampleSize: tplCompleted.length,
+    // Procrastination
+    procrastinationIndex,
+    distribution: [
+      { label: 'Early (>1h)',   count: early,  key: 'early'  },
+      { label: 'On Time (±1h)', count: onTime, key: 'ontime' },
+      { label: 'Late (>1h)',    count: late,   key: 'late'   },
+    ],
+    hasEnoughData: completedCPs >= 1,
   }
 }
 
@@ -86,10 +96,9 @@ function computeMetrics(tasks) {
 function AnalyticsPage() {
   const { user } = useAuth()
 
-  const [allTasks,   setAllTasks]   = useState([])
-  const metrics = useMemo(() => computeMetrics(allTasks), [allTasks])
-  const [loading,    setLoading]    = useState(true)
-  const [error,      setError]      = useState(null)
+  const [allTasks, setAllTasks] = useState([])
+  const [loading,  setLoading]  = useState(true)
+  const [error,    setError]    = useState(null)
 
   // ── Fetch ──────────────────────────────────────────────────────────────────
   const fetchData = useCallback(async () => {
@@ -111,6 +120,9 @@ function AnalyticsPage() {
   }, [user?.id])
 
   useEffect(() => { fetchData() }, [fetchData])
+
+  // ── Compute all metrics ────────────────────────────────────────────────────
+  const metrics = useMemo(() => computeMetrics(allTasks), [allTasks])
 
   // ── Loading ────────────────────────────────────────────────────────────────
   if (loading) {
@@ -162,17 +174,51 @@ function AnalyticsPage() {
         </div>
       )}
 
-      {/* ── Sections (populated in Chunks 3 & 4) ── */}
+      {/* ── Sections — populated by Chunks 3 & 4 ── */}
       {allTasks.length > 0 && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--s8)' }}>
-          {/* Chunk 3: SummaryCards will go here, receives `metrics` prop */}
-          {/* Chunk 4: Charts will go here, receives `metrics` prop */}
-          <p style={{ color: 'var(--text-3)', fontSize: 'var(--text-sm)' }}>
-            ⏳ Cards + charts coming in Chunks 3 &amp; 4… (metrics computed ✓)
-          </p>
+          {/* Summary Cards — Chunk 3 */}
+          <SummaryCards metrics={metrics} />
+
+          {/* Charts — Chunk 4 */}
+          <Charts metrics={metrics} />
         </div>
       )}
     </div>
+  )
+}
+
+// ─── Placeholder sub-components (replaced fully in Chunks 3 & 4) ─────────────
+function SummaryCards({ metrics }) {
+  return (
+    <section>
+      <p style={{ color: 'var(--text-3)', fontSize: 'var(--text-sm)' }}>
+        ⏳ Summary cards — coming in Chunk 3
+        {/* Data preview (dev only): */}
+        <br /><code style={{ fontSize: '11px' }}>{JSON.stringify({
+          totalTasks: metrics.totalTasks,
+          completedCPs: metrics.completedCPs,
+          onTimeRate: metrics.onTimeRate,
+          streak: metrics.streak,
+        })}</code>
+      </p>
+    </section>
+  )
+}
+
+function Charts({ metrics }) {
+  return (
+    <section>
+      <p style={{ color: 'var(--text-3)', fontSize: 'var(--text-sm)' }}>
+        ⏳ Charts — coming in Chunk 4
+        <br /><code style={{ fontSize: '11px' }}>{JSON.stringify({
+          aiOnTimeRate: metrics.aiOnTimeRate,
+          tplOnTimeRate: metrics.tplOnTimeRate,
+          procrastinationIndex: metrics.procrastinationIndex?.toFixed(1),
+          distribution: metrics.distribution,
+        })}</code>
+      </p>
+    </section>
   )
 }
 
