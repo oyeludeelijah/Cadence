@@ -58,6 +58,12 @@ A color-coded system that tells you exactly where you stand:
 - **Idempotent Delivery:** The system tracks which emails have already been sent to prevent flooding users' inboxes.
 - **Reliable Dispatch:** Delivered securely via the Resend API.
 
+### 9. **Analytics Dashboard** *(New)*
+- **Summary Metrics**: Track total completed tasks, checkpoints, on-time completion rate, and completion streaks.
+- **AI Effectiveness**: Compare the on-time rate of AI-generated checkpoints vs. template fallbacks.
+- **Procrastination Index**: Measure how early or late you typically complete checkpoints, with visual distribution buckets.
+- **Visualisations**: Fully responsive data visualisations built with Recharts.
+
 ---
 
 ## Tech Stack 🛠️
@@ -68,6 +74,7 @@ A color-coded system that tells you exactly where you stand:
 | Routing | React Router DOM 7.13.0 |
 | Backend / DB | Supabase (PostgreSQL, PostgREST, Edge Functions, pg_cron) |
 | Styling | Vanilla CSS — custom design system in `src/index.css` |
+| Charts | Recharts 2.x |
 | AI | NVIDIA NIM API — `meta/llama-3.1-8b-instruct` via plain `fetch` |
 | Email Service | Resend API |
 
@@ -163,7 +170,8 @@ src/
 ├── supabaseClient.js
 ├── pages/
 │   ├── TaskListPage.jsx       # Home — task list, grouping, urgency sections
-│   └── TaskDetailPage.jsx     # Individual task — checkpoints, undo, progress
+│   ├── TaskDetailPage.jsx     # Individual task — checkpoints, undo, progress
+│   └── AnalyticsPage.jsx      # Metrics and Recharts visualisations
 ├── components/
 │   ├── CreateTask.jsx         # Task creation form with AI integration
 │   ├── EditTask.jsx           # Task edit form (metadata only)
@@ -182,7 +190,6 @@ vite.config.js                 # Dev proxy: /nvidia-api → NVIDIA NIM endpoint
 
 ## What's Still Missing 🚧
 
-- **Analytics Dashboard** — Track productivity patterns over time
 - **Gamification** — Points, streaks, achievements
 
 ---
