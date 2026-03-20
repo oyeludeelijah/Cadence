@@ -1,6 +1,10 @@
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import { supabase } from '../supabaseClient'
 import { useAuth }  from '../hooks/useAuth'
+import {
+  BarChart, Bar, XAxis, YAxis, CartesianGrid,
+  Tooltip, ResponsiveContainer, Cell, LabelList,
+} from 'recharts'
 
 // ─── computeMetrics ─────────────────────────────────────────────────────────
 // Pure function — all analytics derived from the fetched tasks+checkpoints array.
@@ -315,20 +319,200 @@ function SummaryCards({ metrics }) {
   )
 }
 
+// ─── Charts ───────────────────────────────────────────────────────────────────
 function Charts({ metrics }) {
+  const {
+    aiOnTimeRate, tplOnTimeRate, aiSampleSize, tplSampleSize,
+    distribution, procrastinationIndex, completedCPs,
+  } = metrics
+
+  const hasAiVsTemplate = aiSampleSize > 0 || tplSampleSize > 0
+  const hasDist         = completedCPs > 0
+
+  // ── AI vs Template data ────────────────────────────────────────────────────
+  const aiVsTemplateData = [
+    {
+      name: 'AI Generated',
+      rate: aiOnTimeRate ?? 0,
+      n:    aiSampleSize,
+      fill: 'var(--accent, #6366f1)',
+    },
+    {
+      name: 'Template',
+      rate: tplOnTimeRate ?? 0,
+      n:    tplSampleSize,
+      fill: 'var(--success, #22c55e)',
+    },
+  ]
+
+  // ── Distribution colours ───────────────────────────────────────────────────
+  const distColors = {
+    early:  'var(--success, #22c55e)',
+    ontime: 'var(--accent,  #6366f1)',
+    late:   'var(--danger,  #ef4444)',
+  }
+
+  // ── Procrastination insight sentence ──────────────────────────────────────
+  function insightSentence() {
+    if (procrastinationIndex === null) return null
+    const early = distribution.find(d => d.key === 'early')?.count ?? 0
+    const total = completedCPs
+    const pct   = total > 0 ? Math.round((early / total) * 100) : 0
+    if (procrastinationIndex < -1) return `You complete ${pct}% of checkpoints early — you're ahead of schedule. 🎉`
+    if (procrastinationIndex > 1)  return `You tend to run late. Focus on completing checkpoints a day early.`
+    return `You're generally on time. Keep it up!`
+  }
+
+  // ── Custom tooltip for AI vs Template ─────────────────────────────────────
+  function AiTooltip({ active, payload }) {
+    if (!active || !payload?.length) return null
+    const d = payload[0].payload
+    return (
+      <div className="glass" style={{ padding: '10px 14px', borderRadius: 'var(--r-lg)',
+                                       fontSize: 'var(--text-sm)', minWidth: '140px' }}>
+        <p style={{ fontWeight: 700, color: 'var(--text)', marginBottom: '4px' }}>{d.name}</p>
+        <p style={{ color: d.fill, margin: '2px 0' }}>On-time: <strong>{d.n === 0 ? '—' : `${d.rate}%`}</strong></p>
+        <p style={{ color: 'var(--text-3)', margin: '2px 0' }}>Sample: {d.n} checkpoint{d.n !== 1 ? 's' : ''}</p>
+      </div>
+    )
+  }
+
+  // ── Custom tooltip for distribution ───────────────────────────────────────
+  function DistTooltip({ active, payload }) {
+    if (!active || !payload?.length) return null
+    const d = payload[0].payload
+    return (
+      <div className="glass" style={{ padding: '10px 14px', borderRadius: 'var(--r-lg)',
+                                       fontSize: 'var(--text-sm)' }}>
+        <p style={{ fontWeight: 700, color: 'var(--text)', marginBottom: '4px' }}>{d.label}</p>
+        <p style={{ color: distColors[d.key], margin: 0 }}>{d.count} checkpoint{d.count !== 1 ? 's' : ''}</p>
+      </div>
+    )
+  }
+
   return (
-    <section>
-      <p style={{ color: 'var(--text-3)', fontSize: 'var(--text-sm)' }}>
-        ⏳ Charts — coming in Chunk 4
-        <br /><code style={{ fontSize: '11px' }}>{JSON.stringify({
-          aiOnTimeRate: metrics.aiOnTimeRate,
-          tplOnTimeRate: metrics.tplOnTimeRate,
-          procrastinationIndex: metrics.procrastinationIndex?.toFixed(1),
-          distribution: metrics.distribution,
-        })}</code>
-      </p>
-    </section>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--s6)' }}>
+
+      {/* ── AI vs Template ── */}
+      <section className="glass" style={{ borderRadius: 'var(--r-xl)', padding: 'var(--s5)',
+                                           borderTop: '1px solid rgba(99,102,241,0.2)' }}>
+        <div style={{ marginBottom: 'var(--s4)' }}>
+          <p className="section-eyebrow" style={{ marginBottom: '4px' }}>Effectiveness</p>
+          <h2 style={{ fontSize: 'var(--text-lg)', fontWeight: 700, color: 'var(--text)', margin: 0 }}>
+            AI vs Template Checkpoints
+          </h2>
+          <p style={{ fontSize: 'var(--text-sm)', color: 'var(--text-2)', marginTop: '4px' }}>
+            On-time completion rate by checkpoint origin
+          </p>
+        </div>
+
+        {!hasAiVsTemplate ? (
+          <div style={{ textAlign: 'center', padding: 'var(--s8) 0', color: 'var(--text-3)' }}>
+            <p style={{ fontSize: '2rem', margin: '0 0 8px' }}>📊</p>
+            <p style={{ fontWeight: 600 }}>No completed checkpoints yet</p>
+            <p style={{ fontSize: 'var(--text-sm)', marginTop: '4px' }}>
+              Mark some checkpoints complete to see this chart.
+            </p>
+          </div>
+        ) : (
+          <>
+            <ResponsiveContainer width="100%" height={220}>
+              <BarChart data={aiVsTemplateData} margin={{ top: 16, right: 16, bottom: 0, left: 0 }}
+                        barCategoryGap="35%">
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--border, rgba(255,255,255,0.08))" vertical={false} />
+                <XAxis dataKey="name" tick={{ fill: 'var(--text-2)', fontSize: 12 }}
+                       axisLine={false} tickLine={false} />
+                <YAxis domain={[0, 100]} tickFormatter={v => `${v}%`}
+                       tick={{ fill: 'var(--text-3)', fontSize: 11 }}
+                       axisLine={false} tickLine={false} width={38} />
+                <Tooltip content={<AiTooltip />} cursor={{ fill: 'rgba(255,255,255,0.04)' }} />
+                <Bar dataKey="rate" radius={[6, 6, 0, 0]} maxBarSize={80}>
+                  {aiVsTemplateData.map(entry => (
+                    <Cell key={entry.name} fill={entry.fill} fillOpacity={entry.n === 0 ? 0.25 : 0.85} />
+                  ))}
+                  <LabelList dataKey="rate" position="top"
+                             formatter={v => v === 0 ? '—' : `${v}%`}
+                             style={{ fill: 'var(--text-2)', fontSize: 12, fontWeight: 600 }} />
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+
+            {/* Legend */}
+            <div style={{ display: 'flex', gap: 'var(--s4)', marginTop: 'var(--s3)',
+                          flexWrap: 'wrap', justifyContent: 'center' }}>
+              {aiVsTemplateData.map(d => (
+                <div key={d.name} style={{ display: 'flex', alignItems: 'center',
+                                            gap: '6px', fontSize: 'var(--text-xs)',
+                                            color: 'var(--text-2)' }}>
+                  <span style={{ width: 10, height: 10, borderRadius: 2,
+                                  background: d.fill, display: 'inline-block' }} />
+                  {d.name} (n={d.n})
+                </div>
+              ))}
+            </div>
+          </>
+        )}
+      </section>
+
+      {/* ── Procrastination Distribution ── */}
+      <section className="glass" style={{ borderRadius: 'var(--r-xl)', padding: 'var(--s5)',
+                                           borderTop: '1px solid rgba(99,102,241,0.2)' }}>
+        <div style={{ marginBottom: 'var(--s4)' }}>
+          <p className="section-eyebrow" style={{ marginBottom: '4px' }}>Timing</p>
+          <h2 style={{ fontSize: 'var(--text-lg)', fontWeight: 700, color: 'var(--text)', margin: 0 }}>
+            Procrastination Distribution
+          </h2>
+          <p style={{ fontSize: 'var(--text-sm)', color: 'var(--text-2)', marginTop: '4px' }}>
+            How early or late do you complete checkpoints?
+          </p>
+        </div>
+
+        {!hasDist ? (
+          <div style={{ textAlign: 'center', padding: 'var(--s8) 0', color: 'var(--text-3)' }}>
+            <p style={{ fontSize: '2rem', margin: '0 0 8px' }}>⏱️</p>
+            <p style={{ fontWeight: 600 }}>No completed checkpoints yet</p>
+            <p style={{ fontSize: 'var(--text-sm)', marginTop: '4px' }}>
+              Complete some checkpoints to see your timing patterns.
+            </p>
+          </div>
+        ) : (
+          <>
+            <ResponsiveContainer width="100%" height={200}>
+              <BarChart data={distribution} margin={{ top: 16, right: 16, bottom: 0, left: 0 }}
+                        barCategoryGap="35%">
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--border, rgba(255,255,255,0.08))" vertical={false} />
+                <XAxis dataKey="label" tick={{ fill: 'var(--text-2)', fontSize: 12 }}
+                       axisLine={false} tickLine={false} />
+                <YAxis allowDecimals={false} tick={{ fill: 'var(--text-3)', fontSize: 11 }}
+                       axisLine={false} tickLine={false} width={28} />
+                <Tooltip content={<DistTooltip />} cursor={{ fill: 'rgba(255,255,255,0.04)' }} />
+                <Bar dataKey="count" radius={[6, 6, 0, 0]} maxBarSize={80}>
+                  {distribution.map(entry => (
+                    <Cell key={entry.key} fill={distColors[entry.key]} fillOpacity={0.85} />
+                  ))}
+                  <LabelList dataKey="count" position="top"
+                             style={{ fill: 'var(--text-2)', fontSize: 12, fontWeight: 600 }} />
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+
+            {/* Insight sentence */}
+            {insightSentence() && (
+              <p style={{ marginTop: 'var(--s3)', fontSize: 'var(--text-sm)',
+                          color: 'var(--text-2)', textAlign: 'center',
+                          padding: '10px 16px',
+                          background: 'rgba(99,102,241,0.06)',
+                          borderRadius: 'var(--r-lg)',
+                          border: '1px solid rgba(99,102,241,0.12)' }}>
+                {insightSentence()}
+              </p>
+            )}
+          </>
+        )}
+      </section>
+    </div>
   )
 }
+
 
 export default AnalyticsPage
