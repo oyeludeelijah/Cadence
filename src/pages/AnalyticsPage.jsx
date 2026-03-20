@@ -188,20 +188,129 @@ function AnalyticsPage() {
   )
 }
 
-// ─── Placeholder sub-components (replaced fully in Chunks 3 & 4) ─────────────
+// ─── SummaryCards ─────────────────────────────────────────────────────────────
 function SummaryCards({ metrics }) {
+  const {
+    totalTasks, completedTasks, completedCPs,
+    onTimeRate, streak, procrastinationIndex,
+  } = metrics
+
+  // Procrastination display helpers
+  const piAbs    = procrastinationIndex !== null ? Math.abs(procrastinationIndex).toFixed(1) : null
+  const piLabel  = procrastinationIndex === null  ? '—'
+                 : procrastinationIndex < 0        ? `${piAbs}h early`
+                 :                                   `${piAbs}h late`
+  const piColor  = procrastinationIndex === null  ? 'var(--text-3)'
+                 : procrastinationIndex < 0        ? 'var(--success, #22c55e)'
+                 :                                   'var(--danger)'
+
+  // On-time rate colour
+  const onTimeColor = onTimeRate === null  ? 'var(--text-3)'
+                    : onTimeRate >= 70     ? 'var(--success, #22c55e)'
+                    : onTimeRate >= 40     ? 'var(--warning, #f59e0b)'
+                    :                        'var(--danger)'
+
+  const cards = [
+    {
+      icon: '📋',
+      label: 'Total Tasks',
+      value: totalTasks,
+      sub: `${completedTasks} completed`,
+      subColor: completedTasks > 0 ? 'var(--success, #22c55e)' : 'var(--text-3)',
+    },
+    {
+      icon: '✅',
+      label: 'Checkpoints Done',
+      value: completedCPs,
+      sub: completedCPs === 1 ? '1 checkpoint' : `${completedCPs} checkpoints`,
+      subColor: 'var(--text-3)',
+    },
+    {
+      icon: '🎯',
+      label: 'On-Time Rate',
+      value: onTimeRate !== null ? `${onTimeRate}%` : '—',
+      sub: onTimeRate === null ? 'complete a checkpoint to start'
+         : onTimeRate >= 70   ? 'great consistency'
+         : onTimeRate >= 40   ? 'room to improve'
+         :                      'falling behind',
+      subColor: onTimeColor,
+      valueColor: onTimeColor,
+    },
+    {
+      icon: '⏱️',
+      label: 'Procrastination Index',
+      value: piLabel,
+      sub: procrastinationIndex === null ? 'no data yet'
+         : procrastinationIndex < 0      ? 'you\'re ahead of schedule'
+         :                                  'you\'re running late',
+      subColor: piColor,
+      valueColor: piColor,
+    },
+  ]
+
   return (
     <section>
-      <p style={{ color: 'var(--text-3)', fontSize: 'var(--text-sm)' }}>
-        ⏳ Summary cards — coming in Chunk 3
-        {/* Data preview (dev only): */}
-        <br /><code style={{ fontSize: '11px' }}>{JSON.stringify({
-          totalTasks: metrics.totalTasks,
-          completedCPs: metrics.completedCPs,
-          onTimeRate: metrics.onTimeRate,
-          streak: metrics.streak,
-        })}</code>
-      </p>
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+        gap: 'var(--s3)',
+      }}>
+        {cards.map(card => (
+          <div
+            key={card.label}
+            className="glass"
+            style={{
+              padding: 'var(--s4)',
+              borderRadius: 'var(--r-xl)',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 'var(--s1)',
+              borderTop: '1px solid rgba(99,102,241,0.15)',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span style={{ fontSize: '18px' }}>{card.icon}</span>
+              <span style={{ fontSize: 'var(--text-xs)', color: 'var(--text-3)',
+                             fontWeight: 600, textTransform: 'uppercase',
+                             letterSpacing: '0.06em' }}>
+                {card.label}
+              </span>
+            </div>
+            <p style={{
+              fontSize: 'clamp(26px, 4vw, 36px)',
+              fontWeight: 800,
+              letterSpacing: '-0.03em',
+              color: card.valueColor ?? 'var(--text)',
+              margin: '4px 0 2px',
+              lineHeight: 1,
+            }}>
+              {card.value}
+            </p>
+            <p style={{ fontSize: 'var(--text-xs)', color: card.subColor, margin: 0 }}>
+              {card.sub}
+            </p>
+          </div>
+        ))}
+      </div>
+
+      {/* Streak badge — only shown when streak > 0 */}
+      {streak > 0 && (
+        <div style={{
+          marginTop: 'var(--s3)',
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: '8px',
+          background: 'rgba(245,158,11,0.12)',
+          border: '1px solid rgba(245,158,11,0.3)',
+          borderRadius: 'var(--r-full)',
+          padding: '6px 14px',
+          fontSize: 'var(--text-sm)',
+          fontWeight: 600,
+          color: 'var(--warning, #f59e0b)',
+        }}>
+          🔥 {streak}-day streak
+        </div>
+      )}
     </section>
   )
 }
