@@ -121,15 +121,19 @@ Rules:
     // Normalise — enforce status:'pending', ensure checkpoint_number exists.
     // RULE: For major tasks (> 36h away), we fix the time to 17:00 (5 PM) for consistency.
     // SAFETY: After forcing 5 PM, we verify the result is still before the deadline.
-    // If it isn't (e.g. deadline is 4 PM that same day), we fall back to the raw AI
-    // date, or as a last resort to a proportional slot — so no checkpoint is born overdue.
-    // For short-term tasks (< 36h), we trust the AI's proportional timing to avoid
-    // pushing checkpoints past the deadline or too close to "now".
+    // For short-term tasks (< 36h), we trust the AI's proportional timing but STILL
+    // verify the date is both in the future AND before the deadline.
+    // HARD CLAMP: after all logic runs, a final guard ensures no checkpoint is ever
+    // born at or past the deadline — regardless of what the AI or maths produces.
     const spanMs = deadlineDate.getTime() - new Date().getTime()
     const now = new Date()
     return parsed.map((cp, i) => {
       const rawAiDate = new Date(cp.due_date)
       let aiDate = new Date(cp.due_date)
+
+      // Proportional slot helper: evenly spaces checkpoint i within [now, deadline)
+      const proportionalSlot = () =>
+        new Date(now.getTime() + (spanMs * (i + 1)) / (parsed.length + 1))
 
       if (spanMs > (36 * 60 * 60 * 1000)) {
         // Long-term task: Fix to 5 PM local time
@@ -140,14 +144,29 @@ Rules:
           // Try the raw AI date first; if that's also bad, use a proportional slot.
           aiDate = (rawAiDate > now && rawAiDate < deadlineDate)
             ? rawAiDate
-            : new Date(now.getTime() + (spanMs * (i + 1)) / (parsed.length + 1))
+            : proportionalSlot()
         }
       } else {
-        // Tight deadline: Trust the AI's proportional timing (it knows "now")
-        // Just ensure it's not in the past
-        if (aiDate < now) {
-          aiDate.setTime(now.getTime() + (spanMs / (parsed.length + 1)))
+        // Tight deadline (< 36 h): trust the AI's proportional timing, but verify
+        // BOTH directions — the AI may return dates in the past OR after the deadline
+        // (e.g. the model picks "working hours" on the deadline day ignoring the time).
+        if (aiDate <= now || aiDate >= deadlineDate) {
+          // Try the raw AI date if it's valid; otherwise use a proportional slot.
+          aiDate = (rawAiDate > now && rawAiDate < deadlineDate)
+            ? rawAiDate
+            : proportionalSlot()
         }
+      }
+
+      // Hard clamp: regardless of all the above, never let a checkpoint escape at
+      // or past the deadline. This guards against edge cases like spanMs being very
+      // small causing proportionalSlot() to round to the deadline itself.
+      if (aiDate >= deadlineDate) {
+        aiDate = new Date(deadlineDate.getTime() - (60 * 1000)) // 1 min before deadline
+      }
+      // Also clamp to at least 1 minute in the future (prevents scheduling in the past)
+      if (aiDate <= now) {
+        aiDate = new Date(now.getTime() + 60 * 1000)
       }
 
       return {
