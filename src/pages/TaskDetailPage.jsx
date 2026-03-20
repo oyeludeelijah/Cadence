@@ -50,10 +50,11 @@ function CheckpointCard({ checkpoint, isCurrent, onToggle, checkpointLoading }) 
       )}
 
       <div style={{ display: 'flex', alignItems: 'flex-start', gap: 'var(--s3)' }}>
-        {/* Checkbox */}
+        {/* Checkbox — disabled while a save is in progress to prevent concurrent toggles */}
         <button
           className={`checkbox-btn ${isCompleted ? 'checked' : ''}`}
           onClick={() => onToggle(checkpoint.id, checkpoint.status)}
+          disabled={checkpointLoading}
           title={isCompleted ? 'Mark as pending' : 'Mark as complete'}
           style={{ marginTop: '2px' }}
         >
@@ -176,8 +177,11 @@ function TaskDetailPage() {
   const [error, setError]                   = useState(null)
 
   // useRef for timers — avoids extra re-renders from useState
-  const undoTimeoutRef = useRef(null)
-  const countdownRef   = useRef(null)
+  const undoTimeoutRef   = useRef(null)
+  const countdownRef     = useRef(null)
+  // Fix 4.3: when true, fetchTaskDetails skips the page-level loading spinner.
+  // Toggling a checkpoint triggers a silent re-fetch — the page stays visible.
+  const silentRefreshRef = useRef(false)
 
   // Cleanup on unmount — prevents state updates after navigation
   useEffect(() => {
@@ -187,24 +191,18 @@ function TaskDetailPage() {
     }
   }, [])
 
-  // ── Restore undo state after page refresh ───────────────────────────────────
-  useEffect(() => {
-    const stored = sessionStorage.getItem(undoStorageKey(id))
-    if (!stored) return
+  // Fix 4.2: extracted shared countdown helper — previously this 20-line block was
+  // copy-pasted between the fresh-complete path and the sessionStorage-restore path.
+  // Having two copies meant: (a) any logic change had to be made twice, and (b) if
+  // the user marked a checkpoint complete then quickly navigated away and back, both
+  // the restore useEffect and a fresh toggleCheckpointStatus could start concurrent
+  // intervals. Now both paths call this single function.
+  const startUndoCountdown = useCallback((checkpointId, expiresAt) => {
+    clearTimeout(undoTimeoutRef.current)
+    clearInterval(countdownRef.current)
 
-    let parsed
-    try { parsed = JSON.parse(stored) } catch { return }
-
-    const { checkpointId, expiresAt } = parsed
-    const remaining = expiresAt - Date.now()
-
-    if (remaining <= 0) {
-      sessionStorage.removeItem(undoStorageKey(id))
-      return
-    }
-
-    // Restore the undo window with the accurate remaining time
     setUndoable(checkpointId)
+    const remaining = expiresAt - Date.now()
     setToast({ text: `✅ Checkpoint completed! Tap to undo (${Math.ceil(remaining / 1000)}s)`, type: 'undo', isUndo: true })
 
     countdownRef.current = setInterval(() => {
@@ -232,6 +230,26 @@ function TaskDetailPage() {
     }, remaining)
   }, [id]) // eslint-disable-line react-hooks/exhaustive-deps
 
+  // ── Restore undo state after page refresh ───────────────────────────────────
+  useEffect(() => {
+    const stored = sessionStorage.getItem(undoStorageKey(id))
+    if (!stored) return
+
+    let parsed
+    try { parsed = JSON.parse(stored) } catch { return }
+
+    const { checkpointId, expiresAt } = parsed
+    const remaining = expiresAt - Date.now()
+
+    if (remaining <= 0) {
+      sessionStorage.removeItem(undoStorageKey(id))
+      return
+    }
+
+    // Restore the undo window using the shared helper
+    startUndoCountdown(checkpointId, expiresAt)
+  }, [id, startUndoCountdown])
+
   // ── Toast helper ────────────────────────────────────────────────────────────
   const showToast = useCallback((text, type = 'success', isUndo = false) => {
     setToast({ text, type, isUndo })
@@ -240,7 +258,11 @@ function TaskDetailPage() {
 
   // ── Fetch ──────────────────────────────────────────────────────────────────
   const fetchTaskDetails = useCallback(async () => {
-    setLoading(true)
+    // Fix 4.3: skip the page-level loading spinner for silent (post-toggle) refreshes.
+    // This prevents the full page flickering to a spinner every time the user
+    // marks a checkpoint complete, while still showing the spinner on initial load.
+    if (!silentRefreshRef.current) setLoading(true)
+    silentRefreshRef.current = false   // reset immediately after reading
     try {
       const { data: taskData, error: taskError } = await supabase
         .from('tasks').select('*').eq('id', id).single()
@@ -281,45 +303,16 @@ function TaskDetailPage() {
         .eq('id', checkpointId)
       if (error) throw error
 
+      // Fix 4.3: mark next fetch as silent so it doesn't replace the page with a spinner
+      silentRefreshRef.current = true
       await fetchTaskDetails()
 
       if (newStatus === 'completed') {
-        // Cancel any previous undo countdown
-        clearTimeout(undoTimeoutRef.current)
-        clearInterval(countdownRef.current)
-
         // Persist undo window so it survives a page refresh
         const expiresAt = Date.now() + 10000
         sessionStorage.setItem(undoStorageKey(id), JSON.stringify({ checkpointId, expiresAt }))
-
-        setUndoable(checkpointId)
-        setToast({ text: '✅ Checkpoint completed! Tap to undo (10s)', type: 'undo', isUndo: true })
-
-        // Use absolute expiresAt so the counter stays accurate if the component re-renders
-        countdownRef.current = setInterval(() => {
-          const timeLeft = Math.ceil((expiresAt - Date.now()) / 1000)
-          if (timeLeft > 0) {
-            setToast({ text: `✅ Checkpoint completed! Tap to undo (${timeLeft}s)`, type: 'undo', isUndo: true })
-          } else {
-            clearInterval(countdownRef.current)
-          }
-        }, 1000)
-
-        undoTimeoutRef.current = setTimeout(async () => {
-          clearInterval(countdownRef.current)
-          sessionStorage.removeItem(undoStorageKey(id))
-          const { data } = await supabase
-            .from('checkpoints').select('id')
-            .eq('task_id', id).eq('status', 'pending').limit(1)
-          setToast({
-            text: data?.length > 0 ? '✅ Checkpoint locked in. Next one is ready.' : '🎉 All checkpoints completed!',
-            type: 'success',
-            isUndo: false,
-          })
-          setTimeout(() => setToast(null), 3500)
-          setUndoable(null)
-        }, 10000)
-
+        // Fix 4.2: use the shared helper instead of the inline copy
+        startUndoCountdown(checkpointId, expiresAt)
       } else {
         // Undo: clear all timers and remove persisted state
         clearTimeout(undoTimeoutRef.current)
@@ -341,8 +334,18 @@ function TaskDetailPage() {
     setShowDelete(false)
     setLoading(true)
     try {
-      await supabase.from('checkpoints').delete().eq('task_id', id)
-      await supabase.from('tasks').delete().eq('id', id)
+      // Fix 4.6: check errors from both delete calls instead of swallowing them.
+      // Previously, a failed checkpoint delete would silently proceed to delete the
+      // task, leaving orphaned checkpoint rows in the DB.
+      const { error: cpErr } = await supabase.from('checkpoints').delete().eq('task_id', id)
+      if (cpErr) throw cpErr
+      const { error: tErr } = await supabase.from('tasks').delete().eq('id', id)
+      if (tErr) throw tErr
+
+      // Fix 4.5: clear the undo sessionStorage key before navigating away.
+      // Without this, a stale key can produce a ghost '🎉 All done' toast if
+      // the user hits the browser back button to the now-deleted task URL.
+      sessionStorage.removeItem(undoStorageKey(id))
       navigate('/')
     } catch (err) {
       showToast('❌ Error deleting task', 'error')

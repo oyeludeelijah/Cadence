@@ -1,5 +1,8 @@
 {
   "rewrites": [
-    { "source": "/nvidia-api/(.*)", "destination": "/api/nvidia" }
+    {
+      "source": "/nvidia-api/:path*",
+      "destination": "/api/nvidia"
+    }
   ]
 }

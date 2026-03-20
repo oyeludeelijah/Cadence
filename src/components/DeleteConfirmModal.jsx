@@ -12,8 +12,12 @@
 function DeleteConfirmModal({ taskTitle, loading, onConfirm, onCancel }) {
   return (
     <>
-      {/* Backdrop — click outside to cancel */}
-      <div className="modal-overlay" onClick={onCancel} style={{ alignItems: 'center' }} />
+      {/* Backdrop — click outside to cancel (blocked during loading to prevent mid-delete dismiss) */}
+      <div
+        className="modal-overlay"
+        onClick={loading ? undefined : onCancel}
+        style={{ alignItems: 'center', pointerEvents: loading ? 'none' : undefined }}
+      />
 
       {/* Panel */}
       <div
@@ -55,7 +59,8 @@ function DeleteConfirmModal({ taskTitle, loading, onConfirm, onCancel }) {
           </p>
 
           <div style={{ display: 'flex', gap: 'var(--s2)', justifyContent: 'flex-end' }}>
-            <button className="btn-secondary" onClick={onCancel}>
+            {/* Fix 6.1: Cancel disabled during loading — delete is in progress and cannot be cancelled */}
+            <button className="btn-secondary" onClick={onCancel} disabled={loading}>
               Cancel
             </button>
 

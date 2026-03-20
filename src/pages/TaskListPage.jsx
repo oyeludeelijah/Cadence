@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../supabaseClient'
 import { useReveal } from '../hooks/useReveal'
+import { useAuth } from '../hooks/useAuth'
 import CreateTask from '../components/CreateTask'
 import DeleteConfirmModal from '../components/DeleteConfirmModal'
 import {
@@ -20,6 +21,10 @@ function groupTasks(tasks) {
 
   const dueToday = [], dueThisWeek = [], dueLater = []
   tasks.forEach(t => {
+    // Fix 3.2: completed tasks have no meaningful urgency date — always put them
+    // in dueLater so they never appear under the 🔥 "Due Today" heading.
+    if (t.isCompleted) { dueLater.push(t); return }
+
     const urgDate = t.nextCheckpoint
       ? new Date(t.nextCheckpoint.due_date)
       : new Date(t.final_deadline)
@@ -42,9 +47,12 @@ function TaskCard({ task, onDelete, onNavigate }) {
   const nextCp = task.nextCheckpoint
   const nextStatus = nextCp ? getCheckpointStatus(nextCp) : null
 
+  // Fix 3.4: reflect checkpoint-level overdue on the card border, not just task-level.
+  // Checkpoint overdue (next milestone missed) is more immediately actionable than
+  // the overall deadline being past.
   const accentBorder = task.isCompleted
     ? 'var(--success)'
-    : isOverdue
+    : nextStatus === 'overdue' || isOverdue
     ? 'var(--danger)'
     : nextStatus === 'urgent'
     ? 'var(--warning)'
@@ -226,9 +234,12 @@ function UrgencyGroup({ label, emoji, color, tasks, onDelete, onNavigate }) {
 // ─── Main Page ────────────────────────────────────────────────────────────────
 function TaskListPage() {
   const navigate = useNavigate()
+  const { user } = useAuth()
 
   const [tasks, setTasks]                 = useState([])      // ALL tasks (both tabs)
   const [loading, setLoading]             = useState(true)
+  // Fix 3.3: separate state so deleting doesn't replace the whole list with a spinner.
+  const [deleteLoading, setDeleteLoading] = useState(false)
   const [connectionStatus, setConnection] = useState('Checking…')
   const [activeTab, setActiveTab]         = useState('active')
   const [showCreateForm, setShowCreate]   = useState(false)
@@ -248,7 +259,11 @@ function TaskListPage() {
         setConnection('Env vars missing'); return
       }
       try {
-        const { error } = await supabase.auth.getSession()
+        // Fix 8.4: use a real DB query instead of getSession().
+        // getSession() only contacts the Auth service — if the DB is down but Auth
+        // is up, the previous check would show "✓ Connected" while all task queries
+        // fail. This pings the actual table the page depends on.
+        const { error } = await supabase.from('tasks').select('id').limit(1)
         setConnection(error ? `Error: ${error.message}` : '✓ Connected')
       } catch (e) {
         setConnection(`Error: ${e.message}`)
@@ -297,26 +312,38 @@ function TaskListPage() {
   const fetchTasks = useCallback(async () => {
     setLoading(true)
     try {
-      const { data: tasksData, error: tasksError } = await supabase
+      const query = supabase
         .from('tasks')
         .select('*, checkpoints(*)')
         .order('final_deadline', { ascending: true })
 
+      // Fix 3.5: defence-in-depth user_id filter in addition to RLS.
+      // If RLS were ever misconfigured, this prevents cross-user data leaks.
+      if (user?.id) query.eq('user_id', user.id)
+
+      const { data: tasksData, error: tasksError } = await query
       if (tasksError) throw tasksError
 
       const enriched = await Promise.all(
         (tasksData || []).map(async (task) => {
+          // Fix 3.6: sort by checkpoint_number to match TaskDetailPage ordering.
+          // Previously sorted by due_date, which could disagree with the detail
+          // page if AI-generated checkpoints had non-sequential dates.
           const checkpoints = (task.checkpoints || [])
             .slice()
-            .sort((a, b) => new Date(a.due_date) - new Date(b.due_date))
+            .sort((a, b) => a.checkpoint_number - b.checkpoint_number)
 
           const allDone = checkpoints.length > 0 && checkpoints.every(cp => cp.status === 'completed')
 
-          // Reconcile task.status with checkpoint reality (fire-and-forget)
+          // Fix 3.1: reconcile task.status with checkpoint reality.
+          // Still fire-and-forget (must not block the render), but errors are
+          // now logged so silent DB drift is visible during development.
           if (allDone && task.status !== 'completed') {
             supabase.from('tasks').update({ status: 'completed' }).eq('id', task.id)
+              .then(({ error }) => { if (error) console.error('[reconcile] failed to mark completed:', error.message) })
           } else if (!allDone && task.status === 'completed') {
             supabase.from('tasks').update({ status: 'active' }).eq('id', task.id)
+              .then(({ error }) => { if (error) console.error('[reconcile] failed to mark active:', error.message) })
           }
 
           return {
@@ -335,7 +362,7 @@ function TaskListPage() {
     } finally {
       setLoading(false)
     }
-  }, [])  // stable -- no deps change between renders
+  }, [user?.id])  // re-fetch if the user identity changes (e.g. sign-in after expiry)
 
   useEffect(() => { fetchTasks() }, [fetchTasks])
 
@@ -354,7 +381,9 @@ function TaskListPage() {
     if (!taskToDelete) return
     setError(null)
     setShowDelete(false)
-    setLoading(true)
+    // Fix 3.3: use deleteLoading instead of loading so the task list stays
+    // visible during the delete — the spinner now only lives inside the modal.
+    setDeleteLoading(true)
     try {
       const { error: cpErr } = await supabase
         .from('checkpoints').delete().eq('task_id', taskToDelete.id)
@@ -365,8 +394,8 @@ function TaskListPage() {
       await fetchTasks()
     } catch (err) {
       setError(`❌ Could not delete "${taskToDelete.title}". Please try again.`)
-      setLoading(false)
     } finally {
+      setDeleteLoading(false)
       setTaskToDelete(null)
     }
   }
@@ -415,7 +444,7 @@ function TaskListPage() {
       {showDeleteConfirm && taskToDelete && (
         <DeleteConfirmModal
           taskTitle={taskToDelete.title}
-          loading={loading}
+          loading={deleteLoading}
           onConfirm={confirmDelete}
           onCancel={() => { setShowDelete(false); setError(null); }}
         />

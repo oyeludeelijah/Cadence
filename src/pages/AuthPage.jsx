@@ -60,16 +60,22 @@ function AuthPage() {
       if (isSignUp) {
         const { error } = await supabase.auth.signUp({ email: email.trim(), password })
         if (error) throw error
-        setMessage({ type: 'success', text: '✅ Account created! Signing you in…' })
+        // With email confirmation disabled, signUp immediately signs the user in.
+        // onAuthStateChange fires and App.jsx redirects before any success message
+        // could render here — so we intentionally show nothing and let the redirect
+        // act as the confirmation.
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password })
         if (error) throw error
         // onAuthStateChange in useAuth fires → App.jsx re-renders → redirect happens automatically
       }
     } catch (err) {
-      const text = err.message?.includes('Invalid login credentials')
+      const msg = err.message ?? ''
+      const text = msg.toLowerCase().includes('rate limit') || msg.toLowerCase().includes('too many')
+        ? 'Too many attempts. Please wait a moment and try again.'
+        : msg.includes('Invalid login credentials')
         ? 'Incorrect email or password. Please try again.'
-        : err.message ?? 'Something went wrong. Please try again.'
+        : msg || 'Something went wrong. Please try again.'
       setMessage({ type: 'error', text })
     } finally {
       setLoading(false)

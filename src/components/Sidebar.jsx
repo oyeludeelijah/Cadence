@@ -126,8 +126,10 @@ export function Sidebar({ mobileOpen, onMobileClose }) {
                 key={item.path}
                 className={`sidebar-nav-item ${active ? 'active' : ''} ${item.disabled ? 'disabled' : ''}`}
                 onClick={() => handleNav(item)}
-                title={collapsed ? item.label : undefined}
+                title={item.disabled ? `${item.label} — coming soon` : collapsed ? item.label : undefined}
                 aria-current={active ? 'page' : undefined}
+                disabled={item.disabled || undefined}
+                aria-disabled={item.disabled ? 'true' : undefined}
               >
                 <span className="sidebar-nav-icon"><item.icon /></span>
                 {!collapsed && <span className="sidebar-nav-text">{item.label}</span>}

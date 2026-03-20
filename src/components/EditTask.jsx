@@ -19,6 +19,8 @@ const TASK_TYPE_OPTIONS = [
  *   onCancel {fn}      — Called when the user clicks Cancel or ×
  */
 function EditTask({ task, onSaved, onCancel }) {
+  // task.checkpoints may not be passed by every caller, so fall back to empty array.
+  const existingCheckpoints = task.checkpoints ?? []
   /**
    * Robust conversion of ISO date string to local datetime-local input value (YYYY-MM-DDTHH:mm).
    * This ensures the browser displays the date in the user's local time, not UTC.
@@ -26,6 +28,11 @@ function EditTask({ task, onSaved, onCancel }) {
   function isoToLocalInput(iso) {
     if (!iso) return ''
     const d = new Date(iso)
+    // Fix 5.3: guard against corrupt ISO strings in the DB.
+    // new Date('garbage') returns Invalid Date; getFullYear() would return NaN,
+    // producing 'NaN-aN-aNTNaN:NaN' in the input which would then save NaN to
+    // the DB. Return '' instead so the input stays empty and validation catches it.
+    if (isNaN(d.getTime())) return ''
     const pad = n => String(n).padStart(2, '0')
     return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`
   }
@@ -63,6 +70,21 @@ function EditTask({ task, onSaved, onCancel }) {
       return
     }
 
+    // Fix 5.2: targeted checkpoint-conflict check instead of always-on static warning.
+    // Count how many checkpoints would become overdue if this deadline is applied.
+    const conflictCount = existingCheckpoints.filter(
+      cp => cp.status !== 'completed' && new Date(cp.due_date) > deadline
+    ).length
+    if (conflictCount > 0) {
+      setMessage({
+        type: 'error',
+        text: `⚠️ ${conflictCount} checkpoint${conflictCount > 1 ? 's' : ''} ${
+          conflictCount > 1 ? 'are' : 'is'
+        } scheduled after this deadline and will immediately appear overdue. Move them first, or choose a later deadline.`,
+      })
+      return
+    }
+
     setLoading(true)
     try {
       const { error } = await supabase
@@ -74,6 +96,9 @@ function EditTask({ task, onSaved, onCancel }) {
           notes:          form.notes.trim() || null,
         })
         .eq('id', task.id)
+        // Fix 5.1: defence-in-depth user_id filter alongside RLS.
+        // If RLS were ever misconfigured, this prevents updating another user's task.
+        .eq('user_id', task.user_id)
 
       if (error) throw error
 
@@ -104,10 +129,6 @@ function EditTask({ task, onSaved, onCancel }) {
         </h2>
         <p style={{ fontSize: 'var(--text-sm)', color: 'var(--text-3)', marginTop: '6px' }}>
           Checkpoints are not regenerated when you edit — existing progress is preserved.
-          <br />
-          <span style={{ color: 'var(--warning)', display: 'block', marginTop: '4px' }}>
-            Note: moving the deadline earlier may cause checkpoints to appear overdue.
-          </span>
         </p>
       </div>
 

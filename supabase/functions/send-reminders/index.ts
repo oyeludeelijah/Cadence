@@ -46,6 +46,15 @@ serve(async () => {
       if (is_overdue && reminder_sent_overdue) continue
       if (!is_overdue && reminder_sent_urgent) continue
 
+      // Fix 8.3: basic email format guard.
+      // user_email comes from auth.users (validated by Supabase on sign-up) so
+      // this should never fail in practice, but guards against RPC changes that
+      // might return unexpected data without crashing the whole batch.
+      if (!user_email || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(user_email)) {
+        console.warn(`[send-reminders] Skipping checkpoint ${checkpoint_id}: invalid email '${user_email}'`)
+        continue
+      }
+
       const dueDateObj = new Date(due_date)
       const dueDateStr = dueDateObj.toLocaleString('en-GB', {
         weekday: 'short', day: 'numeric', month: 'short',
@@ -81,6 +90,10 @@ serve(async () => {
         `
 
       // Send the email via Resend
+      // Fix 8.2 — PRODUCTION NOTE: 'onboarding@resend.dev' is the Resend sandbox sender.
+      // Emails from this domain will be classified as spam by Gmail, Outlook, and
+      // institutional mail servers. Before real deployment, replace with a verified
+      // custom domain: https://resend.com/docs/dashboard/domains/introduction
       const res = await fetch('https://api.resend.com/emails', {
         method: 'POST',
         headers: {

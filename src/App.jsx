@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { Routes, Route, Navigate } from 'react-router-dom'
 import TaskListPage   from './pages/TaskListPage'
 import TaskDetailPage from './pages/TaskDetailPage'
 import AuthPage       from './pages/AuthPage'
@@ -24,29 +24,27 @@ function App() {
     )
   }
 
-  // Not authenticated → show AuthPage for every route
+  // Not authenticated → show AuthPage for every route.
+  // BrowserRouter lives in main.jsx so the router is never recreated on sign-in.
   if (!session) {
     return (
-      <BrowserRouter>
-        <Routes>
-          <Route path="*" element={<AuthPage />} />
-        </Routes>
-      </BrowserRouter>
+      <Routes>
+        <Route path="*" element={<AuthPage />} />
+      </Routes>
     )
   }
 
   // Authenticated → normal app
   return (
-    <BrowserRouter>
-      <AppShell>
-        <Routes>
-          <Route path="/"          element={<TaskListPage />} />
-          <Route path="/tasks/:id" element={<TaskDetailPage />} />
-          <Route path="*"          element={<Navigate to="/" replace />} />
-        </Routes>
-      </AppShell>
-    </BrowserRouter>
+    <AppShell>
+      <Routes>
+        <Route path="/"          element={<TaskListPage />} />
+        <Route path="/tasks/:id" element={<TaskDetailPage />} />
+        <Route path="*"          element={<Navigate to="/" replace />} />
+      </Routes>
+    </AppShell>
   )
 }
 
 export default App
+

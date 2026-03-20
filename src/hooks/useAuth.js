@@ -1,33 +1,8 @@
-import { useState, useEffect } from 'react'
-import { supabase } from '../supabaseClient'
-
 /**
- * useAuth — wraps Supabase Auth session management.
+ * useAuth — re-exported from AuthContext for backward-compatible imports.
  *
- * Returns:
- *   session  {object|null}  — the current Supabase session (null = not logged in)
- *   loading  {boolean}      — true on first load while session is being resolved
+ * All components import from '../hooks/useAuth' as before.
+ * The actual subscription logic lives in AuthContext.jsx (single shared instance).
+ * See src/contexts/AuthContext.jsx for implementation details.
  */
-export function useAuth() {
-  const [session, setSession] = useState(undefined) // undefined = not yet resolved
-
-  useEffect(() => {
-    // Get the current session on mount
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session ?? null)
-    })
-
-    // Listen for sign in / sign out events
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session ?? null)
-    })
-
-    return () => subscription.unsubscribe()
-  }, [])
-
-  return {
-    session,
-    loading: session === undefined, // still resolving
-    user: session?.user ?? null,
-  }
-}
+export { useAuth } from '../contexts/AuthContext'

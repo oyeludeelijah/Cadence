@@ -43,6 +43,12 @@ export function getTimeUntilDue(dueDate) {
   const now = new Date()
   const due = new Date(dueDate)
   const diffMs = due - now
+
+  // Fix 4.4: guard against being called on an already-past date.
+  // This shouldn't happen through current call sites (callers check status === 'urgent'),
+  // but protects against future misuse returning a negative minute string.
+  if (diffMs <= 0) return 'just now'
+
   const diffHours = Math.floor(diffMs / (1000 * 60 * 60))
 
   if (diffHours < 1) {

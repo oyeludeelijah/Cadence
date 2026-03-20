@@ -2,7 +2,7 @@
  * generateCheckpoints.js
  *
  * Calls the NVIDIA NIM API (OpenAI-compatible endpoint) to generate a
- * checkpoint plan for a student task.  Uses deepseek-ai/deepseek-v3.2.
+ * checkpoint plan for a student task.  Uses meta/llama-3.1-8b-instruct.
  *
  * Falls back silently to task_templates if the API call fails.
  */
@@ -59,7 +59,9 @@ Rules:
 - If deadline is less than 24 hours away, return exactly 1 checkpoint due halfway between now and the deadline`
 
   try {
-    // Hard 20-second timeout — if the model is slow, fall back to templates
+    // 20-second hard abort: if the model hasn't started responding, give up and
+    // fall back to templates.  clearTimeout runs in the inner finally so the timer
+    // is cancelled as soon as fetch settles (resolve or reject) — not 20s later.
     const controller = new AbortController()
     const timeoutId = setTimeout(() => controller.abort(), 20_000)
 
@@ -118,20 +120,33 @@ Rules:
 
     // Normalise — enforce status:'pending', ensure checkpoint_number exists.
     // RULE: For major tasks (> 36h away), we fix the time to 17:00 (5 PM) for consistency.
-    // For short-term tasks (< 36h), we trust the AI's proportional timing to avoid 
+    // SAFETY: After forcing 5 PM, we verify the result is still before the deadline.
+    // If it isn't (e.g. deadline is 4 PM that same day), we fall back to the raw AI
+    // date, or as a last resort to a proportional slot — so no checkpoint is born overdue.
+    // For short-term tasks (< 36h), we trust the AI's proportional timing to avoid
     // pushing checkpoints past the deadline or too close to "now".
     const spanMs = deadlineDate.getTime() - new Date().getTime()
+    const now = new Date()
     return parsed.map((cp, i) => {
-      const aiDate = new Date(cp.due_date)
-      
+      const rawAiDate = new Date(cp.due_date)
+      let aiDate = new Date(cp.due_date)
+
       if (spanMs > (36 * 60 * 60 * 1000)) {
         // Long-term task: Fix to 5 PM local time
         aiDate.setHours(17, 0, 0, 0)
+
+        // Safety net: if forcing 5 PM pushes the date to/past the deadline, fall back.
+        if (aiDate >= deadlineDate) {
+          // Try the raw AI date first; if that's also bad, use a proportional slot.
+          aiDate = (rawAiDate > now && rawAiDate < deadlineDate)
+            ? rawAiDate
+            : new Date(now.getTime() + (spanMs * (i + 1)) / (parsed.length + 1))
+        }
       } else {
         // Tight deadline: Trust the AI's proportional timing (it knows "now")
         // Just ensure it's not in the past
-        if (aiDate < new Date()) {
-          aiDate.setTime(new Date().getTime() + (spanMs / (parsed.length + 1)))
+        if (aiDate < now) {
+          aiDate.setTime(now.getTime() + (spanMs / (parsed.length + 1)))
         }
       }
 
