@@ -17,6 +17,7 @@ import { supabase } from '../supabaseClient'
  *   // In any component — unchanged import from hooks/useAuth:
  *   const { session, loading, user } = useAuth()
  */
+
 export const AuthContext = createContext(null)
 
 export function AuthProvider({ children }) {
