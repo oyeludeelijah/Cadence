@@ -1,12 +1,93 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import { supabase } from '../supabaseClient'
 import { useAuth }  from '../hooks/useAuth'
+
+// ─── computeMetrics — pure function, runs on every allTasks change ────────────
+// All metrics derived client-side from the tasks + checkpoints payload.
+// Returns a single `metrics` object consumed by the card and chart sections.
+function computeMetrics(tasks) {
+  const allCps       = tasks.flatMap(t => t.checkpoints || [])
+  const completedCps = allCps.filter(cp => cp.status === 'completed' && cp.completed_at)
+
+  // ── Summary ────────────────────────────────────────────────────────────────
+  const totalTasks     = tasks.length
+  const completedTasks = tasks.filter(t => t.status === 'completed').length
+
+  const onTimeCount = completedCps.filter(
+    cp => new Date(cp.completed_at) < new Date(cp.due_date)
+  ).length
+  const onTimeRate = completedCps.length > 0
+    ? Math.round((onTimeCount / completedCps.length) * 100)
+    : null
+
+  // ── Streak — consecutive calendar days (backwards from today) ─────────────
+  const completionDays = new Set(
+    completedCps.map(cp => {
+      const d = new Date(cp.completed_at)
+      return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`
+    })
+  )
+  let streak = 0
+  const today = new Date()
+  for (let i = 0; i < 365; i++) {
+    const d = new Date(today)
+    d.setDate(today.getDate() - i)
+    if (completionDays.has(`${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`)) streak++
+    else break
+  }
+
+  // ── AI vs Template ─────────────────────────────────────────────────────────
+  const aiCps  = completedCps.filter(cp =>  cp.ai_generated)
+  const tmplCps = completedCps.filter(cp => !cp.ai_generated)
+
+  const countOnTime = arr => arr.filter(
+    cp => new Date(cp.completed_at) < new Date(cp.due_date)
+  ).length
+
+  const aiOnTimeRate   = aiCps.length   > 0 ? Math.round((countOnTime(aiCps)   / aiCps.length)   * 100) : null
+  const tmplOnTimeRate = tmplCps.length > 0 ? Math.round((countOnTime(tmplCps) / tmplCps.length) * 100) : null
+
+  // ── Procrastination Index ─────────────────────────────────────────────────
+  // Mean delta in hours: completed_at − due_date.
+  // Negative = completed early (good).  Positive = completed late (bad).
+  let procrastinationHours = null
+  if (completedCps.length > 0) {
+    const sum = completedCps.reduce((acc, cp) => {
+      return acc + (new Date(cp.completed_at) - new Date(cp.due_date)) / 3_600_000
+    }, 0)
+    procrastinationHours = sum / completedCps.length
+  }
+
+  // ── Distribution buckets (Early / On-Time / Late) ──────────────────────────
+  // Early  : completed > 1 h before due  → delta < −1
+  // On-Time: within ±1 h window          → −1 ≤ delta ≤ 1
+  // Late   : completed > 1 h after due   → delta > 1
+  const buckets = { early: 0, onTime: 0, late: 0 }
+  completedCps.forEach(cp => {
+    const deltaH = (new Date(cp.completed_at) - new Date(cp.due_date)) / 3_600_000
+    if      (deltaH < -1) buckets.early++
+    else if (deltaH <=  1) buckets.onTime++
+    else                   buckets.late++
+  })
+
+  return {
+    totalTasks, completedTasks,
+    onTimeRate, onTimeCount,
+    streak,
+    aiOnTimeRate,   aiTotal:   aiCps.length,   aiOnTimeCount:   countOnTime(aiCps),
+    tmplOnTimeRate, tmplTotal: tmplCps.length,  tmplOnTimeCount: countOnTime(tmplCps),
+    procrastinationHours,
+    buckets,
+    totalCompleted: completedCps.length,
+  }
+}
 
 // ─── AnalyticsPage ────────────────────────────────────────────────────────────
 function AnalyticsPage() {
   const { user } = useAuth()
 
   const [allTasks,   setAllTasks]   = useState([])
+  const metrics = useMemo(() => computeMetrics(allTasks), [allTasks])
   const [loading,    setLoading]    = useState(true)
   const [error,      setError]      = useState(null)
 
@@ -84,9 +165,10 @@ function AnalyticsPage() {
       {/* ── Sections (populated in Chunks 3 & 4) ── */}
       {allTasks.length > 0 && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--s8)' }}>
-          {/* Placeholder — replaced by real sections in Chunk 3 & 4 */}
+          {/* Chunk 3: SummaryCards will go here, receives `metrics` prop */}
+          {/* Chunk 4: Charts will go here, receives `metrics` prop */}
           <p style={{ color: 'var(--text-3)', fontSize: 'var(--text-sm)' }}>
-            ⏳ Charts coming in Chunks 3 &amp; 4…
+            ⏳ Cards + charts coming in Chunks 3 &amp; 4… (metrics computed ✓)
           </p>
         </div>
       )}
