@@ -55,7 +55,7 @@ const IconUser = () => (
 // ── Nav links config ─────────────────────────────────────────────────────────
 const NAV_ITEMS = [
   { label: 'My Tasks',   icon: IconTasks,     path: '/' },
-  { label: 'Analytics',  icon: IconAnalytics, path: '/analytics',  disabled: true },
+  { label: 'Analytics',  icon: IconAnalytics, path: '/analytics' },
   { label: 'Settings',   icon: IconSettings,  path: '/settings',   disabled: true },
 ]
 

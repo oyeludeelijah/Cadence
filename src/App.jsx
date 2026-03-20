@@ -1,9 +1,10 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
-import TaskListPage   from './pages/TaskListPage'
-import TaskDetailPage from './pages/TaskDetailPage'
-import AuthPage       from './pages/AuthPage'
-import { AppShell }   from './components/AppShell'
-import { useAuth }    from './hooks/useAuth'
+import TaskListPage    from './pages/TaskListPage'
+import TaskDetailPage  from './pages/TaskDetailPage'
+import AnalyticsPage   from './pages/AnalyticsPage'
+import AuthPage        from './pages/AuthPage'
+import { AppShell }    from './components/AppShell'
+import { useAuth }     from './hooks/useAuth'
 import './App.css'
 
 function App() {
@@ -38,9 +39,10 @@ function App() {
   return (
     <AppShell>
       <Routes>
-        <Route path="/"          element={<TaskListPage />} />
-        <Route path="/tasks/:id" element={<TaskDetailPage />} />
-        <Route path="*"          element={<Navigate to="/" replace />} />
+        <Route path="/"           element={<TaskListPage />} />
+        <Route path="/tasks/:id"  element={<TaskDetailPage />} />
+        <Route path="/analytics"  element={<AnalyticsPage />} />
+        <Route path="*"           element={<Navigate to="/" replace />} />
       </Routes>
     </AppShell>
   )
