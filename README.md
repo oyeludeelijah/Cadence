@@ -49,7 +49,7 @@ A color-coded system that tells you exactly where you stand:
 ### 7. **Refined User Experience**
 - Mobile responsive (768px breakpoint) with **bottom-sheet interaction patterns** for new tasks
 - Loading spinners and skeleton states for all async operations
-- Fast, snappy animations (refined motion tokens in `index.css`)
+- Fast, snappy animations powered by **GSAP** (choreographed modals, staggered checkpoint entrances, and dynamic number counters)
 - Dark/light mode with anti-FOUC (no flash on load)
 - Real-time connection status indicator
 
@@ -74,6 +74,7 @@ A color-coded system that tells you exactly where you stand:
 | Routing | React Router DOM 7.13.0 |
 | Backend / DB | Supabase (PostgreSQL, PostgREST, Edge Functions, pg_cron) |
 | Styling | Vanilla CSS — custom design system in `src/index.css` |
+| Animations | GSAP 3.x |
 | Charts | Recharts 2.x |
 | AI | NVIDIA NIM API — `meta/llama-3.1-8b-instruct` via plain `fetch` |
 | Email Service | Resend API |

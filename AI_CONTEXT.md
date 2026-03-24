@@ -11,9 +11,10 @@ Helps students break large academic tasks (essays, problem sets, exam prep) into
 
 - React 19.2.0 + Vite 7.3.1
 - React Router DOM 7.13.0
+- GSAP 3.x (JavaScript animation engine for modals, stagger effects, counters)
 - Recharts 2.x (Analytics visualisations)
 - Supabase (PostgreSQL + PostgREST) — backend and database
-- Vanilla CSS only — custom design system in `src/index.css` (~970 lines), no Tailwind, no component libraries
+- Vanilla CSS only — custom design system in `src/index.css`, no Tailwind, no component libraries
 - No state management library — pure useState, useEffect, useCallback, useRef
 - JavaScript/JSX throughout
 - **No extra AI packages** — AI calls use plain `fetch` via a Vite proxy (see AI section below)
@@ -38,12 +39,16 @@ src/
 │   ├── CreateTask.jsx         # ~290 lines — attaches user_id on task insert
 │   ├── EditTask.jsx           # ~160 lines — pre-filled edit form (metadata only)
 │   ├── AppShell.jsx           # Persistent layout wrapper (sidebar + main)
-│   ├── Sidebar.jsx            # Shows user email + Sign Out button
-│   └── DeleteConfirmModal.jsx # ~91 lines
+│   ├── Sidebar.jsx            # Shows user email + Sign Out button, GSAP collapse animation
+│   ├── DeleteConfirmModal.jsx # ~91 lines
+│   ├── AnimatedCounter.jsx    # GSAP number scrubber for analytics
+│   └── AnimatedToast.jsx      # Generic toast notification system
 ├── hooks/
 │   ├── useAuth.js             # Wraps Supabase session — returns { session, loading, user }
-│   ├── useReveal.js
-│   └── useTheme.js
+│   ├── useReveal.js           # CSS scroll reveal
+│   ├── useTheme.js            # Dark/light mode
+│   ├── useModalAnimation.js   # GSAP modal enter/exit logic
+│   └── usePageTransition.js   # GSAP page fade-in
 └── utils/
     ├── checkpointHelpers.js   # getCheckpointStatus(), getOverdueText(), getTimeUntilDue()
     └── generateCheckpoints.js # AI checkpoint generation via NVIDIA NIM — COMPLETE
@@ -172,7 +177,7 @@ stream:      false
 
 ## What's fully working
 
-Task creation (AI + fallback), **Edit task (metadata updates — Confirmed ✅)**, urgency grouping, tab switching, checkpoint toggle, 10s undo (survives refresh), deletion with user-visible errors, progress bars, 4-state status, dark/light mode + anti-FOUC, scroll-reveal, mobile responsive (768px), connection indicator, loading/error states, AI badge on task cards and detail page, **user authentication (email/password sign-up + sign-in + sign-out)**, **RLS — users only see their own tasks**, **Automated Email Notifications (Supabase Edge function via pg_cron + Resend)** with anti-spam database tracking, **Analytics Dashboard (Recharts visualisations for AI effectiveness & procrastination index)**.
+Task creation (AI + fallback), **Edit task (metadata updates — Confirmed ✅)**, urgency grouping, tab switching, checkpoint toggle, 10s undo (survives refresh), deletion with user-visible errors, progress bars, 4-state status, dark/light mode + anti-FOUC, scroll-reveal, mobile responsive (768px), connection indicator, loading/error states, AI badge on task cards and detail page, **user authentication (email/password sign-up + sign-in + sign-out)**, **RLS — users only see their own tasks**, **Automated Email Notifications (Supabase Edge function via pg_cron + Resend)** with anti-spam database tracking, **Analytics Dashboard (Recharts visualisations)**, and **Premium GSAP Animations** (counters, staggered entry for checkpoints, standardized modal physics).
 
 ---
 
