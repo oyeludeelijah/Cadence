@@ -457,11 +457,6 @@ input, select, textarea {
   -webkit-backdrop-filter: blur(20px);
   box-shadow: 0 8px 32px rgba(0,0,0,0.4);
   white-space: nowrap;
-  animation: toastIn var(--dur-base) var(--ease-back);
-}
-@keyframes toastIn {
-  from { opacity: 0; transform: translateX(-50%) translateY(-12px) scale(0.95); }
-  to   { opacity: 1; transform: translateX(-50%) translateY(0)    scale(1); }
 }
 .toast-success {
   background: rgba(16,185,129,0.15);
@@ -1097,9 +1092,9 @@ input, select, textarea {
 }
 
 .sidebar.collapsed .sidebar-user {
-  justify-content: center;
+  flex-direction: column;
   padding: var(--s2) 0;
-  gap: 0;
+  gap: var(--s2);
 }
 
 /* ── Brand ───────────────────────────────────────────────────────────────── */

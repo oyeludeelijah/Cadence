@@ -1,3 +1,5 @@
+import { useModalAnimation } from '../hooks/useModalAnimation'
+
 /**
  * DeleteConfirmModal
  *
@@ -10,12 +12,14 @@
  *   onCancel   {fn}      — Called when the user clicks "Cancel" or the backdrop
  */
 function DeleteConfirmModal({ taskTitle, loading, onConfirm, onCancel }) {
+  const { panelRef, close } = useModalAnimation(onCancel)
+
   return (
     <>
       {/* Backdrop — click outside to cancel (blocked during loading to prevent mid-delete dismiss) */}
       <div
         className="modal-overlay"
-        onClick={loading ? undefined : onCancel}
+        onClick={loading ? undefined : close}
         style={{ alignItems: 'center', pointerEvents: loading ? 'none' : undefined }}
       />
 
@@ -32,6 +36,7 @@ function DeleteConfirmModal({ taskTitle, loading, onConfirm, onCancel }) {
         }}
       >
         <div
+          ref={panelRef}
           className="glass modal-panel"
           style={{
             padding: 'var(--s5)',
@@ -60,7 +65,7 @@ function DeleteConfirmModal({ taskTitle, loading, onConfirm, onCancel }) {
 
           <div style={{ display: 'flex', gap: 'var(--s2)', justifyContent: 'flex-end' }}>
             {/* Fix 6.1: Cancel disabled during loading — delete is in progress and cannot be cancelled */}
-            <button className="btn-secondary" onClick={onCancel} disabled={loading}>
+            <button className="btn-secondary" onClick={close} disabled={loading}>
               Cancel
             </button>
 

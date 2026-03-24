@@ -1,9 +1,13 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
+import { usePageTransition } from '../hooks/usePageTransition'
+import { useModalAnimation } from '../hooks/useModalAnimation'
 import { useParams, useNavigate } from 'react-router-dom'
 import { supabase } from '../supabaseClient'
 import { useReveal } from '../hooks/useReveal'
+import { AnimatedToast } from '../components/AnimatedToast'
 import DeleteConfirmModal from '../components/DeleteConfirmModal'
 import EditTask from '../components/EditTask'
+import { gsap } from 'gsap'
 import {
   getCheckpointStatus,
   getOverdueText,
@@ -15,7 +19,6 @@ const undoStorageKey = (taskId) => `undo_checkpoint_${taskId}`
 
 // ─── Checkpoint Card ──────────────────────────────────────────────────────────
 function CheckpointCard({ checkpoint, isCurrent, onToggle, checkpointLoading }) {
-  const ref = useReveal(0.1)
   const status = getCheckpointStatus(checkpoint)
   const isCompleted = checkpoint.status === 'completed'
 
@@ -30,18 +33,18 @@ function CheckpointCard({ checkpoint, isCurrent, onToggle, checkpointLoading }) 
     : 'var(--border-2)'
 
   return (
-    <div
-      ref={ref}
-      className="glass reveal"
-      style={{
-        padding: 'var(--s4)',
-        borderRadius: 'var(--r-lg)',
-        borderLeft: `3px solid ${borderColor}`,
-        opacity: isCompleted ? 0.6 : 1,
-        transition: 'opacity 0.3s ease',
-        position: 'relative',
-      }}
-    >
+    <div className="gsap-checkpoint-card">
+      <div
+        className="glass"
+        style={{
+          padding: 'var(--s4)',
+          borderRadius: 'var(--r-lg)',
+          borderLeft: `3px solid ${borderColor}`,
+          opacity: isCompleted ? 0.6 : 1,
+          transition: 'opacity 0.3s ease',
+          position: 'relative',
+        }}
+      >
       {/* Current badge */}
       {isCurrent && !isCompleted && (
         <div style={{ position: 'absolute', top: 'var(--s2)', right: 'var(--s2)' }}>
@@ -158,6 +161,42 @@ function CheckpointCard({ checkpoint, isCurrent, onToggle, checkpointLoading }) 
         </div>
       </div>
     </div>
+    </div>
+  )
+}
+
+// ─── Edit Modal Panel ────────────────────────────────────────────────────────
+// Extracted so useModalAnimation can run at the top level of a component
+// (rules of hooks) and the panel ref is cleanly scoped to just this element.
+function EditModalPanel({ task, onSaved, onClose }) {
+  const { panelRef, close } = useModalAnimation(onClose)
+  return (
+    <>
+      {/* Backdrop */}
+      <div className="modal-overlay" onClick={close} style={{ alignItems: 'center' }} />
+      {/* Positioner */}
+      <div
+        style={{
+          position: 'fixed',
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+          zIndex: 9999,
+          width: '90%',
+          maxWidth: '520px',
+          maxHeight: '90vh',
+        }}
+      >
+        {/* Animated Panel */}
+        <div ref={panelRef} style={{ width: '100%' }}>
+          <EditTask
+            task={task}
+            onSaved={() => { close(); setTimeout(onSaved, 180) }}
+            onCancel={close}
+          />
+        </div>
+      </div>
+    </>
   )
 }
 
@@ -165,6 +204,7 @@ function CheckpointCard({ checkpoint, isCurrent, onToggle, checkpointLoading }) 
 function TaskDetailPage() {
   const { id }   = useParams()
   const navigate = useNavigate()
+  const pageRef = usePageTransition()
 
   const [task, setTask]                     = useState(null)
   const [checkpoints, setCheckpoints]       = useState([])
@@ -182,6 +222,8 @@ function TaskDetailPage() {
   // Fix 4.3: when true, fetchTaskDetails skips the page-level loading spinner.
   // Toggling a checkpoint triggers a silent re-fetch — the page stays visible.
   const silentRefreshRef = useRef(false)
+  // Ensure stagger only fires once per page load
+  const hasAnimatedRef = useRef(false)
 
   // Cleanup on unmount — prevents state updates after navigation
   useEffect(() => {
@@ -292,6 +334,17 @@ function TaskDetailPage() {
       return
     }
 
+    // ── Pre-emptively lock existing undo window to prevent overlaps ──
+    // If a different checkpoint is toggled while an undo window is open,
+    // explicitly close and lock the previous one before the new save begins.
+    if (undoableCheckpoint && undoableCheckpoint !== checkpointId) {
+      clearTimeout(undoTimeoutRef.current)
+      clearInterval(countdownRef.current)
+      undoTimeoutRef.current = null
+      sessionStorage.removeItem(undoStorageKey(id))
+      setUndoable(null)
+    }
+
     setCpLoading(true)
     const newStatus   = currentStatus === 'completed' ? 'pending' : 'completed'
     const completedAt = newStatus === 'completed' ? new Date().toISOString() : null
@@ -328,6 +381,33 @@ function TaskDetailPage() {
       setCpLoading(false)
     }
   }
+
+  // ── GSAP Staggered Entrance ────────────────────────────────────────────────
+  useEffect(() => {
+    // Only orchestrate if data loaded, checkpoints exist, and haven't animated yet
+    if (!loading && checkpoints.length > 0 && !hasAnimatedRef.current) {
+      hasAnimatedRef.current = true
+
+      const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+      if (prefersReduced) return
+
+      const cards = gsap.utils.toArray('.gsap-checkpoint-card')
+      if (cards.length > 0) {
+        gsap.fromTo(cards,
+          { opacity: 0, y: 50 },
+          {
+            opacity: 1,
+            y: 0,
+            duration: 0.7,
+            stagger: 0.15,
+            delay: 0.3,
+            ease: 'power3.out',
+            clearProps: 'all' // Cleanup inline styles when done
+          }
+        )
+      }
+    }
+  }, [loading, checkpoints])
 
   // ── Delete task ────────────────────────────────────────────────────────────
   async function confirmDelete() {
@@ -385,26 +465,17 @@ function TaskDetailPage() {
   const currentCheckpoint = checkpoints.find(cp => cp.status === 'pending')
   const isTaskOverdue     = new Date(task.final_deadline) < new Date() && task.status !== 'completed'
 
-  const toastClass = toast?.type === 'undo'
-    ? 'toast toast-undo'
-    : toast?.type === 'error'
-    ? 'toast toast-error'
-    : 'toast toast-success'
-
   return (
-    <div style={{ maxWidth: '860px', margin: '0 auto' }}>
-
+    <div ref={pageRef} style={{ maxWidth: '860px', margin: '0 auto' }}>
       {/* ── Toast ─────────────────────────────────────────────────────────────── */}
-      {toast && (
-        <div
-          className={toastClass}
-          onClick={toast.isUndo
-            ? () => undoableCheckpoint && toggleCheckpointStatus(undoableCheckpoint, 'completed')
-            : undefined}
-        >
-          {toast.text}
-        </div>
-      )}
+      <AnimatedToast
+        toast={toast}
+        onClick={() => {
+          if (!checkpointLoading && undoableCheckpoint) {
+            toggleCheckpointStatus(undoableCheckpoint, 'completed')
+          }
+        }}
+      />
 
       {/* ── Error ─────────────────────────────────────────────────────────────── */}
       {error && (
@@ -425,31 +496,11 @@ function TaskDetailPage() {
 
       {/* ── Edit modal ────────────────────────────────────────────────────────── */}
       {showEditModal && (
-        <>
-          {/* Backdrop */}
-          <div className="modal-overlay" onClick={() => setShowEdit(false)} style={{ alignItems: 'center' }} />
-
-          {/* Panel */}
-          <div
-            style={{
-              position: 'fixed',
-              top: '50%',
-              left: '50%',
-              transform: 'translate(-50%, -50%)',
-              zIndex: 9999,
-              width: '90%',
-              maxWidth: '520px',
-              maxHeight: '90vh',
-              overflowY: 'auto',
-            }}
-          >
-            <EditTask
-              task={task}
-              onSaved={() => { setShowEdit(false); fetchTaskDetails() }}
-              onCancel={() => setShowEdit(false)}
-            />
-          </div>
-        </>
+        <EditModalPanel
+          task={task}
+          onClose={() => setShowEdit(false)}
+          onSaved={() => { setShowEdit(false); fetchTaskDetails() }}
+        />
       )}
 
       {/* ── Nav bar ───────────────────────────────────────────────────────────── */}

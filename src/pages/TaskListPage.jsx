@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
+import { usePageTransition } from '../hooks/usePageTransition'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../supabaseClient'
 import { useReveal } from '../hooks/useReveal'
@@ -10,6 +11,7 @@ import {
   getOverdueText,
   getTimeUntilDue,
 } from '../utils/checkpointHelpers'
+import { useModalAnimation } from '../hooks/useModalAnimation'
 
 // ─── groupTasks — pure function, defined outside component so it is not
 //     re-created on every render. ─────────────────────────────────────────────
@@ -231,9 +233,99 @@ function UrgencyGroup({ label, emoji, color, tasks, onDelete, onNavigate }) {
   )
 }
 
+// ─── Create Modal Panel ───────────────────────────────────────────────────────
+// Extracted so useModalAnimation runs at the top level and the discard-confirm
+// logic cleanly maps directly to this modal without polluting the parent page.
+function CreateModalPanel({ onClose, onTaskCreated }) {
+  const { panelRef, close } = useModalAnimation(onClose)
+  const [isDirty, setIsDirty] = useState(false)
+  const [showDiscard, setShowDiscard] = useState(false)
+
+  const handleCloseAttempt = useCallback(() => {
+    if (isDirty) {
+      setShowDiscard(true)
+    } else {
+      close()
+    }
+  }, [isDirty, close])
+
+  // Intercept Escape key
+  useEffect(() => {
+    function onKeyDown(e) {
+      if (e.key === 'Escape') {
+        if (showDiscard) {
+          setShowDiscard(false)
+        } else {
+          handleCloseAttempt()
+        }
+      }
+    }
+    document.addEventListener('keydown', onKeyDown)
+    return () => document.removeEventListener('keydown', onKeyDown)
+  }, [showDiscard, handleCloseAttempt])
+
+  return (
+    <>
+      {showDiscard && (
+        <div 
+          className="discard-confirm-overlay"
+          onClick={(e) => { if (e.target === e.currentTarget) setShowDiscard(false) }}
+        >
+          <div className="discard-confirm-panel">
+            <h4>Discard Changes?</h4>
+            <p>You have unsaved task details. Are you sure you want to exit?</p>
+            <button 
+              className="btn-danger" 
+              style={{ width: '100%', padding: '10px' }}
+              onClick={() => {
+                setShowDiscard(false)
+                close()
+              }}
+            >
+              Yes, Discard All
+            </button>
+            <div className="discard-confirm-footer">
+              Click anywhere outside to keep editing
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div
+        className="modal-overlay bottom-sheet"
+        role="dialog"
+        aria-modal="true"
+        aria-label="Create new task"
+        onClick={(e) => { if (e.target === e.currentTarget) handleCloseAttempt() }}
+      >
+        <div className="modal-panel glass" ref={panelRef}>
+          <button
+            className="modal-close-btn"
+            onClick={handleCloseAttempt}
+            aria-label="Close"
+          >
+            ×
+          </button>
+          <CreateTask 
+             onTaskCreated={() => {
+               close() 
+               // The API call completed, and after 1.8s CreateTask calls us.
+               // We close the GSAP animation, and then tell the parent to fetch.
+               // Wait a beat matching the animation out before fetching so UI doesn't stutter.
+               setTimeout(onTaskCreated, 180)
+             }} 
+             onIsDirtyChange={setIsDirty} 
+          />
+        </div>
+      </div>
+    </>
+  )
+}
+
 // ─── Main Page ────────────────────────────────────────────────────────────────
 function TaskListPage() {
   const navigate = useNavigate()
+  const pageRef = usePageTransition()
   const { user } = useAuth()
 
   const [tasks, setTasks]                 = useState([])      // ALL tasks (both tabs)
@@ -247,11 +339,6 @@ function TaskListPage() {
   const [taskToDelete, setTaskToDelete]   = useState(null)
   const [error, setError]                 = useState(null)
 
-  // ─── Modal + Dirty States ──────────────────────────────────────────────────
-  const [isCreateDirty, setIsCreateDirty] = useState(false)
-  const [isModalClosing, setIsModalClosing] = useState(false)
-  const [showDiscardConfirm, setShowDiscardConfirm] = useState(false)
-
   // ── Connection check ────────────────────────────────────────────────────────
   useEffect(() => {
     async function check() {
@@ -259,10 +346,6 @@ function TaskListPage() {
         setConnection('Env vars missing'); return
       }
       try {
-        // Fix 8.4: use a real DB query instead of getSession().
-        // getSession() only contacts the Auth service — if the DB is down but Auth
-        // is up, the previous check would show "✓ Connected" while all task queries
-        // fail. This pings the actual table the page depends on.
         const { error } = await supabase.from('tasks').select('id').limit(1)
         setConnection(error ? `Error: ${error.message}` : '✓ Connected')
       } catch (e) {
@@ -272,41 +355,7 @@ function TaskListPage() {
     check()
   }, [])
 
-  const performCloseModal = useCallback(() => {
-    setShowDiscardConfirm(false)
-    setIsModalClosing(true)
-    // Matches var(--dur-fast) in CSS
-    setTimeout(() => {
-      setShowCreate(false)
-      setIsModalClosing(false)
-      setIsCreateDirty(false)
-    }, 180)
-  }, [])
-
-  const handleCloseAttempt = useCallback(() => {
-    if (isCreateDirty) {
-      setShowDiscardConfirm(true)
-    } else {
-      performCloseModal()
-    }
-  }, [isCreateDirty, performCloseModal])
-
-  // ── Close modal on Escape key ───────────────────────────────────────────────
-  useEffect(() => {
-    function onKeyDown(e) {
-      if (e.key === 'Escape') {
-        if (showDiscardConfirm) {
-          setShowDiscardConfirm(false)
-        } else if (showCreateForm) {
-          handleCloseAttempt()
-        }
-      }
-    }
-    document.addEventListener('keydown', onKeyDown)
-    return () => document.removeEventListener('keydown', onKeyDown)
-  }, [showCreateForm, showDiscardConfirm, handleCloseAttempt])
-
-  // -- Fetch (stable useCallback -- no [activeTab] dependency)
+  // ── Fetch (stable useCallback -- no [activeTab] dependency) ─────────────────
   // Fetches ALL tasks. Tab filtering is done client-side at render time so
   // switching tabs never re-fetches and avoids the duplicate-entry race.
   const fetchTasks = useCallback(async () => {
@@ -368,7 +417,6 @@ function TaskListPage() {
 
   function handleTaskCreated() {
     fetchTasks()
-    performCloseModal() // use animated close for consistency
   }
 
   function handleDeleteTask(task) {
@@ -414,31 +462,8 @@ function TaskListPage() {
   const navigateToTask = useCallback((id) => navigate(`/tasks/${id}`), [navigate])
 
   return (
-    <div style={{ maxWidth: 'var(--container-max)', margin: '0 auto' }}>
+    <div ref={pageRef} style={{ maxWidth: 'var(--container-max)', margin: '0 auto' }}>
       <div className="mesh-gradient" />
-
-      {/* ── Discard Confirm Popup ── */}
-      {showDiscardConfirm && (
-        <div 
-          className="discard-confirm-overlay"
-          onClick={(e) => { if (e.target === e.currentTarget) setShowDiscardConfirm(false) }}
-        >
-          <div className="discard-confirm-panel">
-            <h4>Discard Changes?</h4>
-            <p>You have unsaved task details. Are you sure you want to exit?</p>
-            <button 
-              className="btn-danger" 
-              style={{ width: '100%', padding: '10px' }}
-              onClick={performCloseModal}
-            >
-              Yes, Discard All
-            </button>
-            <div className="discard-confirm-footer">
-              Click anywhere outside to keep editing
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* ── Delete Modal ───────────────────────────────────────────────────── */}
       {showDeleteConfirm && taskToDelete && (
@@ -525,29 +550,12 @@ function TaskListPage() {
         </button>
       </div>
 
-      {/* ── Create Task Modal ───────────────────────────────────────────────────
-           position:fixed lifts it above all content.
-           Closes on: backdrop click · Escape key · × button.
-          ─────────────────────────────────────────────────────────────────── */}
+      {/* ── Create Task Modal ─────────────────────────────────────────────────── */}
       {showCreateForm && (
-        <div
-          className={`modal-overlay bottom-sheet ${isModalClosing ? 'closing' : ''}`}
-          role="dialog"
-          aria-modal="true"
-          aria-label="Create new task"
-          onClick={(e) => { if (e.target === e.currentTarget) handleCloseAttempt() }}
-        >
-          <div className={`modal-panel glass ${isModalClosing ? 'closing' : ''}`}>
-            <button
-              className="modal-close-btn"
-              onClick={handleCloseAttempt}
-              aria-label="Close"
-            >
-              ×
-            </button>
-            <CreateTask onTaskCreated={handleTaskCreated} onIsDirtyChange={setIsCreateDirty} />
-          </div>
-        </div>
+        <CreateModalPanel 
+          onClose={() => setShowCreate(false)}
+          onTaskCreated={handleTaskCreated}
+        />
       )}
 
       {/* ── Task List ──────────────────────────────────────────────────────────── */}

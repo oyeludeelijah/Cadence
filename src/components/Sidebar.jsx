@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom'
 import { useTheme } from '../hooks/useTheme'
 import { useAuth }  from '../hooks/useAuth'
 import { supabase } from '../supabaseClient'
+import { gsap } from 'gsap'
 
 // ── SVG Icons (inline — no external dependency) ──────────────────────────────
 const IconTasks     = () => (
@@ -70,9 +71,36 @@ export function Sidebar({ mobileOpen, onMobileClose }) {
   const [collapsed, setCollapsed] = useState(() => {
     try { return localStorage.getItem('sidebarCollapsed') === 'true' } catch { return false }
   })
+  // Internal state to delay removing DOM nodes until after GSAP fade-out finishes
+  const [cssCollapsed, setCssCollapsed] = useState(collapsed)
 
   useEffect(() => {
     localStorage.setItem('sidebarCollapsed', String(collapsed))
+
+    if (window.innerWidth <= 768 || window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      setCssCollapsed(collapsed)
+      return
+    }
+
+    if (collapsed) {
+      // 1. Fade out text fast, removing stagger to avoid long empty delays
+      gsap.to('.gsap-text', {
+        opacity: 0, x: -10, duration: 0.1
+      })
+      // 2. Trigger CSS box shrink almost immediately so they overlap smoothly
+      setTimeout(() => setCssCollapsed(true), 50)
+    } else {
+      // 1. Instantly render DOM nodes & trigger CSS box expand
+      setCssCollapsed(false)
+      
+      // 2. Wait a tick for React to paint, then animate text fading in
+      setTimeout(() => {
+        gsap.fromTo('.gsap-text', 
+          { opacity: 0, x: 10 },
+          { opacity: 1, x: 0, duration: 0.25, stagger: 0.03, delay: 0.15, clearProps: 'transform' }
+        )
+      }, 0)
+    }
   }, [collapsed])
 
   function handleNav(item) {
@@ -91,15 +119,15 @@ export function Sidebar({ mobileOpen, onMobileClose }) {
         <div className="sidebar-backdrop" onClick={onMobileClose} />
       )}
 
-      <aside className={`sidebar ${collapsed ? 'collapsed' : ''} ${mobileOpen ? 'mobile-open' : ''}`}>
+      <aside className={`sidebar ${cssCollapsed ? 'collapsed' : ''} ${mobileOpen ? 'mobile-open' : ''}`}>
 
         {/* ── Brand ───────────────────────────────────────────────────────── */}
         <div className="sidebar-brand">
           <div className="sidebar-logo">
             <span>⚡</span>
           </div>
-          {!collapsed && (
-            <div className="sidebar-brand-text">
+          {!cssCollapsed && (
+            <div className="sidebar-brand-text gsap-text">
               <span className="sidebar-brand-name">AI Accountability</span>
               <span className="sidebar-brand-sub">System</span>
             </div>
@@ -118,7 +146,15 @@ export function Sidebar({ mobileOpen, onMobileClose }) {
 
         {/* ── Nav ─────────────────────────────────────────────────────────── */}
         <nav className="sidebar-nav">
-          {!collapsed && <span className="sidebar-nav-label">Menu</span>}
+          <span 
+            className="sidebar-nav-label gsap-text"
+            style={{ 
+              visibility: cssCollapsed ? 'hidden' : 'visible',
+              opacity: cssCollapsed ? 0 : '',
+            }}
+          >
+            Menu
+          </span>
           {NAV_ITEMS.map(item => {
             const active = isActive(item.path)
             return (
@@ -132,9 +168,9 @@ export function Sidebar({ mobileOpen, onMobileClose }) {
                 aria-disabled={item.disabled ? 'true' : undefined}
               >
                 <span className="sidebar-nav-icon"><item.icon /></span>
-                {!collapsed && <span className="sidebar-nav-text">{item.label}</span>}
-                {!collapsed && item.disabled && (
-                  <span className="sidebar-coming-soon">Soon</span>
+                {!cssCollapsed && <span className="sidebar-nav-text gsap-text">{item.label}</span>}
+                {!cssCollapsed && item.disabled && (
+                  <span className="sidebar-coming-soon gsap-text">Soon</span>
                 )}
               </button>
             )
@@ -146,7 +182,7 @@ export function Sidebar({ mobileOpen, onMobileClose }) {
 
         {/* ── Theme toggle ────────────────────────────────────────────────── */}
         <div className="sidebar-section">
-          {collapsed ? (
+          {cssCollapsed ? (
             <button
               className="sidebar-nav-item"
               onClick={toggle}
@@ -181,8 +217,8 @@ export function Sidebar({ mobileOpen, onMobileClose }) {
           <div className="sidebar-user-avatar">
             <IconUser />
           </div>
-          {!collapsed && (
-            <div className="sidebar-user-info">
+          {!cssCollapsed && (
+            <div className="sidebar-user-info gsap-text">
               <span className="sidebar-user-name" title={user?.email}>
                 {user?.email?.split('@')[0] ?? 'Student'}
               </span>
@@ -191,34 +227,38 @@ export function Sidebar({ mobileOpen, onMobileClose }) {
               </span>
             </div>
           )}
-          {/* Sign Out — icon when collapsed, icon + text when expanded */}
+          {/* Sign Out — icon only to save space and prevent email truncation */}
           <button
             onClick={() => supabase.auth.signOut()}
             title="Sign out"
             style={{
-              marginLeft: collapsed ? 0 : 'auto',
+              marginLeft: cssCollapsed ? 0 : 'auto',
               background: 'none',
               border: 'none',
               cursor: 'pointer',
               color: 'var(--text-3)',
-              padding: '4px',
-              borderRadius: 'var(--r-sm)',
+              padding: '6px',
+              borderRadius: 'var(--r-md)',
               display: 'flex',
               alignItems: 'center',
-              gap: '4px',
-              fontSize: 'var(--text-xs)',
+              justifyContent: 'center',
               flexShrink: 0,
-              transition: 'color 0.2s',
+              transition: 'all 0.2s',
             }}
-            onMouseEnter={e => e.currentTarget.style.color = 'var(--danger)'}
-            onMouseLeave={e => e.currentTarget.style.color = 'var(--text-3)'}
+            onMouseEnter={e => {
+              e.currentTarget.style.color = 'var(--danger)';
+              e.currentTarget.style.background = 'rgba(239, 68, 68, 0.1)';
+            }}
+            onMouseLeave={e => {
+              e.currentTarget.style.color = 'var(--text-3)';
+              e.currentTarget.style.background = 'none';
+            }}
           >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
               <polyline points="16 17 21 12 16 7" />
               <line x1="21" y1="12" x2="9" y2="12" />
             </svg>
-            {!collapsed && 'Sign out'}
           </button>
         </div>
 

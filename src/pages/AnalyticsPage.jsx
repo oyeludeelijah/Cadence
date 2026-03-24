@@ -1,6 +1,8 @@
 import { useState, useEffect, useCallback, useMemo } from 'react'
+import { usePageTransition } from '../hooks/usePageTransition'
 import { supabase } from '../supabaseClient'
 import { useAuth }  from '../hooks/useAuth'
+import { AnimatedCounter } from '../components/AnimatedCounter'
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid,
   Tooltip, ResponsiveContainer, Cell, LabelList,
@@ -99,6 +101,7 @@ function computeMetrics(allTasks) {
 // ─── AnalyticsPage ────────────────────────────────────────────────────────────
 function AnalyticsPage() {
   const { user } = useAuth()
+  const pageRef = usePageTransition()
 
   const [allTasks, setAllTasks] = useState([])
   const [loading,  setLoading]  = useState(true)
@@ -152,7 +155,7 @@ function AnalyticsPage() {
 
   // ── Page ───────────────────────────────────────────────────────────────────
   return (
-    <div style={{ maxWidth: 'var(--container-max)', margin: '0 auto' }}>
+    <div ref={pageRef} style={{ maxWidth: 'var(--container-max)', margin: '0 auto' }}>
       <div className="mesh-gradient" />
 
       {/* Header */}
@@ -200,10 +203,8 @@ function SummaryCards({ metrics }) {
   } = metrics
 
   // Procrastination display helpers
-  const piAbs    = procrastinationIndex !== null ? Math.abs(procrastinationIndex).toFixed(1) : null
-  const piLabel  = procrastinationIndex === null  ? '—'
-                 : procrastinationIndex < 0        ? `${piAbs}h early`
-                 :                                   `${piAbs}h late`
+  const piAbs    = procrastinationIndex !== null ? Math.abs(procrastinationIndex) : null
+  const piSuffix = procrastinationIndex !== null ? (procrastinationIndex < 0 ? 'h early' : 'h late') : ''
   const piColor  = procrastinationIndex === null  ? 'var(--text-3)'
                  : procrastinationIndex < 0        ? 'var(--success, #22c55e)'
                  :                                   'var(--danger)'
@@ -218,21 +219,21 @@ function SummaryCards({ metrics }) {
     {
       icon: '📋',
       label: 'Total Tasks',
-      value: totalTasks,
+      value: <AnimatedCounter value={totalTasks} />,
       sub: `${completedTasks} completed`,
       subColor: completedTasks > 0 ? 'var(--success, #22c55e)' : 'var(--text-3)',
     },
     {
       icon: '✅',
       label: 'Checkpoints Done',
-      value: completedCPs,
+      value: <AnimatedCounter value={completedCPs} />,
       sub: completedCPs === 1 ? '1 checkpoint' : `${completedCPs} checkpoints`,
       subColor: 'var(--text-3)',
     },
     {
       icon: '🎯',
       label: 'On-Time Rate',
-      value: onTimeRate !== null ? `${onTimeRate}%` : '—',
+      value: <AnimatedCounter value={onTimeRate} suffix="%" />,
       sub: onTimeRate === null ? 'complete a checkpoint to start'
          : onTimeRate >= 70   ? 'great consistency'
          : onTimeRate >= 40   ? 'room to improve'
@@ -243,7 +244,7 @@ function SummaryCards({ metrics }) {
     {
       icon: '⏱️',
       label: 'Procrastination Index',
-      value: piLabel,
+      value: <AnimatedCounter value={piAbs} suffix={piSuffix} decimals={1} />,
       sub: procrastinationIndex === null ? 'no data yet'
          : procrastinationIndex < 0      ? 'you\'re ahead of schedule'
          :                                  'you\'re running late',
