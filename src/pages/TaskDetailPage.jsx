@@ -18,7 +18,7 @@ import {
 const undoStorageKey = (taskId) => `undo_checkpoint_${taskId}`
 
 // ─── Checkpoint Card ──────────────────────────────────────────────────────────
-function CheckpointCard({ checkpoint, isCurrent, onToggle, checkpointLoading }) {
+function CheckpointCard({ checkpoint, isCurrent, onToggle, checkpointLoading, isLocked }) {
   const status = getCheckpointStatus(checkpoint)
   const isCompleted = checkpoint.status === 'completed'
 
@@ -40,7 +40,7 @@ function CheckpointCard({ checkpoint, isCurrent, onToggle, checkpointLoading }) 
           padding: 'var(--s4)',
           borderRadius: 'var(--r-lg)',
           borderLeft: `3px solid ${borderColor}`,
-          opacity: isCompleted ? 0.6 : 1,
+          opacity: isCompleted ? 0.6 : isLocked ? 0.45 : 1,
           transition: 'opacity 0.3s ease',
           position: 'relative',
         }}
@@ -53,13 +53,13 @@ function CheckpointCard({ checkpoint, isCurrent, onToggle, checkpointLoading }) 
       )}
 
       <div style={{ display: 'flex', alignItems: 'flex-start', gap: 'var(--s3)' }}>
-        {/* Checkbox — disabled while a save is in progress to prevent concurrent toggles */}
+        {/* Checkbox — disabled when loading or when a prior checkpoint is still pending */}
         <button
           className={`checkbox-btn ${isCompleted ? 'checked' : ''}`}
           onClick={() => onToggle(checkpoint.id, checkpoint.status)}
-          disabled={checkpointLoading}
-          title={isCompleted ? 'Mark as pending' : 'Mark as complete'}
-          style={{ marginTop: '2px' }}
+          disabled={checkpointLoading !== null || (isLocked && !isCompleted)}
+          title={isLocked && !isCompleted ? 'Complete the previous checkpoint first' : isCompleted ? 'Mark as pending' : 'Mark as complete'}
+          style={{ marginTop: '2px', cursor: isLocked && !isCompleted ? 'not-allowed' : 'pointer' }}
         >
           {isCompleted && <span className="checkmark">✓</span>}
         </button>
@@ -146,11 +146,11 @@ function CheckpointCard({ checkpoint, isCurrent, onToggle, checkpointLoading }) 
           {isCurrent && !isCompleted && (
             <button
               onClick={() => onToggle(checkpoint.id, checkpoint.status)}
-              disabled={checkpointLoading}
+              disabled={checkpointLoading !== null}
               className="btn-primary"
               style={{ marginTop: 'var(--s3)', width: '100%' }}
             >
-              {checkpointLoading ? (
+              {checkpointLoading === checkpoint.id ? (
                 <>
                   <span className="spinner" style={{ borderTopColor: '#fff' }} />
                   Saving…
@@ -209,7 +209,7 @@ function TaskDetailPage() {
   const [task, setTask]                     = useState(null)
   const [checkpoints, setCheckpoints]       = useState([])
   const [loading, setLoading]               = useState(true)
-  const [checkpointLoading, setCpLoading]   = useState(false)
+  const [checkpointLoading, setCpLoading]   = useState(null)  // null, or the ID of the checkpoint currently being saved
   const [toast, setToast]                   = useState(null)   // { type, text, isUndo }
   const [undoableCheckpoint, setUndoable]   = useState(null)
   const [showDeleteConfirm, setShowDelete]  = useState(false)
@@ -334,6 +334,20 @@ function TaskDetailPage() {
       return
     }
 
+    // Sequential enforcement: block completion if any earlier checkpoint is still pending.
+    // This is a safety net — the checkbox is already visually disabled for locked
+    // checkpoints, but this guard prevents any bypass (e.g. rapid double-clicks).
+    if (currentStatus === 'pending') {
+      const thisCheckpoint = checkpoints.find(cp => cp.id === checkpointId)
+      const hasIncompletePredecessor = checkpoints.some(
+        cp => cp.checkpoint_number < thisCheckpoint.checkpoint_number && cp.status !== 'completed'
+      )
+      if (hasIncompletePredecessor) {
+        showToast('⛔ Complete the previous checkpoint first', 'error')
+        return
+      }
+    }
+
     // ── Pre-emptively lock existing undo window to prevent overlaps ──
     // If a different checkpoint is toggled while an undo window is open,
     // explicitly close and lock the previous one before the new save begins.
@@ -345,7 +359,7 @@ function TaskDetailPage() {
       setUndoable(null)
     }
 
-    setCpLoading(true)
+    setCpLoading(checkpointId)
     const newStatus   = currentStatus === 'completed' ? 'pending' : 'completed'
     const completedAt = newStatus === 'completed' ? new Date().toISOString() : null
 
@@ -378,7 +392,7 @@ function TaskDetailPage() {
     } catch (err) {
       showToast('❌ Error updating checkpoint. Try again.', 'error')
     } finally {
-      setCpLoading(false)
+      setCpLoading(null)
     }
   }
 
@@ -472,6 +486,14 @@ function TaskDetailPage() {
         toast={toast}
         onClick={() => {
           if (!checkpointLoading && undoableCheckpoint) {
+            clearInterval(countdownRef.current)
+            clearTimeout(undoTimeoutRef.current)
+            setToast(prev => ({
+              ...prev,
+              text: 'Undoing...',
+              type: 'undo',
+              isActioning: true
+            }))
             toggleCheckpointStatus(undoableCheckpoint, 'completed')
           }
         }}
@@ -634,15 +656,21 @@ function TaskDetailPage() {
           </p>
         ) : (
           <div style={{ display: 'grid', gap: 'var(--s3)' }}>
-            {checkpoints.map(cp => (
-              <CheckpointCard
-                key={cp.id}
-                checkpoint={cp}
-                isCurrent={currentCheckpoint?.id === cp.id}
-                onToggle={toggleCheckpointStatus}
-                checkpointLoading={checkpointLoading}
-              />
-            ))}
+            {checkpoints.map(cp => {
+              // A checkpoint is locked if it's pending but NOT the next one in sequence
+              // (i.e. there's at least one incomplete checkpoint before it)
+              const isLocked = cp.status === 'pending' && currentCheckpoint?.id !== cp.id
+              return (
+                <CheckpointCard
+                  key={cp.id}
+                  checkpoint={cp}
+                  isCurrent={currentCheckpoint?.id === cp.id}
+                  onToggle={toggleCheckpointStatus}
+                  checkpointLoading={checkpointLoading}
+                  isLocked={isLocked}
+                />
+              )
+            })}
           </div>
         )}
       </div>

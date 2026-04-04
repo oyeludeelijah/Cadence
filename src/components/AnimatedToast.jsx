@@ -65,8 +65,10 @@ export function AnimatedToast({ toast, onClick }) {
     <div
       ref={elRef}
       className={toastClass}
-      onClick={activeToast.isUndo ? onClick : undefined}
+      onClick={activeToast.isUndo && !activeToast.isActioning ? onClick : undefined}
+      style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: activeToast.isUndo && !activeToast.isActioning ? 'pointer' : 'default' }}
     >
+      {activeToast.isActioning && <span className="spinner" style={{ borderTopColor: 'currentColor', width: '12px', height: '12px', borderWidth: '2px' }} />}
       {activeToast.text}
     </div>
   )

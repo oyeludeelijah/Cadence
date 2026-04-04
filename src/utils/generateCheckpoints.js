@@ -45,13 +45,14 @@ Current time: ${currentTime}
 Return ONLY a valid JSON array. No explanation, no markdown, no backticks. Just the raw JSON array.
 
 Each checkpoint must have:
-- "checkpoint_type": short label (e.g. "Thesis Statement", "First Draft", "Practice Problems")
+- "checkpoint_type": a short, specific action label tailored to the task title and notes above. For example, for a history essay comparing WWI and WWII causes, use labels like "Map Key Causes of WWI", "Draft Comparison Argument", "Refine Conclusion" — NOT generic labels like "Research", "First Draft", or "Second Draft"
 - "checkpoint_number": integer starting at 1
 - "due_date": ISO 8601 timestamp, spaced proportionally between now and the deadline
 - "status": "pending"
 
 Rules:
 - 3-5 checkpoints maximum
+- Checkpoint names MUST reflect the specific task title and notes — do not reuse generic stage names
 - First checkpoint due within 24-48 hours of now
 - Last checkpoint due at least 2 hours before the final deadline
 - Space checkpoints proportionally across the available time
