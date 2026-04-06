@@ -49,6 +49,10 @@ function CreateTask({ onTaskCreated, onIsDirtyChange }) {
   function adjustToWorkingHours(rawDate, deadline, spanMs) {
     const TWENTY_FOUR_HOURS = 24 * 60 * 60 * 1000
     const now = new Date()
+    
+    const workingHours = user?.user_metadata?.working_hours || { start: 9, end: 21 }
+    const startHour = parseInt(workingHours.start, 10)
+    const endHour = parseInt(workingHours.end, 10)
 
     // Rule 1: skip adjustment for tight deadlines (< 24h)
     // proportional timing is more important than "sleep" for emergencies
@@ -59,10 +63,17 @@ function CreateTask({ onTaskCreated, onIsDirtyChange }) {
     const d = new Date(rawDate)
     const h = d.getHours()
 
-    if (h < 9) {
-      d.setHours(9, 0, 0, 0)
-    } else if (h >= 21) {
-      d.setHours(21, 0, 0, 0)
+    // Handle normal hours vs night-owl hours across midnight
+    if (startHour <= endHour) {
+      if (h < startHour) d.setHours(startHour, 0, 0, 0)
+      else if (h >= endHour) d.setHours(endHour, 0, 0, 0)
+    } else {
+      // Night owl (e.g. start=14, end=2 -> 2PM to 2AM)
+      // Outside of hours if h >= endHour AND h < startHour
+      if (h >= endHour && h < startHour) {
+        if (h - endHour < startHour - h) d.setHours(endHour, 0, 0, 0)
+        else d.setHours(startHour, 0, 0, 0)
+      }
     }
 
     // Rule 2: safety net — never push past the deadline or into the past
@@ -107,6 +118,7 @@ function CreateTask({ onTaskCreated, onIsDirtyChange }) {
         form.taskType,
         deadline,
         form.notes.trim(),
+        user?.user_metadata?.working_hours || { start: 9, end: 21 }
       )
       setAiActive(false)
 

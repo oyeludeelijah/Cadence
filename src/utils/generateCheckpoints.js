@@ -21,7 +21,7 @@ const NVIDIA_ENDPOINT = '/nvidia-api/chat/completions'
  *   Array of { checkpoint_type, checkpoint_number, due_date, status:'pending' }
  *   or null on any failure (caller falls back to task_templates).
  */
-export async function generateCheckpoints(taskTitle, taskType, deadlineDate, notes) {
+export async function generateCheckpoints(taskTitle, taskType, deadlineDate, notes, workingHours = { start: 9, end: 21 }) {
   const apiKey = import.meta.env.VITE_NVIDIA_API_KEY
   if (!apiKey || apiKey === 'your_nvidia_api_key_here') {
     console.warn('[generateCheckpoints] No NVIDIA API key — skipping AI generation.')
@@ -56,7 +56,7 @@ Rules:
 - First checkpoint due within 24-48 hours of now
 - Last checkpoint due at least 2 hours before the final deadline
 - Space checkpoints proportionally across the available time
-- due_dates must be between working hours 9AM-9PM
+- due_dates must be between working hours ${workingHours.start}:00-${workingHours.end}:00
 - If deadline is less than 24 hours away, return exactly 1 checkpoint due halfway between now and the deadline`
 
   try {
@@ -120,14 +120,19 @@ Rules:
     }
 
     // Normalise — enforce status:'pending', ensure checkpoint_number exists.
-    // RULE: For major tasks (> 36h away), we fix the time to 17:00 (5 PM) for consistency.
-    // SAFETY: After forcing 5 PM, we verify the result is still before the deadline.
-    // For short-term tasks (< 36h), we trust the AI's proportional timing but STILL
-    // verify the date is both in the future AND before the deadline.
-    // HARD CLAMP: after all logic runs, a final guard ensures no checkpoint is ever
-    // born at or past the deadline — regardless of what the AI or maths produces.
+    // RULE: For major tasks (> 36h away), we fix the time for consistency. 
+    // Previously hardcoded to 5 PM, now dynamically uses 1 hour before their 
+    // custom working hours end (e.g., if end=21, sets to 20:00) to respect user preference.
+    // SAFETY: After forcing consistency, we verify the result is still before the deadline.
+    // For short-term tasks (< 36h), we trust the AI's proportional timing.
     const spanMs = deadlineDate.getTime() - new Date().getTime()
     const now = new Date()
+    
+    // Calculate a consistent hour (1 hour before working hours end, handle midnight wrapping)
+    const endHour = parseInt(workingHours.end, 10)
+    let consistentHour = endHour - 1
+    if (consistentHour < 0) consistentHour += 24
+
     return parsed.map((cp, i) => {
       const rawAiDate = new Date(cp.due_date)
       let aiDate = new Date(cp.due_date)
@@ -137,25 +142,34 @@ Rules:
         new Date(now.getTime() + (spanMs * (i + 1)) / (parsed.length + 1))
 
       if (spanMs > (36 * 60 * 60 * 1000)) {
-        // Long-term task: Fix to 5 PM local time
-        aiDate.setHours(17, 0, 0, 0)
+        // Long-term task: Fix to consistent working hour
+        aiDate.setHours(consistentHour, 0, 0, 0)
 
-        // Safety net: if forcing 5 PM pushes the date to/past the deadline, fall back.
+        // Safety net: if forcing consistent hour pushes the date to/past the deadline, fall back.
         if (aiDate >= deadlineDate) {
-          // Try the raw AI date first; if that's also bad, use a proportional slot.
-          aiDate = (rawAiDate > now && rawAiDate < deadlineDate)
-            ? rawAiDate
-            : proportionalSlot()
+          aiDate = (rawAiDate > now && rawAiDate < deadlineDate) ? rawAiDate : proportionalSlot()
         }
       } else {
         // Tight deadline (< 36 h): trust the AI's proportional timing, but verify
-        // BOTH directions — the AI may return dates in the past OR after the deadline
-        // (e.g. the model picks "working hours" on the deadline day ignoring the time).
         if (aiDate <= now || aiDate >= deadlineDate) {
-          // Try the raw AI date if it's valid; otherwise use a proportional slot.
-          aiDate = (rawAiDate > now && rawAiDate < deadlineDate)
-            ? rawAiDate
-            : proportionalSlot()
+          aiDate = (rawAiDate > now && rawAiDate < deadlineDate) ? rawAiDate : proportionalSlot()
+        }
+      }
+
+      // Safety UI Clamp: if AI hallucinated bounds or we fell back to a proportional slot,
+      // clamp to working hours (if it's not a true emergency < 24h away)
+      if (spanMs >= 24 * 60 * 60 * 1000) {
+        const h = aiDate.getHours()
+        const startH = parseInt(workingHours.start, 10)
+        if (startH <= endHour) {
+          if (h < startH) aiDate.setHours(startH, 0, 0, 0)
+          else if (h >= endHour) aiDate.setHours(endHour, 0, 0, 0)
+        } else {
+          // Night owl
+          if (h >= endHour && h < startH) {
+            if (h - endHour < startH - h) aiDate.setHours(endHour, 0, 0, 0)
+            else aiDate.setHours(startH, 0, 0, 0)
+          }
         }
       }
 

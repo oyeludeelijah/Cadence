@@ -3,6 +3,7 @@ import TaskListPage    from './pages/TaskListPage'
 import TaskDetailPage  from './pages/TaskDetailPage'
 import AnalyticsPage   from './pages/AnalyticsPage'
 import AuthPage        from './pages/AuthPage'
+import SettingsPage    from './pages/SettingsPage'
 import { AppShell }    from './components/AppShell'
 import { useAuth }     from './hooks/useAuth'
 import './App.css'
@@ -42,6 +43,7 @@ function App() {
         <Route path="/"           element={<TaskListPage />} />
         <Route path="/tasks/:id"  element={<TaskDetailPage />} />
         <Route path="/analytics"  element={<AnalyticsPage />} />
+        <Route path="/settings"   element={<SettingsPage />} />
         <Route path="*"           element={<Navigate to="/" replace />} />
       </Routes>
     </AppShell>

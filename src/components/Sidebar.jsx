@@ -57,7 +57,7 @@ const IconUser = () => (
 const NAV_ITEMS = [
   { label: 'My Tasks',   icon: IconTasks,     path: '/' },
   { label: 'Analytics',  icon: IconAnalytics, path: '/analytics' },
-  { label: 'Settings',   icon: IconSettings,  path: '/settings',   disabled: true },
+  { label: 'Settings',   icon: IconSettings,  path: '/settings' },
 ]
 
 // ── Sidebar ──────────────────────────────────────────────────────────────────
