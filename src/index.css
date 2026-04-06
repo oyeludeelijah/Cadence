@@ -99,6 +99,7 @@
 html {
   scroll-behavior: smooth;
   -webkit-text-size-adjust: 100%;
+  color-scheme: dark; /* Forces native browser UI (like date pickers and scrollbars) to dark mode */
 }
 
 body {
@@ -354,9 +355,23 @@ input, select, textarea {
 
 .field-input:hover:not(:focus),
 .field-select:hover:not(:focus),
-.field-textarea:hover:not(:focus) {
+.field-textarea:hover:not(:focus),
+.date-picker-group:hover .field-input:not(:focus) {
   border-color: var(--border-2);
   background-color: rgba(255, 255, 255, 0.055);
+}
+
+/* ── Calendar Picker Icon (Native) ────────────────────────────────────────── */
+::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  padding: 4px;
+  filter: invert(1) opacity(0.6); /* makes the standard black icon white and muted */
+  transition: filter var(--dur-fast) var(--ease-out);
+}
+
+.date-picker-group:hover ::-webkit-calendar-picker-indicator,
+::-webkit-calendar-picker-indicator:hover {
+  filter: invert(1) brightness(1.2) opacity(1);
 }
 
 /* ── Badges ───────────────────────────────────────────────────────────────── */

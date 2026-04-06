@@ -248,15 +248,29 @@ function CreateTask({ onTaskCreated, onIsDirtyChange }) {
         </div>
 
         {/* Due Date */}
-        <div className="field-group">
+        <div 
+          className="field-group date-picker-group"
+          style={{ cursor: 'pointer' }}
+          onClick={(e) => {
+            const input = e.currentTarget.querySelector('input');
+            if (input) {
+              if (typeof input.showPicker === 'function') {
+                input.showPicker();
+              } else {
+                input.click();
+              }
+            }
+          }}
+        >
           <label className="field-label" htmlFor="task-due">Final Deadline</label>
           <input
             id="task-due"
-            className="field-input"
+            className="field-input clickable-input"
             type="datetime-local"
             name="dueDate"
             value={form.dueDate}
             onChange={handleChange}
+            style={{ cursor: 'pointer' }}
           />
         </div>
 

@@ -45,7 +45,7 @@ Current time: ${currentTime}
 Return ONLY a valid JSON array. No explanation, no markdown, no backticks. Just the raw JSON array.
 
 Each checkpoint must have:
-- "checkpoint_type": a short, specific action label tailored to the task title and notes above. For example, for a history essay comparing WWI and WWII causes, use labels like "Map Key Causes of WWI", "Draft Comparison Argument", "Refine Conclusion" — NOT generic labels like "Research", "First Draft", or "Second Draft"
+- "checkpoint_type": a short, friendly action label written like a helpful nudge from a friend. Tailored to the task title and notes. For example, for a history essay comparing WWI and WWII causes, use labels like "List out WWI causes", "Write your comparison argument", "Polish your conclusion" — NOT academic labels like "Map Key Causes" or generic ones like "Research", "First Draft"
 - "checkpoint_number": integer starting at 1
 - "due_date": ISO 8601 timestamp, spaced proportionally between now and the deadline
 - "status": "pending"
