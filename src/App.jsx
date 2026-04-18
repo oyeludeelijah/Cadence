@@ -4,6 +4,10 @@ import TaskDetailPage  from './pages/TaskDetailPage'
 import AnalyticsPage   from './pages/AnalyticsPage'
 import AuthPage        from './pages/AuthPage'
 import SettingsPage    from './pages/SettingsPage'
+import LandingPage     from './pages/LandingPage'
+import FeaturesPage    from './pages/FeaturesPage'
+import AboutPage       from './pages/AboutPage'
+import ContactPage     from './pages/ContactPage'
 import { AppShell }    from './components/AppShell'
 import { useAuth }     from './hooks/useAuth'
 import './App.css'
@@ -26,12 +30,17 @@ function App() {
     )
   }
 
-  // Not authenticated → show AuthPage for every route.
-  // BrowserRouter lives in main.jsx so the router is never recreated on sign-in.
+  // Not authenticated → show LandingPage on "/" and AuthPage under "/auth".
+  // Everything else redirects to LandingPage.
   if (!session) {
     return (
       <Routes>
-        <Route path="*" element={<AuthPage />} />
+        <Route path="/"          element={<LandingPage />}  />
+        <Route path="/features"  element={<FeaturesPage />} />
+        <Route path="/about"     element={<AboutPage />}    />
+        <Route path="/contact"   element={<ContactPage />}  />
+        <Route path="/auth"      element={<AuthPage />}     />
+        <Route path="*"          element={<Navigate to="/" replace />} />
       </Routes>
     )
   }

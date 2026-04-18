@@ -1,11 +1,6 @@
 import { useState } from 'react'
 import { supabase } from '../supabaseClient'
-
-const TASK_TYPE_OPTIONS = [
-  { value: 'essay',       label: 'Essay' },
-  { value: 'problem_set', label: 'Problem Set' },
-  { value: 'exam_prep',   label: 'Exam Prep' },
-]
+import { TASK_TYPE_OPTIONS } from '../constants/taskTypes'
 
 /**
  * EditTask
