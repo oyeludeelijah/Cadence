@@ -39,7 +39,7 @@ export default function LandingPage() {
           <div className="lp-wrap lp-hero-inner">
             <div className="lp-hero-eyebrow">
               <span className="lp-hero-eyebrow-dot" />
-              Cadence — Checkpoint Intelligence
+              #01 Accountability Engine
             </div>
 
             <h1 className="lp-hero-h1">

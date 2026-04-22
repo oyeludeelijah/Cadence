@@ -18,7 +18,7 @@ const PILLARS = [
     num: '01',
     title: 'Present Bias',
     ref: 'Kahneman, 2011',
-    body: 'Humans consistently overvalue immediate payoffs relative to future ones. The closer a reward or consequence, the more attention we pay to it. Cadence exploits this by breaking the distant "final grade" into near-term checkpoint deadlines.',
+    body: 'Humans consistently overvalue immediate payoffs relative to future ones. The closer a reward or consequence, the more attention we pay to it. AI Accountability exploits this by breaking the distant "final grade" into near-term checkpoint deadlines.',
   },
   {
     num: '02',

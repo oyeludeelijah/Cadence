@@ -1,5 +1,4 @@
 import { useNavigate } from 'react-router-dom';
-import CadenceLogo from './CadenceLogo';
 
 const FOOTER_LINKS = [
   { label: 'Home',     to: '/'         },
@@ -15,7 +14,7 @@ export default function LandingFooter() {
     <footer className="lp-footer">
       <div className="lp-footer-inner">
         <div>
-          <CadenceLogo variant="dark" width={160} style={{ marginBottom: 'var(--s2)' }} />
+          <div className="lp-footer-brand-name">AI Accountability System</div>
           <p className="lp-footer-tagline">Stop abandoning your assignments.</p>
         </div>
 
@@ -56,7 +55,7 @@ export default function LandingFooter() {
       </div>
 
       <div className="lp-footer-bottom">
-        <p className="lp-footer-copy">© {new Date().getFullYear()} Cadence. All rights reserved.</p>
+        <p className="lp-footer-copy">© 2025 AI Accountability System. All rights reserved.</p>
         <span className="lp-footer-credit">
           Built by{' '}
           <a

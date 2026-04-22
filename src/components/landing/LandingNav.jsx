@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import CadenceLogo from './CadenceLogo';
 
 const NAV_LINKS = [
   { label: 'Home',     to: '/'         },
@@ -31,8 +30,9 @@ export default function LandingNav() {
       <nav className={`lp-nav${scrolled ? ' scrolled' : ''}`}>
         <div className="lp-nav-inner">
           {/* Logo */}
-          <button className="lp-nav-logo" onClick={() => go('/')} aria-label="Cadence — go to home">
-            <CadenceLogo variant="dark" width={130} />
+          <button className="lp-nav-logo" onClick={() => go('/')}>
+            <span className="lp-nav-logo-dot" />
+            AI Accountability
           </button>
 
           {/* Desktop links */}
