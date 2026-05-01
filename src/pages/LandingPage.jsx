@@ -2,10 +2,8 @@ import { useNavigate } from 'react-router-dom';
 import { useReveal } from '../hooks/useReveal';
 import LandingNav from '../components/landing/LandingNav';
 import LandingFooter from '../components/landing/LandingFooter';
-import AmbientOrbs from '../components/landing/AmbientOrbs';
 import TiltCard from '../components/landing/TiltCard';
 import StatNumber from '../components/landing/StatNumber';
-import ParticlesBackground from '../components/landing/ParticlesBackground';
 import '../pages/landing.css';
 
 /* ── Small reusable reveal wrapper ─────────────────────────────────────── */
@@ -21,52 +19,71 @@ function Reveal({ children, delay = 0 }) {
 export default function LandingPage() {
   const navigate = useNavigate();
 
-  const handleScroll = (id) => {
-    document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
-  };
-
   return (
     <div className="lp-page">
       <LandingNav />
 
       <main>
         {/* ── SECTION 1: HERO ────────────────────────────────────────────── */}
-        <section className="lp-hero" id="hero">
-          {/* Layer 0a: Ambient drifting colour orbs — pure CSS */}
-          <AmbientOrbs variant="hero" />
-          {/* Layer 0b: Canvas particle system — GPU RAF loop */}
-          <ParticlesBackground />
-          <div className="lp-wrap lp-hero-inner">
-            <div className="lp-hero-eyebrow">
-              <span className="lp-hero-eyebrow-dot" />
-              #01 Accountability Engine
+        <section className="nh-hero" id="hero">
+          <div className="nh-container">
+            {/* Center Content */}
+            <div className="nh-center-panel">
+               <div className="nh-eyebrow">THE ACCOUNTABILITY ENGINE</div>
+               <h1 className="nh-title">ACCOUNTABLE</h1>
+               
+               <div className="nh-icons-row">
+                 <div className="nh-icon-circle">
+                   {/* Lightbulb / Idea */}
+                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M9 21h6"/><path d="M12 22V12"/><path d="M12 12a5 5 0 1 0-5-5"/></svg>
+                 </div>
+                 <div className="nh-line"></div>
+                 <div className="nh-icon-circle">
+                   {/* Computer / Screen */}
+                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+                 </div>
+                 <div className="nh-line"></div>
+                 <div className="nh-icon-circle">
+                   {/* Star / Plus inside screen / Custom icon */}
+                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="2" y="4" width="20" height="14" rx="2" ry="2"/><line x1="12" y1="8" x2="12" y2="14"/><line x1="9" y1="11" x2="15" y2="11"/></svg>
+                 </div>
+               </div>
+
+               <p className="nh-subtitle">Bridge the gap between intent and completion</p>
             </div>
 
-            <h1 className="lp-hero-h1">
-              Stop{' '}
-              <span className="lp-orange-text">Abandoning</span>
-              <br />
-              Your Assignments
-            </h1>
+            {/* Left Area */}
+            <div className="nh-left-panel">
+               <button className="nh-arrow-btn">
+                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#5a4d8f" strokeWidth="2"><path d="M15 18l-6-6 6-6"/></svg>
+               </button>
+               <div className="nh-pagination">
+                 <div className="nh-page-num">01</div>
+                 <div className="nh-page-dashes">
+                   <span className="nh-dash active"></span>
+                   <span className="nh-dash"></span>
+                   <span className="nh-dash"></span>
+                   <span className="nh-dash"></span>
+                 </div>
+               </div>
+            </div>
 
-            <p className="lp-hero-sub">
-              We bridge the gap between intent and completion using AI-generated
-              checkpoints and real-time urgency tracking.
-            </p>
+            {/* Right Area */}
+            <div className="nh-right-panel">
+               <button className="nh-arrow-btn">
+                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#5a4d8f" strokeWidth="2"><path d="M9 18l6-6-6-6"/></svg>
+               </button>
+            </div>
 
-            <div className="lp-hero-actions">
-              <button
-                className="lp-btn-primary"
-                onClick={() => navigate('/auth')}
-              >
-                Get Started — It's Free
-              </button>
-              <button
-                className="lp-btn-secondary"
-                onClick={() => handleScroll('how-it-works')}
-              >
-                See How It Works ↓
-              </button>
+            {/* Bottom Area */}
+            <div className="nh-bottom-area">
+               <div className="nh-bottom-left">
+                  <button className="nh-outline-btn" onClick={() => navigate('/auth')}>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#e8d98d" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+                    <span>GET STARTED</span>
+                  </button>
+               </div>
+
             </div>
           </div>
         </section>

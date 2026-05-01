@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { supabase } from '../supabaseClient'
 import { generateCheckpoints } from '../utils/generateCheckpoints'
 import { useAuth } from '../hooks/useAuth'
@@ -9,9 +9,30 @@ import { useTaskForm } from '../hooks/useTaskForm'
 function CreateTask({ onTaskCreated, onIsDirtyChange }) {
   const { user } = useAuth()
   const { form, handleChange, resetForm } = useTaskForm({ onIsDirtyChange })
-  const [loading, setLoading]   = useState(false)
-  const [aiActive, setAiActive] = useState(false)  // true while AI (NVIDIA NIM) is generating
-  const [message, setMessage]   = useState(null)   // { type: 'success'|'error', text }
+  const [loading, setLoading]     = useState(false)
+  const [aiActive, setAiActive]   = useState(false)
+  const [aiPhase, setAiPhase]     = useState(0)   // cycles through progress messages
+  const [message, setMessage]     = useState(null) // { type: 'success'|'error', text }
+  const phaseTimer                = useRef(null)
+
+  const AI_PHASES = [
+    { icon: '🔌', text: 'Connecting to AI engine…',       hint: 'Cold starts can take ~20–30s' },
+    { icon: '🧠', text: 'Analysing your task…',           hint: 'Reading your title, type & deadline' },
+    { icon: '📋', text: 'Building your checkpoint roadmap…', hint: 'Structuring a step-by-step plan' },
+    { icon: '✨', text: 'Almost done…',                   hint: 'Finalising dates & timings' },
+  ]
+
+  useEffect(() => {
+    if (aiActive) {
+      setAiPhase(0)
+      phaseTimer.current = setInterval(() => {
+        setAiPhase(p => Math.min(p + 1, AI_PHASES.length - 1))
+      }, 7000) // advance every 7s
+    } else {
+      clearInterval(phaseTimer.current)
+    }
+    return () => clearInterval(phaseTimer.current)
+  }, [aiActive])
 
   /**
    * Adjusts a checkpoint time to reasonable working hours (9 AM – 9 PM).
@@ -194,7 +215,7 @@ function CreateTask({ onTaskCreated, onIsDirtyChange }) {
         </p>
       </div>
 
-      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 'var(--s3)' }}>
+      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 'var(--s3)', position: 'relative' }}>
         {/* Title */}
         <div className="field-group">
           <label className="field-label" htmlFor="task-title">Task Title</label>
@@ -268,6 +289,66 @@ function CreateTask({ onTaskCreated, onIsDirtyChange }) {
           />
         </div>
 
+        {/* AI Loading Overlay — shown while NIM is generating */}
+        {aiActive && (
+          <div style={{
+            position: 'absolute', inset: 0,
+            background: 'rgba(10,10,20,0.92)',
+            backdropFilter: 'blur(8px)',
+            borderRadius: 'var(--r-xl)',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 'var(--s3)',
+            zIndex: 10,
+            padding: 'var(--s6)',
+          }}>
+            {/* Animated ring */}
+            <div style={{
+              width: 64, height: 64,
+              borderRadius: '50%',
+              border: '3px solid rgba(99,102,241,0.2)',
+              borderTop: '3px solid var(--accent)',
+              animation: 'spin 1s linear infinite',
+              flexShrink: 0,
+            }} />
+
+            {/* Phase text */}
+            <div style={{ textAlign: 'center', maxWidth: 280 }}>
+              <p style={{
+                fontSize: 'var(--text-lg)',
+                fontWeight: 600,
+                color: 'var(--text)',
+                margin: '0 0 6px 0',
+                transition: 'opacity 0.4s',
+              }}>
+                {AI_PHASES[aiPhase].icon} {AI_PHASES[aiPhase].text}
+              </p>
+              <p style={{
+                fontSize: 'var(--text-sm)',
+                color: 'var(--text-3)',
+                margin: 0,
+              }}>
+                {AI_PHASES[aiPhase].hint}
+              </p>
+            </div>
+
+            {/* Progress dots */}
+            <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
+              {AI_PHASES.map((_, i) => (
+                <div key={i} style={{
+                  width: i === aiPhase ? 20 : 8,
+                  height: 8,
+                  borderRadius: 4,
+                  background: i <= aiPhase ? 'var(--accent)' : 'rgba(99,102,241,0.2)',
+                  transition: 'all 0.4s ease',
+                }} />
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Submit */}
         <button
           type="submit"
@@ -275,12 +356,7 @@ function CreateTask({ onTaskCreated, onIsDirtyChange }) {
           disabled={loading}
           style={{ width: '100%', padding: 'var(--s2) var(--s4)', fontSize: 'var(--text-base)' }}
         >
-          {aiActive ? (
-            <>
-              <span className="spinner" style={{ borderTopColor: '#fff' }} />
-              AI is planning your task…
-            </>
-          ) : loading ? (
+          {loading ? (
             <>
               <span className="spinner" style={{ borderTopColor: '#fff' }} />
               Creating checkpoints…

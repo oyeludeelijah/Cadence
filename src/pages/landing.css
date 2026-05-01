@@ -453,88 +453,282 @@
 .lp-btn-secondary:active { transform: scale(0.97); }
 
 /* ══════════════════════════════════════════════════════════════════════════
-   HOME — HERO
+   HOME — HERO (REDESIGN)
    ══════════════════════════════════════════════════════════════════════════ */
-.lp-hero {
+.nh-hero {
   min-height: 100vh;
+  background: #000000;
+  display: flex;
+  position: relative;
+  overflow: hidden;
+  font-family: 'Outfit', 'Inter', sans-serif;
+  color: #fff;
+}
+
+.nh-container {
+  width: 100%;
+  max-width: 1600px;
+  margin: 0 auto;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding-top: 68px; /* Offset for nav */
+}
+
+/* Right Content Panel — mirrors the reference layout */
+.nh-center-panel {
+  text-align: right;
+  position: absolute;
+  top: 50%;
+  right: 150px;          /* moved another 20px closer to center */
+  left: 40%;            /* starts at the mid-point */
+  transform: translateY(-50%);
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end; /* right-align children */
+}
+
+.nh-eyebrow {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: #fff;
+  margin-bottom: 20px;
+}
+
+.nh-title {
+  font-family: 'Bebas Neue', 'Outfit', sans-serif;
+  font-size: clamp(72px, 10vw, 160px);
+  font-weight: 400; /* Bebas Neue only ships in regular weight */
+  text-transform: uppercase;
+  line-height: 0.9;
+  margin: 0 0 32px 0;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+.nh-icons-row {
   display: flex;
   align-items: center;
-  padding-top: 68px;
-  position: relative;
-  /* overflow: hidden removed — allows orbs to bleed past the bottom
-     edge into the next section naturally rather than hard-clipping. */
+  justify-content: flex-end; /* right-align the icon row */
+  margin-top: 0;
+  margin-bottom: 20px;
 }
-/* Static mesh background removed to eliminate "dark spots" */
-/*.lp-hero::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background:
-    radial-gradient(ellipse 70% 60% at 50% -10%, rgba(35, 83, 71, 0.45) 0%, transparent 65%),
-    radial-gradient(ellipse 50% 40% at 80% 20%,  rgba(142, 182, 155, 0.08) 0%, transparent 60%),
-    radial-gradient(ellipse 40% 50% at 20% 80%,  rgba(22, 56, 50, 0.35) 0%, transparent 60%);
-  pointer-events: none;
-  z-index: 0;
-}*/
-.lp-hero-inner {
-  position: relative;
-  z-index: 1;
-  padding: var(--s16) 0;
-  text-align: center;
-}
-/* Ensure all section content renders above the fixed orb layer */
-.lp-section,
-.lp-section-alt,
-.lp-page-hero {
-  position: relative;
-  z-index: 1;
-}
-.lp-hero-eyebrow {
-  display: inline-flex;
+
+.nh-icon-circle {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 1px solid #5a4d8f;
+  display: flex;
   align-items: center;
+  justify-content: center;
+  color: #fff;
+}
+
+.nh-line {
+  width: 36px;
+  height: 1px;
+  background-color: #5a4d8f;
+}
+
+.nh-subtitle {
+  font-size: 17px;
+  color: #7f8bba;
+  margin: 0;
+  font-family: 'Inter', sans-serif;
+  text-align: right;
+}
+
+/* Left Panel */
+.nh-left-panel {
+  position: absolute;
+  left: 110px;          /* moved another 20px closer to center */
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  gap: 40px;
+  z-index: 20;
+}
+
+.nh-arrow-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px;
+  transition: transform 0.2s ease;
+}
+
+.nh-arrow-btn:hover {
+  transform: scale(1.1);
+}
+
+.nh-pagination {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.nh-page-num {
+  font-size: 32px;
+  font-weight: 600;
+}
+
+.nh-page-dashes {
+  display: flex;
   gap: 8px;
+}
+
+.nh-dash {
+  width: 24px;
+  height: 3px;
+  background: #5a4d8f;
+  border-radius: 2px;
+}
+
+.nh-dash.active {
+  background: #e8d98d;
+}
+
+/* Right Panel */
+.nh-right-panel {
+  position: absolute;
+  right: 190px;         /* moved another 20px closer to center */
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 20;
+}
+
+/* Socials Panel */
+.nh-socials-panel {
+  position: absolute;
+  right: 40px;
+  bottom: 80px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  z-index: 20;
+}
+
+.nh-social-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s ease;
+}
+
+.nh-social-icon:hover {
+  transform: scale(1.2);
+}
+
+.nh-social-dot {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: #5a4d8f;
+}
+
+/* Bottom Area */
+.nh-bottom-area {
+  position: absolute;
+  bottom: 40px;
+  left: 40px;
+  right: 120px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  z-index: 20;
+}
+
+.nh-bottom-left {
+  display: flex;
+}
+
+.nh-outline-btn {
+  background: transparent;
+  border: 1px solid #5a4d8f;
+  border-radius: 30px;
+  padding: 12px 24px;
+  color: #7f8bba;
   font-size: 11px;
   font-weight: 700;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-  color: var(--accent-hover);
-  margin-bottom: var(--s4);
-  background: var(--accent-dim);
-  border: 1px solid rgba(35, 83, 71, 0.4);
-  border-radius: var(--r-pill);
-  padding: 6px 14px;
-}
-.lp-hero-eyebrow-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--accent-hover);
-  animation: pulse-dot 2s infinite;
-}
-.lp-hero-h1 {
-  font-family: 'Outfit', sans-serif;
-  font-size: clamp(48px, 8vw, 88px);
-  font-weight: 900;
-  letter-spacing: -0.04em;
-  line-height: 1;
-  color: var(--text);
-  margin-bottom: var(--s4);
-  max-width: 14ch;
-  margin-left: auto;
-  margin-right: auto;
-}
-.lp-hero-sub {
-  font-size: clamp(16px, 2vw, 20px);
-  color: var(--text-2);
-  line-height: 1.7;
-  max-width: 54ch;
-  margin: 0 auto var(--s6);
-}
-.lp-hero-actions {
+  letter-spacing: 0.1em;
   display: flex;
-  gap: var(--s2);
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.nh-outline-btn:hover {
+  background: rgba(90, 77, 143, 0.1);
+  border-color: #7f8bba;
+  color: #fff;
+}
+
+.nh-bottom-center {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 16px;
+}
+
+.nh-pill-btn {
+  background: transparent;
+  border: 1px solid #5a4d8f;
+  border-radius: 30px;
+  padding: 8px 16px;
+  color: #7f8bba;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.nh-pill-btn:hover {
+  background: rgba(90, 77, 143, 0.1);
+  color: #fff;
+}
+
+.nh-pill-icon {
+  display: flex;
+  align-items: center;
   justify-content: center;
-  flex-wrap: wrap;
+}
+
+@media (max-width: 1024px) {
+  .nh-title {
+    font-size: 80px;
+  }
+  .nh-left-panel, .nh-right-panel, .nh-socials-panel {
+    display: none;
+  }
+  .nh-bottom-area {
+    flex-direction: column;
+    align-items: center;
+    gap: 24px;
+    right: 40px;
+  }
+  .nh-bottom-center {
+    position: static;
+    transform: none;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
 }
 
 /* ══════════════════════════════════════════════════════════════════════════
