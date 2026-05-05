@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="400" height="400">
+  <rect width="400" height="400" fill="#000000"/>
+  <line x1="62" y1="95" x2="84" y2="95" stroke="#E07A4A" stroke-width="7" stroke-linecap="square"/>
+  <line x1="62" y1="95" x2="62" y2="305" stroke="#E07A4A" stroke-width="7" stroke-linecap="square"/>
+  <line x1="62" y1="305" x2="84" y2="305" stroke="#E07A4A" stroke-width="7" stroke-linecap="square"/>
+  <text x="98" y="274" font-family="system-ui, -apple-system, Helvetica Neue, sans-serif" font-size="148" font-weight="700" letter-spacing="-5" fill="#F2F2F2">Ca</text>
+  <text x="278" y="274" font-family="system-ui, -apple-system, Helvetica Neue, sans-serif" font-size="148" font-weight="300" letter-spacing="-5" fill="#444444">d</text>
+</svg>

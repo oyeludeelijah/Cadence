@@ -30,9 +30,8 @@ export default function LandingNav() {
       <nav className={`lp-nav${scrolled ? ' scrolled' : ''}`}>
         <div className="lp-nav-inner">
           {/* Logo */}
-          <button className="lp-nav-logo" onClick={() => go('/')}>
-            <span className="lp-nav-logo-dot" />
-            AI Accountability
+          <button className="lp-nav-logo" onClick={() => go('/')} style={{ background: 'none', border: 'none', padding: 0 }}>
+            <img src="/logos/full/cadence-fullcolor-white.svg" alt="Cadence" style={{ height: '40px', width: 'auto' }} />
           </button>
 
           {/* Desktop links */}

@@ -1123,41 +1123,22 @@ input, select, textarea {
   flex-shrink: 0;
 }
 
-.sidebar-logo {
+/* Avatar: shown when collapsed — fixed square */
+.sidebar-logo-img--avatar {
   width: 36px;
   height: 36px;
   border-radius: var(--r-md);
-  background: var(--accent-dim);
-  border: 1px solid rgba(35, 83, 71, 0.35);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 18px;
   flex-shrink: 0;
+  object-fit: contain;
 }
 
-.sidebar-brand-text {
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  white-space: nowrap;
-}
-
-.sidebar-brand-name {
-  font-family: 'Outfit', sans-serif;
-  font-size: var(--text-base);
-  font-weight: 700;
-  color: var(--text);
-  letter-spacing: -0.02em;
-  line-height: 1.2;
-}
-
-.sidebar-brand-sub {
-  font-size: 10px;
-  font-weight: 500;
-  color: var(--text-3);
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
+/* Full logo: shown when expanded */
+.sidebar-logo-img--full {
+  height: 50px;
+  width: auto;
+  max-width: 180px;
+  object-fit: contain;
+  margin-left: -4px; /* visually align with the navigation items below */
 }
 
 /* ── Collapse toggle button ──────────────────────────────────────────────── */
@@ -1390,12 +1371,10 @@ input, select, textarea {
   flex-shrink: 0;
 }
 
-.mobile-topbar-brand {
-  font-family: 'Outfit', sans-serif;
-  font-size: var(--text-base);
-  font-weight: 700;
-  color: var(--text);
-  letter-spacing: -0.01em;
+.mobile-topbar-logo {
+  height: 28px;
+  width: auto;
+  object-fit: contain;
 }
 
 /* Hamburger button */
@@ -1487,6 +1466,19 @@ input, select, textarea {
   /* Show mobile top bar */
   .mobile-topbar {
     display: flex;
+  }
+
+  /* Left-align icons on mobile instead of centering them when narrow/collapsed */
+  .sidebar.collapsed .sidebar-brand,
+  .sidebar.collapsed .sidebar-nav-item,
+  .sidebar.collapsed .sidebar-user {
+    justify-content: flex-start !important;
+    padding-left: var(--s4) !important;
+    gap: var(--s3) !important;
+  }
+  .sidebar.collapsed .sidebar-section {
+    align-items: flex-start !important;
+    padding-left: var(--s4) !important;
   }
 }
 

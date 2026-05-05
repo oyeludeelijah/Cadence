@@ -35,7 +35,7 @@ function App() {
   if (!session) {
     return (
       <Routes>
-        <Route path="/"          element={<LandingPage />}  />
+        <Route path="/"          element={<LandingPage />} />
         <Route path="/features"  element={<FeaturesPage />} />
         <Route path="/about"     element={<AboutPage />}    />
         <Route path="/contact"   element={<ContactPage />}  />

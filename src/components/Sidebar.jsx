@@ -123,14 +123,26 @@ export function Sidebar({ mobileOpen, onMobileClose }) {
 
         {/* ── Brand ───────────────────────────────────────────────────────── */}
         <div className="sidebar-brand">
-          <div className="sidebar-logo">
-            <span>⚡</span>
-          </div>
-          {!cssCollapsed && (
-            <div className="sidebar-brand-text gsap-text">
-              <span className="sidebar-brand-name">AI Accountability</span>
-              <span className="sidebar-brand-sub">System</span>
-            </div>
+          {cssCollapsed ? (
+            <img
+              key="logo-collapsed"
+              src={theme === 'dark'
+                ? '/logos/halved/cadence-avatar-dark-transparent.svg'
+                : '/logos/halved/cadence-avatar-light-transparent.svg'
+              }
+              alt="Cadence"
+              className="sidebar-logo-img sidebar-logo-img--avatar"
+            />
+          ) : (
+            <img
+              key="logo-expanded"
+              src={theme === 'dark'
+                ? '/logos/full/cadence-dark-transparent.svg'
+                : '/logos/full/cadence-light-transparent.svg'
+              }
+              alt="Cadence"
+              className="sidebar-logo-img sidebar-logo-img--full gsap-text"
+            />
           )}
         </div>
 

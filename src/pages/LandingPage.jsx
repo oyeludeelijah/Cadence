@@ -29,62 +29,65 @@ export default function LandingPage() {
           <div className="nh-container">
             {/* Center Content */}
             <div className="nh-center-panel">
-               <div className="nh-eyebrow">THE ACCOUNTABILITY ENGINE</div>
-               <h1 className="nh-title">ACCOUNTABLE</h1>
-               
-               <div className="nh-icons-row">
-                 <div className="nh-icon-circle">
-                   {/* Lightbulb / Idea */}
-                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M9 21h6"/><path d="M12 22V12"/><path d="M12 12a5 5 0 1 0-5-5"/></svg>
-                 </div>
-                 <div className="nh-line"></div>
-                 <div className="nh-icon-circle">
-                   {/* Computer / Screen */}
-                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
-                 </div>
-                 <div className="nh-line"></div>
-                 <div className="nh-icon-circle">
-                   {/* Star / Plus inside screen / Custom icon */}
-                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="2" y="4" width="20" height="14" rx="2" ry="2"/><line x1="12" y1="8" x2="12" y2="14"/><line x1="9" y1="11" x2="15" y2="11"/></svg>
-                 </div>
+               <div className="nh-hero-logo-wrapper">
+                 <img src="/logos/halved/cadence-avatar-x.svg" alt="Cadence" className="nh-hero-logo" />
                </div>
-
-               <p className="nh-subtitle">Bridge the gap between intent and completion</p>
-            </div>
-
-            {/* Left Area */}
-            <div className="nh-left-panel">
-               <button className="nh-arrow-btn">
-                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#5a4d8f" strokeWidth="2"><path d="M15 18l-6-6 6-6"/></svg>
-               </button>
-               <div className="nh-pagination">
-                 <div className="nh-page-num">01</div>
-                 <div className="nh-page-dashes">
-                   <span className="nh-dash active"></span>
-                   <span className="nh-dash"></span>
-                   <span className="nh-dash"></span>
-                   <span className="nh-dash"></span>
-                 </div>
-               </div>
-            </div>
-
-            {/* Right Area */}
-            <div className="nh-right-panel">
-               <button className="nh-arrow-btn">
-                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#5a4d8f" strokeWidth="2"><path d="M9 18l6-6-6-6"/></svg>
+               <h1 className="nh-headline">
+                 <span className="nh-headline-primary">Finish every assignment, <span style={{ opacity: 0.3 }}>one step at a time.</span></span>
+                 <span className="nh-headline-secondary">AI breaks your deadline into checkpoints automatically. You just follow the plan.</span>
+               </h1>
+               <button className="nh-hero-cta" onClick={() => navigate('/auth')}>
+                 GET STARTED
                </button>
             </div>
 
-            {/* Bottom Area */}
-            <div className="nh-bottom-area">
-               <div className="nh-bottom-left">
-                  <button className="nh-outline-btn" onClick={() => navigate('/auth')}>
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#e8d98d" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
-                    <span>GET STARTED</span>
-                  </button>
-               </div>
+            {/* ── Floating Widgets ───────────────────────────────────────── */}
 
+            {/* Widget 1 — Top Left — Checkpoint Card */}
+            <div className="hw-widget hw-widget--tl">
+              <div className="hw-widget-row">
+                <span className="hw-icon hw-icon--check">✓</span>
+                <div>
+                  <p className="hw-task-title hw-task-title--done">Research</p>
+                  <p className="hw-task-sub">Due: Today, 5pm</p>
+                </div>
+              </div>
+              <span className="hw-badge hw-badge--green">COMPLETED</span>
             </div>
+
+            {/* Widget 2 — Top Right — Urgency Badge */}
+            <div className="hw-widget hw-widget--tr hw-widget--pill">
+              <span className="hw-icon hw-icon--warn">⚠</span>
+              <div>
+                <p className="hw-task-title hw-task-title--urgent">OVERDUE</p>
+                <p className="hw-task-sub">Linear Algebra Problem Set</p>
+              </div>
+            </div>
+
+            {/* Widget 3 — Bottom Left — AI Generation Card */}
+            <div className="hw-widget hw-widget--bl">
+              <div className="hw-widget-row">
+                <span className="hw-icon hw-icon--doc">📝</span>
+                <div>
+                  <p className="hw-task-title">Organic Chemistry Midterm</p>
+                  <p className="hw-task-sub">Exam Prep · Due in 7 days</p>
+                </div>
+              </div>
+              <div className="hw-ai-row">
+                <span className="hw-ai-spark">✦</span>
+                <p className="hw-ai-label">AI is planning your task...</p>
+              </div>
+            </div>
+
+            {/* Widget 4 — Bottom Right — Progress Card */}
+            <div className="hw-widget hw-widget--br">
+              <p className="hw-progress-label">Checkpoint 3 of 5</p>
+              <div className="hw-progress-bar">
+                <div className="hw-progress-fill" style={{ width: '60%' }}></div>
+              </div>
+              <p className="hw-task-sub" style={{ marginTop: '6px' }}>Next: First Draft · Tomorrow</p>
+            </div>
+
           </div>
         </section>
 

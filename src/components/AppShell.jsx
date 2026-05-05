@@ -26,7 +26,7 @@ export function AppShell({ children }) {
           >
             <span /><span /><span />
           </button>
-          <span className="mobile-topbar-brand">⚡ AI Accountability System</span>
+          <img src="/logos/full/cadence-fullcolor-white.svg" alt="Cadence" className="mobile-topbar-logo" />
         </div>
 
         {/* Page content */}

@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="50 20 480 160" width="480" height="160">
+  <line x1="60" y1="36" x2="80" y2="36" stroke="#C75A2C" stroke-width="3" stroke-linecap="square"/>
+  <line x1="60" y1="36" x2="60" y2="164" stroke="#C75A2C" stroke-width="3" stroke-linecap="square"/>
+  <line x1="60" y1="164" x2="80" y2="164" stroke="#C75A2C" stroke-width="3" stroke-linecap="square"/>
+  <text x="92" y="150" font-family="system-ui, -apple-system, Helvetica Neue, sans-serif" font-size="96" font-weight="700" letter-spacing="-3" fill="#141414">Cad</text>
+  <text x="264" y="150" font-family="system-ui, -apple-system, Helvetica Neue, sans-serif" font-size="96" font-weight="300" letter-spacing="-3" fill="#AAAAAA">ence</text>
+</svg>
