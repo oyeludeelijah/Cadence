@@ -319,7 +319,7 @@ function CreateTask({ onTaskCreated, onIsDirtyChange }) {
               <p style={{
                 fontSize: 'var(--text-lg)',
                 fontWeight: 600,
-                color: 'var(--text)',
+                color: '#ffffff',
                 margin: '0 0 6px 0',
                 transition: 'opacity 0.4s',
               }}>
@@ -327,7 +327,7 @@ function CreateTask({ onTaskCreated, onIsDirtyChange }) {
               </p>
               <p style={{
                 fontSize: 'var(--text-sm)',
-                color: 'var(--text-3)',
+                color: 'rgba(255, 255, 255, 0.7)',
                 margin: 0,
               }}>
                 {AI_PHASES[aiPhase].hint}

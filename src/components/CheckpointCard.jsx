@@ -24,7 +24,7 @@ export default function CheckpointCard({ checkpoint, isCurrent, onToggle, checkp
     ? 'var(--danger)'
     : status === 'urgent'
     ? 'var(--warning)'
-    : 'var(--border-2)'
+    : 'var(--accent)'
 
   return (
     <div className="gsap-checkpoint-card">

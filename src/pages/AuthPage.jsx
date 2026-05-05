@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { supabase } from '../supabaseClient'
+import { useTheme } from '../hooks/useTheme'
 
 // ── Deterministic star positions (no layout shift) ─────────────────────────
 const STARS = [
@@ -33,6 +34,7 @@ function EyeIcon({ open }) {
 
 // ── Main component ─────────────────────────────────────────────────────────
 function AuthPage() {
+  const { theme } = useTheme()
   const [mode, setMode]             = useState('signin') // 'signin' | 'signup'
   const [email, setEmail]           = useState('')
   const [password, setPassword]     = useState('')
@@ -115,16 +117,15 @@ function AuthPage() {
         ))}
 
         {/* Brand — top */}
-        <div className="auth-brand">
-          <div className="auth-brand-icon">⚡</div>
-          <div>
-            <div style={{ fontSize: 'var(--text-sm)', fontWeight: 700, color: 'var(--text)', letterSpacing: '0.05em', lineHeight: 1.2 }}>
-              AI ACCOUNTABILITY
-            </div>
-            <div style={{ fontSize: '10px', color: 'var(--text-3)', letterSpacing: '0.06em', textTransform: 'uppercase' }}>
-              System
-            </div>
-          </div>
+        <div className="auth-brand" style={{ display: 'flex', alignItems: 'center' }}>
+          <img
+            src={theme === 'dark'
+              ? '/logos/full/cadence-dark-transparent.svg'
+              : '/logos/full/cadence-light-transparent.svg'
+            }
+            alt="Cadence"
+            style={{ height: '42px', width: 'auto', objectFit: 'contain' }}
+          />
         </div>
 
         {/* Tagline — bottom */}
