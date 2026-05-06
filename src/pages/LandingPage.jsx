@@ -30,7 +30,7 @@ export default function LandingPage() {
             {/* Center Content */}
             <div className="nh-center-panel">
                <div className="nh-hero-logo-wrapper">
-                 <img src="/logos/halved/cadence-avatar-x.svg" alt="Cadence" className="nh-hero-logo" />
+                 <img src="/logos/halved/cadence-avatar-light-transparent.svg" alt="Cadence" className="nh-hero-logo" />
                </div>
                <h1 className="nh-headline">
                  <span className="nh-headline-primary">Finish every assignment, <span style={{ opacity: 0.3 }}>one step at a time.</span></span>

@@ -31,7 +31,7 @@ export default function LandingNav() {
         <div className="lp-nav-inner">
           {/* Logo */}
           <button className="lp-nav-logo" onClick={() => go('/')} style={{ background: 'none', border: 'none', padding: 0 }}>
-            <img src="/logos/full/cadence-fullcolor-white.svg" alt="Cadence" style={{ height: '40px', width: 'auto' }} />
+            <img src="/logos/full/cadence-light-transparent.svg" alt="Cadence" style={{ height: '40px', width: 'auto' }} />
           </button>
 
           {/* Desktop links */}

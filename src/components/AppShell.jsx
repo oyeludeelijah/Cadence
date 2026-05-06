@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Sidebar } from './Sidebar'
+import { useTheme } from '../hooks/useTheme'
 
 /**
  * AppShell — persistent layout wrapper.
@@ -8,6 +9,7 @@ import { Sidebar } from './Sidebar'
  */
 export function AppShell({ children }) {
   const [mobileOpen, setMobileOpen] = useState(false)
+  const { theme } = useTheme()
 
   return (
     <div className="app-shell">
@@ -26,7 +28,14 @@ export function AppShell({ children }) {
           >
             <span /><span /><span />
           </button>
-          <img src="/logos/full/cadence-fullcolor-white.svg" alt="Cadence" className="mobile-topbar-logo" />
+          <img 
+            src={theme === 'dark' 
+              ? "/logos/full/cadence-dark-transparent.svg" 
+              : "/logos/full/cadence-light-transparent.svg"
+            } 
+            alt="Cadence" 
+            className="mobile-topbar-logo" 
+          />
         </div>
 
         {/* Page content */}
