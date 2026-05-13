@@ -60,7 +60,6 @@ export default function ContactPage() {
                 ) : (
                   <div className="lp-card" style={{ padding: 'var(--s5)' }}>
                     <h2 style={{
-                      fontFamily: 'Outfit, sans-serif',
                       fontSize: 'var(--text-xl)',
                       fontWeight: 700,
                       letterSpacing: '-0.02em',

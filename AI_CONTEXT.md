@@ -12,9 +12,9 @@ Helps students break large academic tasks (essays, problem sets, exam prep) into
 - React 19.2.0 + Vite 7.3.1
 - React Router DOM 7.13.0
 - GSAP 3.x (JavaScript animation engine for modals, stagger effects, counters)
-- Recharts 2.x (Analytics visualisations)
+- Recharts 3.x (Analytics visualisations)
 - Supabase (PostgreSQL + PostgREST) — backend and database
-- Vanilla CSS only — custom design system in `src/index.css`, no Tailwind, no component libraries
+- Core app uses Vanilla CSS (`src/index.css`). Landing pages use Tailwind CSS v4
 - No state management library — pure useState, useEffect, useCallback, useRef
 - JavaScript/JSX throughout
 - **No extra AI packages** — AI calls use plain `fetch` via a Vite proxy (see AI section below)
@@ -27,15 +27,20 @@ Helps students break large academic tasks (essays, problem sets, exam prep) into
 api/
 └── nvidia.js                  # Vercel serverless proxy for production AI
 src/
-├── App.jsx                    # Route guard — shows AuthPage if no session, AppShell+Routes if authenticated
-├── index.css                  # Full design system — source of truth
+├── App.jsx                    # Route guard — unauthenticated users see LandingPage on /, AuthPage on /auth
+├── index.css                  # Full design system for core app
 ├── supabaseClient.js
 ├── pages/
-│   ├── AuthPage.jsx           # Sign In / Sign Up page (tab toggle, existing design system classes)
-│   ├── TaskListPage.jsx       # ~615 lines
-│   ├── TaskDetailPage.jsx     # ~600 lines
+│   ├── LandingPage.jsx        # Public landing page (Tailwind CSS / Cosmos UI)
+│   ├── FeaturesPage.jsx       # Public features overview
+│   ├── AboutPage.jsx          # Public about page
+│   ├── ContactPage.jsx        # Public contact page
+│   ├── AuthPage.jsx           # Sign In / Sign Up page
+│   ├── TaskListPage.jsx       # Home — task list, grouping, urgency sections
+│   ├── TaskDetailPage.jsx     # Individual task — checkpoints, undo, progress
 │   └── AnalyticsPage.jsx      # Metrics computation and Recharts visualisations
 ├── components/
+│   ├── landing/               # Tailwind components for public pages
 │   ├── CreateTask.jsx         # ~290 lines — attaches user_id on task insert
 │   ├── EditTask.jsx           # ~160 lines — pre-filled edit form (metadata only)
 │   ├── AppShell.jsx           # Persistent layout wrapper (sidebar + main)
@@ -51,7 +56,8 @@ src/
 │   └── usePageTransition.js   # GSAP page fade-in
 └── utils/
     ├── checkpointHelpers.js   # getCheckpointStatus(), getOverdueText(), getTimeUntilDue()
-    └── generateCheckpoints.js # AI checkpoint generation via NVIDIA NIM — COMPLETE
+    ├── generateCheckpoints.js # Orchestrates AI checkpoint generation and date normalization
+    └── nimApiClient.js        # HTTP transport layer for NVIDIA NIM with retry/backoff logic
 
 vite.config.js                 # Has proxy config for local dev AI
 vercel.json                    # Rewrite rule for production AI proxy
@@ -67,7 +73,7 @@ supabase/
 
 ## Database
 
-- **tasks** — `id`, `title`, `task_type` ('essay'|'problem_set'|'exam_prep'), `final_deadline`, `notes`, `status` ('active'|'completed'), `created_at`
+- **tasks** — `id`, `user_id` (FK to auth.users), `title`, `task_type` ('essay'|'problem_set'|'exam_prep'), `final_deadline`, `notes`, `status` ('active'|'completed'), `created_at`
 - **checkpoints** — `id`, `task_id` (FK), `checkpoint_number`, `checkpoint_type`, `due_date`, `status` ('pending'|'completed'), `completed_at`, `created_at`, `ai_generated` (boolean, default false), `reminder_sent_urgent` (boolean, default false), `reminder_sent_overdue` (boolean, default false)
 - **task_templates** — `id`, `task_type`, `checkpoint_sequence` (JSONB) — fallback only, do not remove
 
@@ -112,12 +118,12 @@ Replaces `task_templates` as the checkpoint source. When a user creates a task, 
 - `vercel.json` must contain the rewrite rule
 - `NVIDIA_API_KEY` must be set in Vercel environment variables (server-side only, no `VITE_` prefix)
 
-**Key file:** `src/utils/generateCheckpoints.js`
+**Key files:** `src/utils/generateCheckpoints.js` and `src/utils/nimApiClient.js`
 - Exports: `generateCheckpoints(taskTitle, taskType, deadlineDate, notes)`
 - Returns: array of `{ checkpoint_type, checkpoint_number, due_date, status: 'pending' }` or `null` on failure
-- Has a **20-second hard timeout** via `AbortController` — aborts and returns `null` if model is slow
+- Uses a robust exponential backoff strategy: 45-second per-attempt timeout, max 3 retries, and a 100-second maximum total time budget. If exhausted, it silently returns `null`
 - Strips stray markdown fences from the model response before `JSON.parse`
-- Validates response shape before returning — returns `null` if malformed
+- Validates response shape before returning — aborts if malformed
 
 **Request config:**
 ```js
@@ -170,7 +176,7 @@ stream:      false
 - Safety net: ensures adjusted time is in the future and strictly before the final deadline; otherwise defaults to safe proportional fallback.
 
 **AI Normalization** in `generateCheckpoints.js`:
-- For long-term tasks (> 36h), forces 5 PM consistency.
+- For long-term tasks (> 36h), dynamically sets to 1 hour before custom working hours end (e.g., 8 PM if working hours end at 9 PM) for consistency.
 - For short-term tasks (< 36h), trusts the AI's proportional timing to prevent "impossible" deadlines.
 
 ---
@@ -195,8 +201,8 @@ Task creation (AI + fallback), **Edit task (metadata updates — Confirmed ✅)*
 
 ## Design rules — non-negotiable
 
-- Vanilla CSS only — no Tailwind, no libraries
-- Use CSS custom property tokens from `index.css` — never hardcode values
+- Core app uses Vanilla CSS only via `index.css`. Public landing pages use Tailwind CSS v4.
+- Use CSS custom property tokens from `index.css` for core app components — never hardcode values
 - Background `#080810`, accent `#6366f1`, glassmorphism cards
 - Fonts: Outfit (headings), Inter (body)
 - 8px grid — `--s1` through `--s16`

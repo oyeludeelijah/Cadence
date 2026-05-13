@@ -5,7 +5,7 @@
    Psychology: Halo Effect (first impression = calm control)
    ═══════════════════════════════════════════════════════════════════════════ */
 
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Inter:wght@400;450;500;600&display=swap');
+
 
 /* ── Design Tokens ────────────────────────────────────────────────────────── */
 :root {
@@ -93,6 +93,7 @@
   box-sizing: border-box;
   margin: 0;
   padding: 0;
+  font-family: 'Elms Sans', sans-serif;
 }
 
 /* ── Base ─────────────────────────────────────────────────────────────────── */
@@ -103,7 +104,6 @@ html {
 }
 
 body {
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
   font-size: var(--text-base);
   line-height: 1.65;
   color: var(--text);
@@ -115,7 +115,6 @@ body {
 }
 
 h1, h2, h3, h4, h5, h6 {
-  font-family: 'Outfit', sans-serif;
   font-weight: 700;
   letter-spacing: -0.02em;
   line-height: 1.1;
@@ -134,14 +133,12 @@ a {
 }
 
 button {
-  font-family: 'Inter', sans-serif;
   cursor: pointer;
   border: none;
   background: none;
 }
 
 input, select, textarea {
-  font-family: 'Inter', sans-serif;
 }
 
 /* ── Animated Background ──────────────────────────────────────────────────── */
@@ -300,7 +297,7 @@ input, select, textarea {
   width: 100%;
   padding: var(--s2) var(--s3);
   font-size: var(--text-base);
-  font-family: 'Inter', sans-serif;
+  font-family: 'Elms Sans', sans-serif;
   color: var(--text);
   background-color: rgba(255, 255, 255, 0.04);  /* background-color not shorthand — preserves select arrow */
   border: 1px solid var(--border-2);

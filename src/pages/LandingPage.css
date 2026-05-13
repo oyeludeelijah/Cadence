@@ -1,7 +1,6 @@
 @import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap');
 
 .lp-container {
-  font-family: "Inter", sans-serif;
   background-color: #ffffff;
   color: #0f1a16;
   min-height: 100vh;
@@ -26,10 +25,8 @@
 
 /* Typography Base Overrides */
 .lp-container h1, .lp-container h2, .lp-container h3, .lp-container h4, .lp-container .font-headline {
-  font-family: "Inter", sans-serif;
 }
 .lp-container p, .lp-container .font-body {
-  font-family: "Inter", sans-serif;
 }
 
 /* Layout Containers */

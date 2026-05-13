@@ -33,7 +33,7 @@ export default function LandingPage() {
                  <img src="/logos/halved/cadence-avatar-light-transparent.svg" alt="Cadence" className="nh-hero-logo" />
                </div>
                <h1 className="nh-headline">
-                 <span className="nh-headline-primary">Finish every assignment, <span style={{ opacity: 0.3 }}>one step at a time.</span></span>
+                 <span className="nh-headline-primary">Finish every assignment, <span style={{ opacity: 0.3, display: 'block' }}>one step at a time.</span></span>
                  <span className="nh-headline-secondary">AI breaks your deadline into checkpoints automatically. You just follow the plan.</span>
                </h1>
                <button className="nh-hero-cta" onClick={() => navigate('/auth')}>

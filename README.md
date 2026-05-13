@@ -75,11 +75,11 @@ A color-coded system that tells you exactly where you stand:
 | Backend / DB | Supabase (PostgreSQL, PostgREST, Edge Functions, pg_cron) |
 | Styling | Vanilla CSS — custom design system in `src/index.css` |
 | Animations | GSAP 3.x |
-| Charts | Recharts 2.x |
+| Charts | Recharts 3.x |
 | AI | NVIDIA NIM API — `meta/llama-3.1-8b-instruct` via plain `fetch` |
 | Email Service | Resend API |
 
-No Tailwind, no component libraries, no external state management (pure hooks).
+Core app uses pure Vanilla CSS. Landing pages use Tailwind CSS v4. No external state management (pure hooks).
 
 ---
 
@@ -128,6 +128,7 @@ You'll need these tables in Supabase:
 | Column | Type | Notes |
 |---|---|---|
 | `id` | uuid | primary key |
+| `user_id` | uuid | FK → auth.users(id) |
 | `title` | text | |
 | `task_type` | text | `'essay'` \| `'problem_set'` \| `'exam_prep'` |
 | `final_deadline` | timestamptz | |
@@ -167,13 +168,16 @@ You'll need these tables in Supabase:
 ```
 src/
 ├── App.jsx
-├── index.css                  # Full design system — source of truth for all styles
+├── index.css                  # Full design system for core app
 ├── supabaseClient.js
 ├── pages/
+│   ├── LandingPage.jsx        # Public landing page (Tailwind CSS)
+│   ├── AuthPage.jsx           # Sign In / Sign Up page
 │   ├── TaskListPage.jsx       # Home — task list, grouping, urgency sections
 │   ├── TaskDetailPage.jsx     # Individual task — checkpoints, undo, progress
 │   └── AnalyticsPage.jsx      # Metrics and Recharts visualisations
 ├── components/
+│   ├── landing/               # Tailwind components for public pages
 │   ├── CreateTask.jsx         # Task creation form with AI integration
 │   ├── EditTask.jsx           # Task edit form (metadata only)
 │   └── DeleteConfirmModal.jsx # Confirmation modal for task deletion
@@ -182,7 +186,8 @@ src/
 │   └── useTheme.js            # Dark/light mode hook with anti-FOUC
 └── utils/
     ├── checkpointHelpers.js   # Status logic (getCheckpointStatus, etc.)
-    └── generateCheckpoints.js # NVIDIA NIM AI call with fallback logic
+    ├── generateCheckpoints.js # AI checkpoint generation orchestration
+    └── nimApiClient.js        # NVIDIA NIM API client with retry and fallback logic
 
 vite.config.js                 # Dev proxy: /nvidia-api → NVIDIA NIM endpoint
 ```
@@ -219,5 +224,5 @@ If you're a supervisor reading this and have questions (or found bugs), feel fre
 
 ---
 
-**Last Updated**: March 2026
+**Last Updated**: May 2026
 **Status**: Demo / Prototype — AI integration and User Authentication complete.

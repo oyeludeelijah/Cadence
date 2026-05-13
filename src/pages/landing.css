@@ -30,7 +30,7 @@
   min-height: 100vh;
   background: #ffffff;
   color: var(--text);
-  font-family: 'Inter', sans-serif;
+
   overflow-x: hidden;
 }
 
@@ -89,7 +89,7 @@
   margin: 0 auto;
 }
 .lp-nav-logo {
-  font-family: 'Outfit', sans-serif;
+
   font-size: 18px;
   font-weight: 800;
   letter-spacing: -0.03em;
@@ -144,7 +144,7 @@
 .lp-nav-cta {
   font-size: var(--text-sm);
   font-weight: 700;
-  font-family: 'Outfit', sans-serif;
+
   color: #fff;
   background: var(--orange-grad);
   border: none;
@@ -217,7 +217,7 @@
   text-align: center;
   font-size: var(--text-base);
   font-weight: 700;
-  font-family: 'Outfit', sans-serif;
+
   color: #fff;
   background: var(--orange-grad);
   border: none;
@@ -244,7 +244,7 @@
   align-items: start;
 }
 .lp-footer-brand-name {
-  font-family: 'Outfit', sans-serif;
+
   font-size: var(--text-base);
   font-weight: 800;
   color: var(--text);
@@ -324,7 +324,7 @@
   margin-bottom: var(--s2);
 }
 .lp-section-h {
-  font-family: 'Outfit', sans-serif;
+
   font-size: clamp(32px, 5vw, 52px);
   font-weight: 800;
   letter-spacing: -0.03em;
@@ -383,7 +383,7 @@
   font-size: 20px;
 }
 .lp-card h3 {
-  font-family: 'Outfit', sans-serif;
+
   font-size: var(--text-lg);
   font-weight: 700;
   letter-spacing: -0.02em;
@@ -405,7 +405,7 @@
   padding: 14px 30px;
   background: var(--orange-grad);
   color: #fff;
-  font-family: 'Outfit', sans-serif;
+
   font-size: var(--text-base);
   font-weight: 700;
   border-radius: var(--r-pill);
@@ -430,7 +430,7 @@
   padding: 14px 30px;
   background: transparent;
   color: var(--text-2);
-  font-family: 'Outfit', sans-serif;
+
   font-size: var(--text-base);
   font-weight: 600;
   border-radius: var(--r-pill);
@@ -482,7 +482,7 @@
   box-shadow:
     0 4px 16px rgba(0, 0, 0, 0.07),
     0 1px 4px rgba(0, 0, 0, 0.04);
-  font-family: 'Outfit', 'Inter', sans-serif;
+
   pointer-events: none;
   user-select: none;
   z-index: 5;
@@ -641,7 +641,7 @@
   display: flex;
   position: relative;
   overflow: hidden;
-  font-family: 'Outfit', 'Inter', sans-serif;
+
   color: #0f1a16;
 }
 
@@ -666,7 +666,10 @@
   z-index: 10;
   display: flex;
   flex-direction: column;
-  align-items: center; /* center-align children */
+  align-items: center;
+  width: 100%;
+  padding: 0 var(--container-padding);
+  box-sizing: border-box;
 }
 
 /* Two-line ChronoTask-style headline */
@@ -679,11 +682,15 @@
 .nh-hero-logo {
   width: 64px;
   height: 64px;
+  background: #ffffff;
+  padding: 14px;
+  box-sizing: border-box;
   border-radius: 16px;
   box-shadow: 
     0 20px 40px rgba(0, 0, 0, 0.1),
     0 10px 20px rgba(0, 0, 0, 0.05);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  object-fit: contain;
 }
 
 .nh-hero-logo:hover {
@@ -706,7 +713,7 @@
   margin-top: 48px;
   background: var(--orange-grad); /* Brand Orange */
   color: white;
-  font-family: 'Outfit', sans-serif;
+
   font-size: 16px;
   font-weight: 600;
   padding: 16px 36px;
@@ -729,7 +736,7 @@
 }
 
 .nh-headline-primary {
-  font-family: 'Outfit', 'Inter', sans-serif;
+
   font-size: clamp(32px, 5vw, 64px); /* Slightly reduced font size to fit on two lines */
   font-weight: 700;
   line-height: 1.15;
@@ -739,7 +746,7 @@
 }
 
 .nh-headline-secondary {
-  font-family: 'Outfit', 'Inter', sans-serif;
+
   font-size: clamp(16px, 1.2vw, 19px); /* Reduced size */
   font-weight: 400;
   line-height: 1.5;
@@ -858,7 +865,7 @@
   box-shadow: 0 0 24px rgba(253, 139, 0, 0.35);
 }
 .lp-step-title {
-  font-family: 'Outfit', sans-serif;
+
   font-size: var(--text-lg);
   font-weight: 700;
   color: var(--text);
@@ -914,7 +921,7 @@
   /* transform handled by Framer Motion TiltCard */
 }
 .lp-stat-num {
-  font-family: 'Outfit', sans-serif;
+
   font-size: clamp(40px, 6vw, 64px);
   font-weight: 900;
   letter-spacing: -0.04em;
@@ -944,7 +951,7 @@
 }
 /* The animated digit — inherits the same large orange gradient as .lp-stat-num */
 .lp-stat-digit {
-  font-family: 'Outfit', sans-serif;
+
   font-size: clamp(40px, 6vw, 64px);
   font-weight: 900;
   letter-spacing: -0.04em;
@@ -957,7 +964,7 @@
 }
 /* Prefix/suffix ("<", "%", "s") — same gradient, slightly smaller */
 .lp-stat-unit {
-  font-family: 'Outfit', sans-serif;
+
   font-size: clamp(22px, 3.5vw, 36px);
   font-weight: 700;
   letter-spacing: -0.02em;
@@ -993,7 +1000,7 @@
   pointer-events: none;
 }*/
 .lp-cta-banner h2 {
-  font-family: 'Outfit', sans-serif;
+
   font-size: clamp(28px, 4vw, 48px);
   font-weight: 800;
   letter-spacing: -0.03em;
@@ -1045,7 +1052,7 @@
   font-size: 26px;
 }
 .lp-feature-full-title {
-  font-family: 'Outfit', sans-serif;
+
   font-size: clamp(24px, 3vw, 36px);
   font-weight: 800;
   letter-spacing: -0.03em;
@@ -1149,7 +1156,7 @@
   margin-top: 2px;
 }
 .lp-add-feature h4 {
-  font-family: 'Outfit', sans-serif;
+
   font-size: var(--text-base);
   font-weight: 700;
   color: var(--text);
@@ -1195,7 +1202,7 @@
 }
 .lp-pillar:hover { border-color: var(--border-2); }
 .lp-pillar-num {
-  font-family: 'Outfit', sans-serif;
+
   font-size: var(--text-3xl);
   font-weight: 900;
   letter-spacing: -0.05em;
@@ -1207,7 +1214,7 @@
   margin-bottom: var(--s2);
 }
 .lp-pillar h3 {
-  font-family: 'Outfit', sans-serif;
+
   font-size: var(--text-base);
   font-weight: 700;
   color: var(--text);
@@ -1246,7 +1253,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-family: 'Outfit', sans-serif;
+
   font-size: var(--text-2xl);
   font-weight: 800;
   color: #fff;
@@ -1254,7 +1261,7 @@
   letter-spacing: -0.03em;
 }
 .lp-builder-name {
-  font-family: 'Outfit', sans-serif;
+
   font-size: var(--text-xl);
   font-weight: 800;
   color: var(--text);
@@ -1327,7 +1334,7 @@
   width: 100%;
   padding: var(--s2) var(--s3);
   font-size: var(--text-base);
-  font-family: 'Inter', sans-serif;
+
   color: var(--text);
   background: rgba(0, 0, 0, 0.03);
   border: 1px solid var(--border-2);
@@ -1363,7 +1370,7 @@
   padding-top: var(--s2);
 }
 .lp-contact-alt-title {
-  font-family: 'Outfit', sans-serif;
+
   font-size: var(--text-xl);
   font-weight: 700;
   color: var(--text);
