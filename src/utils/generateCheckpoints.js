@@ -25,14 +25,20 @@ import { clampToWorkingHours }   from './normaliseDueDates'
  *   or null on any failure (caller falls back to task_templates).
  */
 export async function generateCheckpoints(taskTitle, taskType, deadlineDate, notes, workingHours = { start: 9, end: 21 }) {
-  const apiKey = import.meta.env.VITE_NVIDIA_API_KEY
-  if (!apiKey || apiKey === 'your_nvidia_api_key_here') {
+  // In production, the Vercel proxy (api/nvidia.js) injects NVIDIA_API_KEY server-side
+  // and ignores whatever the client sends — so VITE_NVIDIA_API_KEY is only needed locally.
+  // We gate the feature with VITE_AI_ENABLED=true (safe to expose, it's just a boolean).
+  const aiEnabled = import.meta.env.VITE_AI_ENABLED === 'true'
+  if (!aiEnabled) {
     console.warn('[generateCheckpoints] No NVIDIA API key — skipping AI generation.')
     return null
   }
 
-  // Debug: confirm key is loaded (first 8 chars only)
-  console.log('[generateCheckpoints] Key prefix:', apiKey.substring(0, 8))
+  // apiKey may be undefined in production — that's fine, the proxy handles auth.
+  const apiKey = import.meta.env.VITE_NVIDIA_API_KEY
+
+  // Debug: confirm key is loaded locally (first 8 chars only), undefined in prod is expected.
+  console.log('[generateCheckpoints] Key prefix:', apiKey?.substring(0, 8) ?? '(prod — proxy handles auth)')
 
   const currentTime = new Date().toISOString()
   const deadlineISO = deadlineDate.toISOString()
