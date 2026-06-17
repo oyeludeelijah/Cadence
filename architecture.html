@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>AI Accountability System — Architecture</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background: #F0F4F8;
+  font-family: 'Segoe UI', Arial, sans-serif;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+h1 { font-size: 20px; font-weight: 700; color: #1A237E; margin-bottom: 4px; }
+p  { font-size: 12px; color: #78909C; margin-bottom: 20px; }
+.wrap {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.12);
+  padding: 20px;
+  overflow: auto;
+}
+</style>
+</head>
+<body>
+<h1>AI Accountability System — System Architecture</h1>
+<p>React 19 · Vite 7 · Supabase Cloud · NVIDIA NIM · Vercel · Resend</p>
+<div class="wrap">
+<svg width="1560" height="920" viewBox="0 0 1560 920" xmlns="http://www.w3.org/2000/svg">
+<defs>
+  <marker id="a"  viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0,1 L9,5 L0,9Z" fill="#546E7A"/></marker>
+  <marker id="ab" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0,1 L9,5 L0,9Z" fill="#1565C0"/></marker>
+  <marker id="ap" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0,1 L9,5 L0,9Z" fill="#6A1B9A"/></marker>
+  <marker id="ao" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0,1 L9,5 L0,9Z" fill="#E65100"/></marker>
+  <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0,1 L9,5 L0,9Z" fill="#880E4F"/></marker>
+  <marker id="ag" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0,1 L9,5 L0,9Z" fill="#1B5E20"/></marker>
+</defs>
+
+<!-- ── SWIM LANE BACKGROUNDS ── -->
+<rect x="10" y="10"  width="1540" height="78"  rx="8" fill="#E0F7FA" stroke="#4DD0E1" stroke-width="1.5"/>
+<text x="20" y="28" font-size="9" font-weight="700" fill="#006064" font-family="Arial">ACTOR</text>
+
+<rect x="10" y="96"  width="1540" height="276" rx="8" fill="#E8F4FD" stroke="#90CAF9" stroke-width="1.5"/>
+<text x="20" y="113" font-size="9" font-weight="700" fill="#0D47A1" font-family="Arial">FRONTEND LAYER  —  React 19 · Vite 7 · GSAP · Recharts · Vanilla CSS  (Deployed: Vercel CDN)</text>
+
+<rect x="10" y="380" width="1540" height="122" rx="8" fill="#F3E5F5" stroke="#CE93D8" stroke-width="1.5"/>
+<text x="20" y="397" font-size="9" font-weight="700" fill="#4A148C" font-family="Arial">AI CHECKPOINT GENERATION LAYER</text>
+
+<rect x="10" y="510" width="1540" height="246" rx="8" fill="#FFFDE7" stroke="#FFD54F" stroke-width="1.5"/>
+<text x="20" y="527" font-size="9" font-weight="700" fill="#E65100" font-family="Arial">SUPABASE CLOUD  —  PostgreSQL · PostgREST · Auth · Edge Functions · pg_cron</text>
+
+<rect x="10" y="764" width="1540" height="148" rx="8" fill="#FCE4EC" stroke="#F48FB1" stroke-width="1.5"/>
+<text x="20" y="781" font-size="9" font-weight="700" fill="#880E4F" font-family="Arial">EXTERNAL SERVICES</text>
+
+<!-- ── ACTOR ── -->
+<ellipse cx="780" cy="49" rx="90" ry="27" fill="white" stroke="#00ACC1" stroke-width="2"/>
+<text x="780" y="45" text-anchor="middle" font-size="11" font-weight="700" fill="#006064" font-family="Arial">Student</text>
+<text x="780" y="60" text-anchor="middle" font-size="8.5" fill="#00838F" font-family="Arial">Web Browser</text>
+
+<!-- Student → App.jsx -->
+<path d="M690,49 H80 V122" stroke="#546E7A" stroke-width="1.5" fill="none" marker-end="url(#a)"/>
+
+<!-- ── FRONTEND LAYER ── -->
+
+<!-- App.jsx -->
+<rect x="25"  y="122" width="110" height="46" rx="5" fill="#FFFDE7" stroke="#F9A825" stroke-width="1.5"/>
+<text x="80"  y="141" text-anchor="middle" font-size="10" font-weight="700" fill="#333" font-family="Arial">App.jsx</text>
+<text x="80"  y="155" text-anchor="middle" font-size="8"  fill="#795548" font-family="Arial">Route Guard</text>
+<path d="M135,145 H178" stroke="#546E7A" stroke-width="1.5" fill="none" marker-end="url(#a)"/>
+
+<!-- Auth? diamond  cx=225 cy=145 -->
+<polygon points="225,117 272,145 225,173 178,145" fill="#E3F2FD" stroke="#1976D2" stroke-width="1.5"/>
+<text x="225" y="141" text-anchor="middle" font-size="8.5" font-weight="700" fill="#0D47A1" font-family="Arial">Auth</text>
+<text x="225" y="153" text-anchor="middle" font-size="8.5"              fill="#0D47A1" font-family="Arial">?</text>
+
+<!-- No → public pages -->
+<path d="M225,173 V244" stroke="#546E7A" stroke-width="1.5" fill="none" marker-end="url(#a)"/>
+<text x="230" y="214" font-size="8" fill="#C62828" font-family="Arial">No</text>
+<rect x="118" y="244" width="132" height="42" rx="5" fill="#FFF3E0" stroke="#EF6C00" stroke-width="1.5"/>
+<text x="184" y="261" text-anchor="middle" font-size="9"   font-weight="700" fill="#BF360C" font-family="Arial">LandingPage</text>
+<text x="184" y="275" text-anchor="middle" font-size="7.5"              fill="#E65100" font-family="Arial">/features /about /contact</text>
+<rect x="264" y="244" width="108" height="42" rx="5" fill="#FFF3E0" stroke="#EF6C00" stroke-width="1.5"/>
+<text x="318" y="262" text-anchor="middle" font-size="9"   font-weight="700" fill="#BF360C" font-family="Arial">AuthPage</text>
+<text x="318" y="275" text-anchor="middle" font-size="7.5"              fill="#E65100" font-family="Arial">sign in / up</text>
+
+<!-- Yes → AppShell -->
+<path d="M272,145 H344" stroke="#546E7A" stroke-width="1.5" fill="none" marker-end="url(#a)"/>
+<text x="280" y="137" font-size="8" fill="#2E7D32" font-family="Arial">Yes</text>
+<rect x="344" y="122" width="135" height="46" rx="5" fill="#FFFDE7" stroke="#F9A825" stroke-width="1.5"/>
+<text x="411" y="141" text-anchor="middle" font-size="10"  font-weight="700" fill="#333"    font-family="Arial">AppShell</text>
+<text x="411" y="155" text-anchor="middle" font-size="7.5"              fill="#795548" font-family="Arial">+ Sidebar (GSAP collapse)</text>
+
+<!-- AppShell → Pages group -->
+<path d="M479,145 H502" stroke="#546E7A" stroke-width="1.5" fill="none" marker-end="url(#a)"/>
+<rect x="502" y="112" width="726" height="62" rx="5" fill="rgba(255,255,255,0.5)" stroke="#CFD8DC" stroke-width="1" stroke-dasharray="4,3"/>
+<text x="514" y="126" font-size="7.5" fill="#90A4AE" font-family="Arial">Authenticated Pages</text>
+
+<!-- Pages -->
+<rect x="508" y="128" width="138" height="40" rx="5" fill="#FFFDE7" stroke="#F9A825" stroke-width="1.5"/>
+<text x="577" y="145" text-anchor="middle" font-size="9"   font-weight="700" fill="#333"    font-family="Arial">TaskListPage</text>
+<text x="577" y="158" text-anchor="middle" font-size="7"              fill="#795548" font-family="Arial">tasks · urgency groups</text>
+
+<rect x="660" y="128" width="148" height="40" rx="5" fill="#FFFDE7" stroke="#F9A825" stroke-width="1.5"/>
+<text x="734" y="145" text-anchor="middle" font-size="9"   font-weight="700" fill="#333"    font-family="Arial">TaskDetailPage</text>
+<text x="734" y="158" text-anchor="middle" font-size="7"              fill="#795548" font-family="Arial">checkpoints · 10s undo</text>
+
+<rect x="822" y="128" width="136" height="40" rx="5" fill="#FFFDE7" stroke="#F9A825" stroke-width="1.5"/>
+<text x="890" y="145" text-anchor="middle" font-size="9"   font-weight="700" fill="#333"    font-family="Arial">AnalyticsPage</text>
+<text x="890" y="158" text-anchor="middle" font-size="7"              fill="#795548" font-family="Arial">Recharts · AnimatedCounter</text>
+
+<rect x="972" y="128" width="130" height="40" rx="5" fill="#FFFDE7" stroke="#F9A825" stroke-width="1.5"/>
+<text x="1037" y="145" text-anchor="middle" font-size="9"   font-weight="700" fill="#333"    font-family="Arial">SettingsPage</text>
+<text x="1037" y="158" text-anchor="middle" font-size="7"              fill="#795548" font-family="Arial">working hours · prefs</text>
+
+<!-- Hooks/Context note -->
+<rect x="1120" y="122" width="200" height="46" rx="5" fill="#E8F5E9" stroke="#66BB6A" stroke-width="1.5" stroke-dasharray="4,3"/>
+<text x="1220" y="140" text-anchor="middle" font-size="9" font-weight="700" fill="#1B5E20" font-family="Arial">Hooks / AuthContext</text>
+<text x="1220" y="153" text-anchor="middle" font-size="7" fill="#388E3C" font-family="Arial">useAuth · useTheme · useModalAnimation</text>
+<text x="1220" y="163" text-anchor="middle" font-size="6.5" fill="#66BB6A" font-family="Arial">useReveal · usePageTransition · useTaskForm</text>
+
+<!-- Component row (y=242) -->
+<rect x="508"  y="242" width="138" height="44" rx="5" fill="#FFE0B2" stroke="#F57C00" stroke-width="1.5"/>
+<text x="577"  y="260" text-anchor="middle" font-size="9"   font-weight="700" fill="#BF360C" font-family="Arial">CreateTask.jsx</text>
+<text x="577"  y="273" text-anchor="middle" font-size="7.5"              fill="#E65100" font-family="Arial">task creation · AI trigger</text>
+
+<rect x="660"  y="242" width="138" height="44" rx="5" fill="#FFE0B2" stroke="#F57C00" stroke-width="1.5"/>
+<text x="729"  y="260" text-anchor="middle" font-size="9"   font-weight="700" fill="#BF360C" font-family="Arial">EditTask.jsx</text>
+<text x="729"  y="273" text-anchor="middle" font-size="7.5"              fill="#E65100" font-family="Arial">metadata edits only</text>
+
+<rect x="812"  y="242" width="148" height="44" rx="5" fill="#FFE0B2" stroke="#F57C00" stroke-width="1.5"/>
+<text x="886"  y="260" text-anchor="middle" font-size="9"   font-weight="700" fill="#BF360C" font-family="Arial">CheckpointCard.jsx</text>
+<text x="886"  y="273" text-anchor="middle" font-size="7.5"              fill="#E65100" font-family="Arial">status · toggle · GSAP anim</text>
+
+<rect x="972"  y="242" width="145" height="44" rx="5" fill="#FFE0B2" stroke="#F57C00" stroke-width="1.5"/>
+<text x="1044" y="260" text-anchor="middle" font-size="9"   font-weight="700" fill="#BF360C" font-family="Arial">AnimatedToast.jsx</text>
+<text x="1044" y="273" text-anchor="middle" font-size="7.5"              fill="#E65100" font-family="Arial">10s undo countdown</text>
+
+<!-- page → sub-component connectors -->
+<path d="M577,168 V242" stroke="#BDBDBD" stroke-width="1.2" fill="none" marker-end="url(#a)"/>
+<path d="M734,168 V242" stroke="#BDBDBD" stroke-width="1.2" fill="none" marker-end="url(#a)"/>
+<path d="M858,168 V242" stroke="#BDBDBD" stroke-width="1.2" fill="none" marker-end="url(#a)"/>
+<path d="M1037,168 V242" stroke="#BDBDBD" stroke-width="1.2" fill="none" marker-end="url(#a)"/>
+
+<!-- ── CROSS-LAYER ARROWS (Frontend → Supabase) ── -->
+<!-- AuthPage → Supabase Auth -->
+<path d="M318,286 V376 H107 V530" stroke="#1565C0" stroke-width="1.5" stroke-dasharray="5,3" fill="none" marker-end="url(#ab)"/>
+<text x="180" y="435" font-size="7" fill="#1565C0" font-family="Arial" transform="rotate(-90,180,435)">signIn / signUp</text>
+
+<!-- Pages → PostgREST CRUD -->
+<path d="M656,148 V376 H290 V510" stroke="#1565C0" stroke-width="1.5" stroke-dasharray="5,3" fill="none" marker-end="url(#ab)"/>
+<text x="300" y="445" font-size="7" fill="#1565C0" font-family="Arial" transform="rotate(-90,300,445)">SELECT / INSERT / UPDATE (RLS)</text>
+
+<!-- CreateTask → AI layer -->
+<path d="M577,286 V428" stroke="#7B1FA2" stroke-width="1.5" fill="none" marker-end="url(#ap)"/>
+<text x="582" y="360" font-size="7.5" fill="#7B1FA2" font-family="Arial">create task</text>
+
+<!-- ── AI LAYER ── -->
+
+<!-- AI Enabled? diamond  cx=577 cy=432 -->
+<polygon points="577,402 631,432 577,462 523,432" fill="#EDE7F6" stroke="#7E57C2" stroke-width="1.5"/>
+<text x="577" y="428" text-anchor="middle" font-size="8.5" font-weight="700" fill="#4A148C" font-family="Arial">AI</text>
+<text x="577" y="440" text-anchor="middle" font-size="8.5"              fill="#4A148C" font-family="Arial">Enabled?</text>
+
+<!-- No → task_templates -->
+<path d="M523,432 H466" stroke="#546E7A" stroke-width="1.5" fill="none" marker-end="url(#a)"/>
+<text x="474" y="423" font-size="8" fill="#C62828" font-family="Arial">No</text>
+<rect x="295" y="412" width="171" height="42" rx="5" fill="#F1F8E9" stroke="#558B2F" stroke-width="1.5"/>
+<text x="380" y="430" text-anchor="middle" font-size="9"   font-weight="700" fill="#33691E" font-family="Arial">task_templates</text>
+<text x="380" y="442" text-anchor="middle" font-size="7.5"              fill="#558B2F" font-family="Arial">JSONB fallback (Supabase DB)</text>
+<text x="380" y="451" text-anchor="middle" font-size="6.5"              fill="#795548" font-family="Arial">ai_generated = false</text>
+<!-- task_templates → DB -->
+<path d="M380,454 V492 H290 V510" stroke="#1B5E20" stroke-width="1.2" stroke-dasharray="4,3" fill="none" marker-end="url(#ag)"/>
+
+<!-- Yes → generateCheckpoints -->
+<path d="M631,432 H688" stroke="#546E7A" stroke-width="1.5" fill="none" marker-end="url(#a)"/>
+<text x="638" y="424" font-size="8" fill="#2E7D32" font-family="Arial">Yes</text>
+<rect x="688" y="410" width="196" height="44" rx="5" fill="#EDE7F6" stroke="#7E57C2" stroke-width="1.5"/>
+<text x="786" y="429" text-anchor="middle" font-size="9"   font-weight="700" fill="#311B92" font-family="Arial">generateCheckpoints()</text>
+<text x="786" y="442" text-anchor="middle" font-size="7.5"              fill="#512DA8" font-family="Arial">buildPrompt → callNim → normaliseDates</text>
+
+<!-- vercel.json note above Vercel proxy box -->
+<rect x="840" y="394" width="164" height="26" rx="4" fill="#E8EAF6" stroke="#5C6BC0" stroke-width="1" stroke-dasharray="3,2"/>
+<text x="922" y="405" text-anchor="middle" font-size="7"   fill="#283593" font-family="Arial">vercel.json rewrite:</text>
+<text x="922" y="416" text-anchor="middle" font-size="6.5" fill="#3949AB" font-family="Arial">/nvidia-api/* → /api/nvidia</text>
+
+<!-- Vite Proxy -->
+<rect x="688" y="464" width="142" height="38" rx="5" fill="#E8EAF6" stroke="#3949AB" stroke-width="1.5"/>
+<text x="759" y="481" text-anchor="middle" font-size="9"   font-weight="700" fill="#1A237E" font-family="Arial">Vite Dev Proxy</text>
+<text x="759" y="494" text-anchor="middle" font-size="7.5"              fill="#283593" font-family="Arial">/nvidia-api/* (local dev)</text>
+
+<!-- Vercel serverless fn -->
+<rect x="840" y="464" width="164" height="38" rx="5" fill="#E8EAF6" stroke="#3949AB" stroke-width="1.5"/>
+<text x="922" y="481" text-anchor="middle" font-size="9"   font-weight="700" fill="#1A237E" font-family="Arial">api/nvidia.js</text>
+<text x="922" y="494" text-anchor="middle" font-size="7.5"              fill="#283593" font-family="Arial">Vercel Serverless fn (prod)</text>
+
+<!-- generateCheckpoints → proxies -->
+<path d="M754,454 V464" stroke="#3949AB" stroke-width="1.2" fill="none" marker-end="url(#a)"/>
+<path d="M854,454 V464" stroke="#3949AB" stroke-width="1.2" fill="none" marker-end="url(#a)"/>
+
+<!-- proxies → NVIDIA NIM (external lane) -->
+<!-- Vite: straight down x=759 (clear of pg_cron at cx=908) -->
+<path d="M759,502 V774" stroke="#BF360C" stroke-width="1.5" stroke-dasharray="5,3" fill="none" marker-end="url(#ao)"/>
+<!-- Vercel fn: route right of pg_cron -->
+<path d="M922,502 H1010 V748 H830 V774" stroke="#BF360C" stroke-width="1.5" stroke-dasharray="5,3" fill="none" marker-end="url(#ao)"/>
+<text x="860" y="700" font-size="7.5" fill="#BF360C" font-family="Arial">CORS-safe proxy</text>
+
+<!-- ── SUPABASE CLOUD ── -->
+
+<!-- Supabase Auth (pill) -->
+<rect x="25"  y="532" width="165" height="48" rx="24" fill="#E8F5E9" stroke="#43A047" stroke-width="2"/>
+<text x="107" y="552" text-anchor="middle" font-size="9.5" font-weight="700" fill="#1B5E20" font-family="Arial">Supabase Auth</text>
+<text x="107" y="565" text-anchor="middle" font-size="7.5"              fill="#2E7D32" font-family="Arial">email/password · JWT issued</text>
+<path d="M190,556 H214" stroke="#43A047" stroke-width="1.5" fill="none" marker-end="url(#ag)"/>
+<text x="192" y="549" font-size="6.5" fill="#2E7D32" font-family="Arial">JWT</text>
+
+<!-- PostgREST API -->
+<rect x="214" y="532" width="165" height="48" rx="6" fill="#E8F5E9" stroke="#43A047" stroke-width="2"/>
+<text x="296" y="552" text-anchor="middle" font-size="9.5" font-weight="700" fill="#1B5E20" font-family="Arial">PostgREST API</text>
+<text x="296" y="565" text-anchor="middle" font-size="7.5"              fill="#2E7D32" font-family="Arial">RLS enforced per user (JWT)</text>
+<path d="M255,580 V606" stroke="#43A047" stroke-width="1.2" fill="none" marker-end="url(#ag)"/>
+<path d="M337,580 V606" stroke="#43A047" stroke-width="1.2" fill="none" marker-end="url(#ag)"/>
+
+<!-- tasks table -->
+<rect x="214" y="606" width="152" height="100" rx="5" fill="#E8F5E9" stroke="#66BB6A" stroke-width="1.5"/>
+<text x="290" y="624" text-anchor="middle" font-size="9" font-weight="700" fill="#1B5E20" font-family="Arial">tasks</text>
+<text x="290" y="637" text-anchor="middle" font-size="7"  fill="#388E3C" font-family="Arial">id · user_id · title</text>
+<text x="290" y="649" text-anchor="middle" font-size="7"  fill="#388E3C" font-family="Arial">task_type · final_deadline</text>
+<text x="290" y="661" text-anchor="middle" font-size="7"  fill="#388E3C" font-family="Arial">notes · status</text>
+<text x="290" y="673" text-anchor="middle" font-size="6.5" fill="#9E9E9E" font-family="Arial">RLS: auth.uid() = user_id</text>
+<text x="290" y="685" text-anchor="middle" font-size="6.5" fill="#9E9E9E" font-family="Arial">No cascade deletes</text>
+<text x="290" y="697" text-anchor="middle" font-size="6.5" fill="#9E9E9E" font-family="Arial">joined: select('*, checkpoints(*)')</text>
+
+<!-- checkpoints table -->
+<rect x="378" y="606" width="165" height="100" rx="5" fill="#E8F5E9" stroke="#66BB6A" stroke-width="1.5"/>
+<text x="460" y="624" text-anchor="middle" font-size="9" font-weight="700" fill="#1B5E20" font-family="Arial">checkpoints</text>
+<text x="460" y="637" text-anchor="middle" font-size="7"  fill="#388E3C" font-family="Arial">id · task_id · cp_number</text>
+<text x="460" y="649" text-anchor="middle" font-size="7"  fill="#388E3C" font-family="Arial">cp_type · due_date · status</text>
+<text x="460" y="661" text-anchor="middle" font-size="7"  fill="#388E3C" font-family="Arial">ai_generated (bool)</text>
+<text x="460" y="673" text-anchor="middle" font-size="7"  fill="#E65100" font-family="Arial">reminder_sent_urgent</text>
+<text x="460" y="685" text-anchor="middle" font-size="7"  fill="#E65100" font-family="Arial">reminder_sent_overdue</text>
+<text x="460" y="697" text-anchor="middle" font-size="6.5" fill="#9E9E9E" font-family="Arial">completed_at · created_at</text>
+
+<!-- tasks → checkpoints FK -->
+<path d="M366,656 H378" stroke="#66BB6A" stroke-width="1.2" stroke-dasharray="3,2" fill="none" marker-end="url(#ag)"/>
+<text x="358" y="649" font-size="6" fill="#66BB6A" font-family="Arial">FK</text>
+
+<!-- get_pending_reminders RPC -->
+<rect x="556" y="606" width="192" height="52" rx="5" fill="#FFF3E0" stroke="#F57C00" stroke-width="1.5"/>
+<text x="652" y="625" text-anchor="middle" font-size="9"   font-weight="700" fill="#BF360C" font-family="Arial">get_pending_reminders()</text>
+<text x="652" y="638" text-anchor="middle" font-size="7.5"              fill="#E65100" font-family="Arial">RPC · SECURITY DEFINER</text>
+<text x="652" y="650" text-anchor="middle" font-size="7"              fill="#795548" font-family="Arial">joins checkpoints → auth.users</text>
+<text x="652" y="660" text-anchor="middle" font-size="7"              fill="#795548" font-family="Arial">returns pending emails safely</text>
+
+<!-- pg_cron -->
+<ellipse cx="908" cy="556" rx="85" ry="30" fill="#FFF8E1" stroke="#FFB300" stroke-width="2"/>
+<text x="908" y="552" text-anchor="middle" font-size="9.5" font-weight="700" fill="#E65100" font-family="Arial">pg_cron</text>
+<text x="908" y="566" text-anchor="middle" font-size="8"              fill="#F57F17" font-family="Arial">fires every hour</text>
+
+<!-- pg_cron → Edge Function -->
+<path d="M993,556 H1028" stroke="#FB8C00" stroke-width="1.5" fill="none" marker-end="url(#ao)"/>
+<text x="996" y="548" font-size="7" fill="#E65100" font-family="Arial">HTTP trigger</text>
+
+<!-- Edge Function -->
+<rect x="1028" y="532" width="196" height="48" rx="5" fill="#FFF3E0" stroke="#FB8C00" stroke-width="1.5"/>
+<text x="1126" y="552" text-anchor="middle" font-size="9.5" font-weight="700" fill="#BF360C" font-family="Arial">send-reminders</text>
+<text x="1126" y="565" text-anchor="middle" font-size="7.5"              fill="#E65100" font-family="Arial">Supabase Edge Function (Deno/TS)</text>
+
+<!-- Edge Function → get_pending_reminders -->
+<path d="M1126,580 V632 H748" stroke="#FB8C00" stroke-width="1.5" stroke-dasharray="4,3" fill="none" marker-end="url(#ao)"/>
+<text x="930" y="626" font-size="7" fill="#E65100" font-family="Arial">call RPC for user emails</text>
+
+<!-- Anti-spam guard -->
+<rect x="1238" y="606" width="188" height="52" rx="5" fill="#FFF8E1" stroke="#FFD54F" stroke-width="1.5" stroke-dasharray="4,3"/>
+<text x="1332" y="624" text-anchor="middle" font-size="9"   font-weight="700" fill="#E65100" font-family="Arial">Anti-spam Guard</text>
+<text x="1332" y="637" text-anchor="middle" font-size="7.5"              fill="#F57F17" font-family="Arial">checks reminder_sent_urgent</text>
+<text x="1332" y="649" text-anchor="middle" font-size="7.5"              fill="#F57F17" font-family="Arial">+ reminder_sent_overdue flags</text>
+
+<!-- Edge Function → anti-spam -->
+<path d="M1224,556 H1278 V606" stroke="#FB8C00" stroke-width="1.2" stroke-dasharray="3,2" fill="none" marker-end="url(#ao)"/>
+
+<!-- Edge Function → Resend (external) -->
+<path d="M1126,580 V722 H1310 V774" stroke="#880E4F" stroke-width="1.5" stroke-dasharray="5,3" fill="none" marker-end="url(#ar)"/>
+<text x="1314" y="696" font-size="7.5" fill="#880E4F" font-family="Arial">send email</text>
+
+<!-- ── EXTERNAL SERVICES ── -->
+
+<!-- NVIDIA NIM -->
+<rect x="660" y="774" width="256" height="84" rx="8" fill="white" stroke="#AD1457" stroke-width="2"/>
+<text x="788" y="800" text-anchor="middle" font-size="12" font-weight="700" fill="#880E4F" font-family="Arial">NVIDIA NIM API</text>
+<text x="788" y="816" text-anchor="middle" font-size="8.5"              fill="#AD1457" font-family="Arial">meta/llama-3.1-8b-instruct</text>
+<text x="788" y="830" text-anchor="middle" font-size="7.5"              fill="#C2185B" font-family="Arial">temp=0.3 · max_tokens=512 · stream=false</text>
+<text x="788" y="844" text-anchor="middle" font-size="7.5"              fill="#9E9E9E" font-family="Arial">Returns JSON checkpoint plan</text>
+
+<!-- Resend API -->
+<rect x="1200" y="774" width="196" height="84" rx="8" fill="white" stroke="#AD1457" stroke-width="2"/>
+<text x="1298" y="802" text-anchor="middle" font-size="12" font-weight="700" fill="#880E4F" font-family="Arial">Resend API</text>
+<text x="1298" y="818" text-anchor="middle" font-size="8.5"              fill="#AD1457" font-family="Arial">Transactional email dispatch</text>
+<text x="1298" y="832" text-anchor="middle" font-size="7.5"              fill="#C2185B" font-family="Arial">urgent / overdue alerts</text>
+<text x="1298" y="846" text-anchor="middle" font-size="7.5"              fill="#9E9E9E" font-family="Arial">→ Student inbox</text>
+
+<!-- NVIDIA NIM response → generateCheckpoints (routed right of pg_cron) -->
+<path d="M916,774 H996 V500 H862 V454" stroke="#546E7A" stroke-width="1.2" stroke-dasharray="4,3" fill="none" marker-end="url(#a)"/>
+<text x="998" y="636" font-size="7" fill="#546E7A" font-family="Arial" transform="rotate(90,998,636)">JSON checkpoint plan (response)</text>
+
+<!-- ── LEGEND ── -->
+<rect x="1350" y="130" width="198" height="248" rx="6" fill="white" stroke="#B0BEC5" stroke-width="1.5"/>
+<text x="1362" y="149" font-size="10" font-weight="700" fill="#333" font-family="Arial">LEGEND</text>
+
+<rect x="1362" y="158" width="16" height="12" rx="2" fill="#FFFDE7" stroke="#F9A825" stroke-width="1.5"/>
+<text x="1384" y="169" font-size="8" fill="#333" font-family="Arial">Page / Component</text>
+<rect x="1362" y="178" width="16" height="12" rx="2" fill="#FFE0B2" stroke="#F57C00" stroke-width="1.5"/>
+<text x="1384" y="189" font-size="8" fill="#333" font-family="Arial">Sub-Component</text>
+<rect x="1362" y="198" width="16" height="12" rx="2" fill="#E8F5E9" stroke="#43A047" stroke-width="1.5"/>
+<text x="1384" y="209" font-size="8" fill="#333" font-family="Arial">Supabase Service / Table</text>
+<rect x="1362" y="218" width="16" height="12" rx="2" fill="#EDE7F6" stroke="#7E57C2" stroke-width="1.5"/>
+<text x="1384" y="229" font-size="8" fill="#333" font-family="Arial">AI Pipeline Component</text>
+<rect x="1362" y="238" width="16" height="12" rx="2" fill="#E8EAF6" stroke="#3949AB" stroke-width="1.5"/>
+<text x="1384" y="249" font-size="8" fill="#333" font-family="Arial">Proxy Layer</text>
+<rect x="1362" y="258" width="16" height="12" rx="2" fill="#FFF3E0" stroke="#FB8C00" stroke-width="1.5"/>
+<text x="1384" y="269" font-size="8" fill="#333" font-family="Arial">Scheduled / Background</text>
+<rect x="1362" y="278" width="16" height="12" rx="2" fill="white"   stroke="#AD1457" stroke-width="2"/>
+<text x="1384" y="289" font-size="8" fill="#333" font-family="Arial">External API</text>
+<rect x="1362" y="298" width="16" height="12" rx="2" fill="#F1F8E9" stroke="#558B2F" stroke-width="1.5"/>
+<text x="1384" y="309" font-size="8" fill="#333" font-family="Arial">Fallback / Recovery</text>
+
+<polygon points="1370,321 1378,314 1386,321 1378,328" fill="#E3F2FD" stroke="#1976D2" stroke-width="1.5"/>
+<text x="1392" y="325" font-size="8" fill="#333" font-family="Arial">Decision point</text>
+
+<line x1="1362" y1="342" x2="1386" y2="342" stroke="#546E7A" stroke-width="1.5" marker-end="url(#a)"/>
+<text x="1392" y="346" font-size="8" fill="#333" font-family="Arial">Navigation / Control</text>
+
+<line x1="1362" y1="360" x2="1386" y2="360" stroke="#1565C0" stroke-width="1.5" stroke-dasharray="4,3" marker-end="url(#ab)"/>
+<text x="1392" y="364" font-size="8" fill="#333" font-family="Arial">Data / API call (dashed)</text>
+
+<line x1="1362" y1="378" x2="1386" y2="378" stroke="#BF360C" stroke-width="1.5" stroke-dasharray="5,3" marker-end="url(#ao)"/>
+<text x="1392" y="382" font-size="8" fill="#333" font-family="Arial">AI / Email dispatch</text>
+
+</svg>
+</div>
+</body>
+</html>

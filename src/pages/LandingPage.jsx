@@ -29,16 +29,16 @@ export default function LandingPage() {
           <div className="nh-container">
             {/* Center Content */}
             <div className="nh-center-panel">
-               <div className="nh-hero-logo-wrapper">
-                 <img src="/logos/halved/cadence-avatar-light-transparent.svg" alt="Cadence" className="nh-hero-logo" />
-               </div>
-               <h1 className="nh-headline">
-                 <span className="nh-headline-primary">Finish every assignment, <span style={{ opacity: 0.3, display: 'block' }}>one step at a time.</span></span>
-                 <span className="nh-headline-secondary">AI breaks your deadline into checkpoints automatically. You just follow the plan.</span>
-               </h1>
-               <button className="nh-hero-cta" onClick={() => navigate('/auth')}>
-                 GET STARTED
-               </button>
+              <div className="nh-hero-logo-wrapper">
+                <img src="/logos/halved/cadence-avatar-light-transparent.svg" alt="Cadence" className="nh-hero-logo" />
+              </div>
+              <h1 className="nh-headline">
+                <span className="nh-headline-primary">Finish every assignment, <span style={{ opacity: 0.3, display: 'block' }}>one step at a time.</span></span>
+                <span className="nh-headline-secondary">AI breaks your deadline into checkpoints automatically. You just follow the plan.</span>
+              </h1>
+              <button className="nh-hero-cta" onClick={() => navigate('/auth')}>
+                GET STARTED
+              </button>
             </div>
 
             {/* ── Floating Widgets ───────────────────────────────────────── */}
@@ -246,9 +246,9 @@ export default function LandingPage() {
 
             <div className="lp-stats-row">
               {[
-                { end: 3,   prefix: '',  suffix: '',  label: 'Task types supported',      duration: 1200 },
-                { end: 5,   prefix: '<', suffix: 's', label: 'Average AI response time',  duration: 1500 },
-                { end: 100, prefix: '',  suffix: '%', label: 'Tasks created successfully', duration: 2000 },
+                { end: 3, prefix: '', suffix: '', label: 'Task types supported', duration: 1200 },
+                { end: 5, prefix: '<', suffix: 's', label: 'Average AI response time', duration: 1500 },
+                { end: 100, prefix: '', suffix: '%', label: 'Tasks created successfully', duration: 2000 },
               ].map(({ end, prefix, suffix, label, duration }, i) => (
                 <Reveal key={label} delay={i * 80}>
                   <TiltCard className="lp-stat-card" maxTilt={4} scaleOnHover={1.04}>
@@ -269,14 +269,12 @@ export default function LandingPage() {
                 <h2>Ready to stop procrastinating?</h2>
                 <p>Join students who are finishing what they start.</p>
                 <div className="lp-cta-banner-actions">
-                  <a
+                  <button
                     className="lp-btn-primary"
-                    href="https://elijah-fyp.vercel.app"
-                    target="_blank"
-                    rel="noopener noreferrer"
+                    onClick={() => navigate('/auth')}
                   >
-                    Open the App ↗
-                  </a>
+                    Get Started
+                  </button>
                   <button
                     className="lp-btn-secondary"
                     onClick={() => navigate('/features')}
