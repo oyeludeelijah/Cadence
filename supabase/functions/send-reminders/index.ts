@@ -126,6 +126,13 @@ serve(async () => {
       } else {
         const errorText = await res.text()
         console.error(`Failed to send email to ${user_email}:`, errorText)
+        
+        await supabase.from('system_logs').insert([{
+          source: 'edge_function',
+          message: `Resend API Error for ${user_email}: ${errorText}`,
+          stack_trace: null,
+          user_id: null
+        }])
       }
     }
 
@@ -133,6 +140,18 @@ serve(async () => {
 
   } catch (err) {
     console.error('Function error:', err)
+    
+    try {
+      await supabase.from('system_logs').insert([{
+        source: 'edge_function',
+        message: String(err.message || err),
+        stack_trace: String(err.stack || ''),
+        user_id: null
+      }])
+    } catch (logErr) {
+      console.error('Failed to write to system_logs', logErr)
+    }
+
     return new Response(JSON.stringify({ error: String(err) }), { status: 500 })
   }
 })

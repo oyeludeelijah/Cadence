@@ -14,6 +14,8 @@ import { groupTasks } from '../utils/taskGrouping'
 import TaskCard from '../components/TaskCard'
 import UrgencyGroup from '../components/UrgencyGroup'
 import CreateModalPanel from '../components/CreateModalPanel'
+import OverdueResolutionModal from '../components/OverdueResolutionModal'
+
 
 
 
@@ -32,8 +34,9 @@ function TaskListPage() {
   // Fix 3.3: separate state so deleting doesn't replace the whole list with a spinner.
   const [deleteLoading, setDeleteLoading] = useState(false)
   const [connectionStatus, setConnection] = useState('Checking…')
-  const [activeTab, setActiveTab]         = useState('active')
-  const [showCreateForm, setShowCreate]   = useState(false)
+  const [activeTab, setActiveTab] = useState('active')
+  const [showCreateForm, setShowCreate] = useState(false)
+  const [showResolutionModal, setShowResolutionModal] = useState(false)
   const [showDeleteConfirm, setShowDelete]= useState(false)
   const [taskToDelete, setTaskToDelete]   = useState(null)
   const [error, setError]                 = useState(null)
@@ -83,16 +86,7 @@ function TaskListPage() {
 
           const allDone = checkpoints.length > 0 && checkpoints.every(cp => cp.status === 'completed')
 
-          // Fix 3.1: reconcile task.status with checkpoint reality.
-          // Still fire-and-forget (must not block the render), but errors are
-          // now logged so silent DB drift is visible during development.
-          if (allDone && task.status !== 'completed') {
-            supabase.from('tasks').update({ status: 'completed' }).eq('id', task.id)
-              .then(({ error }) => { if (error) console.error('[reconcile] failed to mark completed:', error.message) })
-          } else if (!allDone && task.status === 'completed') {
-            supabase.from('tasks').update({ status: 'active' }).eq('id', task.id)
-              .then(({ error }) => { if (error) console.error('[reconcile] failed to mark active:', error.message) })
-          }
+          // Status reconciliation handled by Postgres trigger on checkpoints table.
 
           return {
             ...task,
@@ -156,6 +150,24 @@ function TaskListPage() {
   const overdueCount = visibleTasks.filter(t =>
     t.nextCheckpoint && getCheckpointStatus(t.nextCheckpoint) === 'overdue'
   ).length
+
+  // Gap 1: collect all overdue checkpoints across active tasks, attaching their task title.
+  const overdueCheckpointsList = tasks
+    .filter(t => !t.isCompleted && t.nextCheckpoint && getCheckpointStatus(t.nextCheckpoint) === 'overdue')
+    .map(t => ({
+      taskTitle: t.title,
+      ...t.nextCheckpoint
+    }))
+
+  function handleCreateClick() {
+    if (overdueCheckpointsList.length > 0) {
+      setError(null)
+      setShowResolutionModal(true)
+    } else {
+      setError(null)
+      setShowCreate(true)
+    }
+  }
 
   // Shared navigate handler — stable reference so UrgencyGroup/TaskCard don't get a new fn each render
   const navigateToTask = useCallback((id) => navigate(`/tasks/${id}`), [navigate])
@@ -243,7 +255,7 @@ function TaskListPage() {
         </div>
 
         {/* Primary CTA */}
-        <button className="btn-primary" onClick={() => setShowCreate(true)} style={{ gap: '8px' }}>
+        <button className="btn-primary" onClick={handleCreateClick} style={{ gap: '8px' }}>
           <span style={{ fontSize: '18px', lineHeight: 1 }}>+</span>
           Create New Task
         </button>
@@ -254,6 +266,21 @@ function TaskListPage() {
         <CreateModalPanel 
           onClose={() => setShowCreate(false)}
           onTaskCreated={handleTaskCreated}
+        />
+      )}
+
+      {/* ── Overdue Resolution Modal (Gap 1) ──────────────────────────────────── */}
+      {showResolutionModal && (
+        <OverdueResolutionModal
+          checkpoints={overdueCheckpointsList}
+          onClose={() => setShowResolutionModal(false)}
+          onAllResolved={() => {
+            setShowResolutionModal(false)
+            fetchTasks()
+            // Auto-open create form now that they are unblocked
+            setShowCreate(true)
+          }}
+          onProgress={fetchTasks}
         />
       )}
 
@@ -268,11 +295,16 @@ function TaskListPage() {
         <div className="glass empty-state" style={{ borderRadius: 'var(--r-xl)', maxWidth: '520px', margin: '0 auto' }}>
           {activeTab === 'active' ? (
             <>
-              <span className="empty-state-icon">📋</span>
-              <h3>No active tasks</h3>
-              <p>Create your first task and we'll build a checkpoint plan around your deadline.</p>
-              <button className="btn-primary" onClick={() => setShowCreate(true)}>
-                + Create Your First Task
+              <span className="empty-state-icon">{tasks.length > 0 ? '✅' : '📋'}</span>
+              <h3>{tasks.length > 0 ? 'All caught up!' : 'No active tasks'}</h3>
+              <p>
+                {tasks.length > 0
+                  ? 'You have no active tasks right now. Ready to tackle something new?'
+                  : "Create your first task and we'll build a checkpoint plan around your deadline."
+                }
+              </p>
+              <button className="btn-primary" onClick={handleCreateClick}>
+                + {tasks.length > 0 ? 'Create New Task' : 'Create Your First Task'}
               </button>
             </>
           ) : (
@@ -297,8 +329,8 @@ function TaskListPage() {
             />
           )}
 
-          {/* On-track banner */}
-          {dueToday.length === 0 && activeTab === 'active' && (dueThisWeek.length > 0 || dueLater.length > 0) && (
+          {/* On-track banner — only when nothing is due today AND nothing is overdue */}
+          {dueToday.length === 0 && overdueCount === 0 && activeTab === 'active' && (dueThisWeek.length > 0 || dueLater.length > 0) && (
             <div className="glass" style={{
               borderRadius: 'var(--r-lg)',
               padding: 'var(--s3) var(--s4)',

@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>System Flowchart</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; font-family: Arial, sans-serif; }
+body { background: #fff; display: flex; justify-content: center; padding: 16px; }
+</style>
+</head>
+<body>
+<svg width="800" height="690" viewBox="0 0 800 690" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+      <path d="M0,0 L10,5 L0,10 z" fill="#000"/>
+    </marker>
+    <marker id="arr-blue" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+      <path d="M0,0 L10,5 L0,10 z" fill="#000"/>
+    </marker>
+  </defs>
+
+  <!-- START -->
+  <circle cx="400" cy="18" r="10" fill="#000"/>
+
+  <!-- AUTH ROUTE GUARD -->
+  <line x1="400" y1="28" x2="400" y2="36" stroke="#000" stroke-width="1.5" marker-end="url(#arr)"/>
+  <rect x="320" y="36" width="160" height="30" rx="6" fill="#fff" stroke="#000" stroke-width="1.5"/>
+  <text x="400" y="55" text-anchor="middle" font-size="11" font-weight="bold" fill="#000">Auth Route Guard</text>
+
+  <!-- D1: AUTHENTICATED? -->
+  <line x1="400" y1="66" x2="400" y2="78" stroke="#000" stroke-width="1.5" marker-end="url(#arr)"/>
+  <polygon points="400,78 447,102 400,126 353,102" fill="#fff" stroke="#000" stroke-width="1.5"/>
+  <text x="400" y="98" text-anchor="middle" font-size="10" font-weight="bold" fill="#000">Authenticated?</text>
+
+  <!-- No: Redirect to Sign In / Up -->
+  <line x1="353" y1="102" x2="222" y2="102" stroke="#000" stroke-width="1.5" marker-end="url(#arr)"/>
+  <text x="300" y="95" font-size="8.5" fill="#000" font-weight="bold">No</text>
+  <rect x="62" y="87" width="160" height="30" rx="6" fill="#fff" stroke="#000" stroke-width="1.5"/>
+  <text x="142" y="106" text-anchor="middle" font-size="10" font-weight="bold" fill="#000">Redirect to Sign In / Up</text>
+  <!-- Loop back to Auth Guard -->
+  <line x1="62" y1="102" x2="36" y2="102" stroke="#000" stroke-width="1.5"/>
+  <line x1="36" y1="102" x2="36" y2="51" stroke="#000" stroke-width="1.5"/>
+  <line x1="36" y1="51" x2="320" y2="51" stroke="#000" stroke-width="1.5" marker-end="url(#arr)"/>
+
+  <!-- Yes: Fetch Tasks -->
+  <line x1="400" y1="126" x2="400" y2="140" stroke="#000" stroke-width="1.5" marker-end="url(#arr)"/>
+  <text x="408" y="136" font-size="8.5" fill="#000" font-weight="bold">Yes</text>
+
+  <!-- FETCH TASKS (RLS) -->
+  <rect x="320" y="140" width="160" height="30" rx="6" fill="#fff" stroke="#000" stroke-width="1.5"/>
+  <text x="400" y="159" text-anchor="middle" font-size="11" font-weight="bold" fill="#000">Fetch Tasks (RLS)</text>
+
+  <!-- D2: HAS TASKS? -->
+  <line x1="400" y1="170" x2="400" y2="183" stroke="#000" stroke-width="1.5" marker-end="url(#arr)"/>
+  <polygon points="400,183 442,205 400,227 358,205" fill="#fff" stroke="#000" stroke-width="1.5"/>
+  <text x="400" y="209" text-anchor="middle" font-size="10" font-weight="bold" fill="#000">Has Tasks?</text>
+
+  <!-- No: Show Empty State -->
+  <line x1="358" y1="205" x2="214" y2="205" stroke="#000" stroke-width="1.5" marker-end="url(#arr)"/>
+  <text x="298" y="198" font-size="8.5" fill="#000" font-weight="bold">No</text>
+  <rect x="64" y="190" width="150" height="30" rx="6" fill="#fff" stroke="#000" stroke-width="1.5"/>
+  <text x="139" y="209" text-anchor="middle" font-size="10" font-weight="bold" fill="#000">Show Empty State</text>
+  <!-- Loop forward to Dashboard -->
+  <line x1="64" y1="205" x2="44" y2="205" stroke="#000" stroke-width="1.5"/>
+  <line x1="44" y1="205" x2="44" y2="259" stroke="#000" stroke-width="1.5"/>
+  <line x1="44" y1="259" x2="318" y2="259" stroke="#000" stroke-width="1.5" marker-end="url(#arr)"/>
+
+  <!-- Yes: Dashboard -->
+  <line x1="400" y1="227" x2="400" y2="241" stroke="#000" stroke-width="1.5" marker-end="url(#arr)"/>
+  <text x="408" y="237" font-size="8.5" fill="#000" font-weight="bold">Yes</text>
+
+  <!-- PRIMARY TASK LIST (DASHBOARD) -->
+  <rect x="318" y="241" width="164" height="36" rx="6" fill="#fff" stroke="#000" stroke-width="1.5"/>
+  <text x="400" y="257" text-anchor="middle" font-size="11" font-weight="bold" fill="#000">Primary Task List</text>
+  <text x="400" y="269" text-anchor="middle" font-size="8.5" fill="#000">Urgency Categories</text>
+
+  <!-- BRANCH SPLIT -->
+  <line x1="400" y1="277" x2="400" y2="294" stroke="#000" stroke-width="1.5"/>
+  <line x1="400" y1="294" x2="185" y2="294" stroke="#000" stroke-width="1.5"/>
+  <line x1="185" y1="294" x2="185" y2="308" stroke="#000" stroke-width="1.5" marker-end="url(#arr)"/>
+  <line x1="400" y1="294" x2="625" y2="294" stroke="#000" stroke-width="1.5"/>
+  <line x1="625" y1="294" x2="625" y2="308" stroke="#000" stroke-width="1.5" marker-end="url(#arr)"/>
+
+  <!-- ══════════════ PATH A: CREATE TASK ══════════════ -->
+
+  <!-- OPEN CREATETASK MODAL -->
+  <rect x="100" y="308" width="170" height="30" rx="6" fill="#fff" stroke="#000" stroke-width="1.5"/>
+  <text x="185" y="327" text-anchor="middle" font-size="10" font-weight="bold" fill="#000">Open CreateTask Modal</text>
+
+  <!-- FILL FORM & SUBMIT -->
+  <line x1="185" y1="338" x2="185" y2="352" stroke="#000" stroke-width="1.5" marker-end="url(#arr)"/>
+  <rect x="100" y="352" width="170" height="34" rx="6" fill="#fff" stroke="#000" stroke-width="1.5"/>
+  <text x="185" y="368" text-anchor="middle" font-size="10" font-weight="bold" fill="#000">Fill Form &amp; Submit</text>
+  <text x="185" y="379" text-anchor="middle" font-size="8.5" fill="#000">Loading state starts</text>
+
+  <!-- D3: AI REQUEST -->
+  <line x1="185" y1="386" x2="185" y2="401" stroke="#000" stroke-width="1.5" marker-end="url(#arr)"/>
+  <!-- Diamond: center=(185,426), half-w=51, half-h=25 -->
+  <polygon points="185,401 236,426 185,451 134,426" fill="#fff" stroke="#000" stroke-width="1.5"/>
+  <text x="185" y="421" text-anchor="middle" font-size="10" font-weight="bold" fill="#000">AI Request</text>
+  <text x="185" y="433" text-anchor="middle" font-size="8.5" fill="#000">45s limit</text>
+
+  <!-- TEMPLATE FALLBACK (Fail/Timeout) -->
+  <!-- D3 left tip at x=134. Fallback right edge at x=122. Arrow: 134→122 -->
+  <line x1="134" y1="426" x2="122" y2="426" stroke="#000" stroke-width="1.5" marker-end="url(#arr)"/>
+  <text x="130" y="418" font-size="8.5" fill="#000" font-weight="bold" text-anchor="end">Fail/Timeout</text>
+  <rect x="18" y="411" width="104" height="32" rx="6" fill="#fff" stroke="#000" stroke-width="1.5"/>
+  <text x="70" y="426" text-anchor="middle" font-size="9.5" font-weight="bold" fill="#000">Template Fallback</text>
+  <text x="70" y="437" text-anchor="middle" font-size="7.5" fill="#000">Predefined sequences</text>
+  <!-- Fallback → DB Insert -->
+  <line x1="70" y1="443" x2="70" y2="510" stroke="#000" stroke-width="1.5"/>
+  <line x1="70" y1="510" x2="100" y2="510" stroke="#000" stroke-width="1.5" marker-end="url(#arr)"/>
+
+  <!-- PARSE AI CHECKPOINTS (Success) -->
+  <line x1="185" y1="451" x2="185" y2="466" stroke="#000" stroke-width="1.5" marker-end="url(#arr)"/>
+  <text x="193" y="462" font-size="8.5" fill="#000" font-weight="bold">Success</text>
+  <rect x="100" y="466" width="170" height="30" rx="6" fill="#fff" stroke="#000" stroke-width="1.5"/>
+  <text x="185" y="485" text-anchor="middle" font-size="10" font-weight="bold" fill="#000">Parse AI Checkpoints</text>
+
+  <!-- Parse → DB Insert -->
+  <line x1="185" y1="496" x2="185" y2="510" stroke="#000" stroke-width="1.5" marker-end="url(#arr)"/>
+
+  <!-- DB INSERT & COMMIT -->
+  <rect x="100" y="510" width="170" height="30" rx="6" fill="#fff" stroke="#000" stroke-width="1.5"/>
+  <text x="185" y="529" text-anchor="middle" font-size="10" font-weight="bold" fill="#000">DB Insert &amp; Commit</text>
+
+  <!-- Return to Dashboard (dashed blue loop, far left) -->
+  <line x1="185" y1="540" x2="185" y2="558" stroke="#000" stroke-width="1.5"/>
+  <line x1="185" y1="558" x2="10" y2="558" stroke="#000" stroke-width="1.5" stroke-dasharray="4,3"/>
+  <line x1="10" y1="558" x2="10" y2="259" stroke="#000" stroke-width="1.5" stroke-dasharray="4,3"/>
+  <line x1="10" y1="259" x2="318" y2="259" stroke="#000" stroke-width="1.5" stroke-dasharray="4,3" marker-end="url(#arr-blue)"/>
+  <text text-anchor="middle" font-size="8" fill="#000" font-weight="bold"
+        transform="translate(19,415) rotate(-90)">Return to Dashboard</text>
+
+  <!-- ══════════════ PATH B: TASK PROGRESS ══════════════ -->
+
+  <!-- VIEW TASK DETAIL PAGE -->
+  <rect x="537" y="308" width="176" height="30" rx="6" fill="#fff" stroke="#000" stroke-width="1.5"/>
+  <text x="625" y="327" text-anchor="middle" font-size="10" font-weight="bold" fill="#000">View Task Detail Page</text>
+
+  <!-- MARK CHECKPOINT COMPLETE -->
+  <line x1="625" y1="338" x2="625" y2="352" stroke="#000" stroke-width="1.5" marker-end="url(#arr)"/>
+  <rect x="537" y="352" width="176" height="30" rx="6" fill="#fff" stroke="#000" stroke-width="1.5"/>
+  <text x="625" y="371" text-anchor="middle" font-size="10" font-weight="bold" fill="#000">Mark Checkpoint Complete</text>
+
+  <!-- 10-SECOND UNDO WINDOW -->
+  <line x1="625" y1="382" x2="625" y2="396" stroke="#000" stroke-width="1.5" marker-end="url(#arr)"/>
+  <rect x="537" y="396" width="176" height="30" rx="6" fill="#fff" stroke="#000" stroke-width="1.5"/>
+  <text x="625" y="415" text-anchor="middle" font-size="10" font-weight="bold" fill="#000">10-second Undo Window</text>
+
+  <!-- D4: UNDO CLICKED? -->
+  <line x1="625" y1="426" x2="625" y2="441" stroke="#000" stroke-width="1.5" marker-end="url(#arr)"/>
+  <!-- Diamond: center=(625,465), tips: top=(625,441), right=(675,465), bottom=(625,489), left=(575,465) -->
+  <polygon points="625,441 675,465 625,489 575,465" fill="#fff" stroke="#000" stroke-width="1.5"/>
+  <text x="625" y="469" text-anchor="middle" font-size="10" font-weight="bold" fill="#000">Undo Clicked?</text>
+
+  <!-- REVERT STATE (Yes → left) -->
+  <line x1="575" y1="465" x2="554" y2="465" stroke="#000" stroke-width="1.5" marker-end="url(#arr)"/>
+  <text x="572" y="458" font-size="8.5" fill="#000" font-weight="bold" text-anchor="end">Yes (Undo)</text>
+  <!-- Revert rect: right edge=554, center=499, left=444 -->
+  <rect x="444" y="449" width="110" height="30" rx="6" fill="#fff" stroke="#000" stroke-width="1.5"/>
+  <text x="499" y="468" text-anchor="middle" font-size="10" font-weight="bold" fill="#000">Revert State</text>
+
+  <!-- Shared loop vertical at x=408 for both Revert and D5-No -->
+  <!-- Revert left → x=408 -->
+  <line x1="444" y1="464" x2="408" y2="464" stroke="#000" stroke-width="1.5"/>
+  <!-- D5 No → x=408 (drawn below, but share the vertical) -->
+  <!-- Full vertical from y=580 (D5 No level) to y=323 (View Task level) -->
+  <!-- This line is drawn AFTER D5 so both horizontals connect to it -->
+
+  <!-- COMMIT TO DATABASE (No - time expires) -->
+  <line x1="625" y1="489" x2="625" y2="503" stroke="#000" stroke-width="1.5" marker-end="url(#arr)"/>
+  <text x="633" y="499" font-size="8.5" fill="#000" font-weight="bold">No (Time expires)</text>
+  <rect x="537" y="503" width="176" height="34" rx="6" fill="#fff" stroke="#000" stroke-width="1.5"/>
+  <text x="625" y="518" text-anchor="middle" font-size="10" font-weight="bold" fill="#000">Commit to Database</text>
+  <text x="625" y="530" text-anchor="middle" font-size="8.5" fill="#000">Irreversible state update</text>
+
+  <!-- D5: ALL CHECKPOINTS DONE? -->
+  <line x1="625" y1="537" x2="625" y2="552" stroke="#000" stroke-width="1.5" marker-end="url(#arr)"/>
+  <!-- Diamond: center=(625,577), tips: top=(625,552), right=(678,577), bottom=(625,602), left=(572,577) -->
+  <polygon points="625,552 678,577 625,602 572,577" fill="#fff" stroke="#000" stroke-width="1.5"/>
+  <text x="625" y="573" text-anchor="middle" font-size="9.5" font-weight="bold" fill="#000">All checkpoints done?</text>
+
+  <!-- No: loop back to View Task Detail (shared vertical at x=408) -->
+  <line x1="572" y1="577" x2="408" y2="577" stroke="#000" stroke-width="1.5"/>
+  <text x="478" y="570" text-anchor="middle" font-size="8.5" fill="#000" font-weight="bold">No (More pending)</text>
+  <!-- Draw the shared vertical now (from lowest y=577 up to y=323, includes the Revert junction at y=464) -->
+  <line x1="408" y1="577" x2="408" y2="323" stroke="#000" stroke-width="1.5"/>
+  <line x1="408" y1="323" x2="537" y2="323" stroke="#000" stroke-width="1.5" marker-end="url(#arr)"/>
+
+  <!-- COMPLETE PARENT TASK (Yes) -->
+  <line x1="625" y1="602" x2="625" y2="617" stroke="#000" stroke-width="1.5" marker-end="url(#arr)"/>
+  <text x="633" y="613" font-size="8.5" fill="#000" font-weight="bold">Yes</text>
+  <rect x="537" y="617" width="176" height="34" rx="6" fill="#fff" stroke="#000" stroke-width="1.5"/>
+  <text x="625" y="633" text-anchor="middle" font-size="10" font-weight="bold" fill="#000">Complete Parent Task</text>
+  <text x="625" y="644" text-anchor="middle" font-size="8.5" fill="#000">Status = 'completed'</text>
+
+  <!-- END NODE -->
+  <line x1="625" y1="651" x2="625" y2="660" stroke="#000" stroke-width="1.5" marker-end="url(#arr)"/>
+  <circle cx="625" cy="671" r="12" fill="none" stroke="#000" stroke-width="2.5"/>
+  <circle cx="625" cy="671" r="7" fill="#000"/>
+
+</svg>
+</body>
+</html>

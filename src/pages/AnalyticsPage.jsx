@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { usePageTransition } from '../hooks/usePageTransition'
 import { supabase } from '../supabaseClient'
 import { useAuth }  from '../hooks/useAuth'
@@ -30,19 +31,42 @@ function computeMetrics(allTasks) {
     ? Math.round((onTimeCount / completedCPs) * 100)
     : null   // null = not enough data
 
-  // ── Streak — consecutive calendar days (desc from today) with ≥1 completion ─
+  // ── Streak — consecutive active days (desc from today) with ≥1 completion ──
+  // An "active day" is any calendar day that falls within at least one task's
+  // span (created_at → final_deadline). Days outside all spans are skipped so
+  // finishing work early or having no tasks on a day doesn't break the streak.
   const completionDays = new Set(
     completed.map(cp => new Date(cp.completed_at).toDateString())
   )
+
+  // Build a set of all calendar days covered by any task's span
+  const activeDayStrings = new Set()
+  for (const task of allTasks) {
+    const start    = task.created_at    ? new Date(task.created_at)    : null
+    const end      = task.final_deadline ? new Date(task.final_deadline) : null
+    if (!start || !end) continue
+    const cursor = new Date(start)
+    cursor.setHours(0, 0, 0, 0)
+    const endDay = new Date(end)
+    endDay.setHours(0, 0, 0, 0)
+    while (cursor <= endDay) {
+      activeDayStrings.add(cursor.toDateString())
+      cursor.setDate(cursor.getDate() + 1)
+    }
+  }
+
   let streak = 0
   const today = new Date()
   for (let i = 0; i < 365; i++) {
     const d = new Date(today)
     d.setDate(today.getDate() - i)
-    if (completionDays.has(d.toDateString())) {
+    const ds = d.toDateString()
+    // Skip days that have no tasks active — don't count as a gap
+    if (!activeDayStrings.has(ds)) continue
+    if (completionDays.has(ds)) {
       streak++
-    } else if (i > 0) {
-      break  // gap found — streak ends
+    } else if (streak > 0) {
+      break  // active day with no completion after streak started — breaks it
     }
   }
 
@@ -185,7 +209,7 @@ function AnalyticsPage() {
       {allTasks.length > 0 && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--s8)' }}>
           {/* Summary Cards — Chunk 3 */}
-          <SummaryCards metrics={metrics} />
+          <SummaryCards metrics={metrics} allTasks={allTasks} />
 
           {/* Charts — Chunk 4 */}
           <Charts metrics={metrics} />
@@ -196,11 +220,24 @@ function AnalyticsPage() {
 }
 
 // ─── SummaryCards ─────────────────────────────────────────────────────────────
-function SummaryCards({ metrics }) {
+function SummaryCards({ metrics, allTasks }) {
+  const navigate = useNavigate()
   const {
     totalTasks, completedTasks, completedCPs,
     onTimeRate, streak, procrastinationIndex,
   } = metrics
+
+  // Find the active task with the most overdue checkpoints (for prescriptive CTAs)
+  const mostAtRiskTask = allTasks
+    .filter(t => t.status !== 'completed')
+    .map(t => ({
+      ...t,
+      overdueCount: (t.checkpoints || []).filter(
+        cp => cp.status !== 'completed' && new Date(cp.due_date) < new Date()
+      ).length,
+    }))
+    .sort((a, b) => b.overdueCount - a.overdueCount)
+    .find(t => t.overdueCount > 0)
 
   // Procrastination display helpers
   const piAbs    = procrastinationIndex !== null ? Math.abs(procrastinationIndex) : null
@@ -214,6 +251,23 @@ function SummaryCards({ metrics }) {
                     : onTimeRate >= 70     ? 'var(--success, #22c55e)'
                     : onTimeRate >= 40     ? 'var(--warning, #f59e0b)'
                     :                        'var(--danger)'
+
+  // Helper: render sub as a button-link when there's an actionable task
+  function ActionSub({ text, color, taskId }) {
+    if (!taskId) return <p style={{ fontSize: 'var(--text-xs)', color, margin: 0 }}>{text}</p>
+    return (
+      <button
+        onClick={() => navigate(`/tasks/${taskId}`)}
+        style={{
+          background: 'none', border: 'none', padding: 0, cursor: 'pointer',
+          fontSize: 'var(--text-xs)', color, margin: 0, textDecoration: 'underline',
+          textAlign: 'left',
+        }}
+      >
+        {text} →
+      </button>
+    )
+  }
 
   const cards = [
     {
@@ -237,9 +291,12 @@ function SummaryCards({ metrics }) {
       sub: onTimeRate === null ? 'complete a checkpoint to start'
          : onTimeRate >= 70   ? 'great consistency'
          : onTimeRate >= 40   ? 'room to improve'
+         : mostAtRiskTask     ? `View most at-risk task`
          :                      'falling behind',
       subColor: onTimeColor,
       valueColor: onTimeColor,
+      // Link to most at-risk task when rate is bad
+      actionTaskId: onTimeRate !== null && onTimeRate < 40 ? mostAtRiskTask?.id : null,
     },
     {
       icon: '⏱️',
@@ -247,9 +304,11 @@ function SummaryCards({ metrics }) {
       value: <AnimatedCounter value={piAbs} suffix={piSuffix} decimals={1} />,
       sub: procrastinationIndex === null ? 'no data yet'
          : procrastinationIndex < 0      ? 'you\'re ahead of schedule'
-         :                                  'you\'re running late',
+         : mostAtRiskTask                ? 'View task needing attention'
+         :                                 'you\'re running late',
       subColor: piColor,
       valueColor: piColor,
+      actionTaskId: procrastinationIndex !== null && procrastinationIndex > 1 ? mostAtRiskTask?.id : null,
     },
   ]
 
@@ -291,9 +350,7 @@ function SummaryCards({ metrics }) {
             }}>
               {card.value}
             </p>
-            <p style={{ fontSize: 'var(--text-xs)', color: card.subColor, margin: 0 }}>
-              {card.sub}
-            </p>
+            <ActionSub text={card.sub} color={card.subColor} taskId={card.actionTaskId} />
           </div>
         ))}
       </div>

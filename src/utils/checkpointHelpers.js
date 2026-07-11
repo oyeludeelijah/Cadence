@@ -3,13 +3,18 @@
 
 /**
  * Returns the effective status of a checkpoint:
- * 'completed', 'overdue', 'urgent', or 'pending'
+ * 'completed', 'locked', 'overdue', 'urgent', or 'pending'
+ *
+ * isLocked: true when a prior checkpoint is still pending.
+ * Locked checkpoints return 'locked' regardless of their due_date —
+ * showing them as overdue is misleading because the student can't act on them.
  */
-export function getCheckpointStatus(checkpoint) {
+export function getCheckpointStatus(checkpoint, isLocked = false) {
   const now = new Date()
   const due = new Date(checkpoint.due_date)
 
   if (checkpoint.status === 'completed') return 'completed'
+  if (isLocked) return 'locked'
   if (due < now) return 'overdue'
 
   const hoursUntilDue = (due - now) / (1000 * 60 * 60)

@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Entity Relationship Diagram — Task Manager</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Arial, sans-serif; }
+body { background: #F0F4F8; padding: 24px; display: flex; flex-direction: column; align-items: center; }
+h1 { font-size: 20px; font-weight: 700; color: #1A237E; margin-bottom: 4px; }
+p  { font-size: 12px; color: #78909C; margin-bottom: 20px; }
+.wrap { background: white; border-radius: 12px; box-shadow: 0 4px 24px rgba(0,0,0,0.12); padding: 20px; overflow: auto; }
+</style>
+</head>
+<body>
+<h1>Entity Relationship Diagram — Task Manager (Updated)</h1>
+<p>Tables, attributes, key types &amp; relationships</p>
+<div class="wrap">
+<svg width="1400" height="950" viewBox="0 0 1400 950" xmlns="http://www.w3.org/2000/svg">
+
+  <!-- Tables Backgrounds -->
+  <!-- Tasks -->
+  <rect x="50" y="100" width="320" height="420" rx="8" fill="#F0F8FF" stroke="#BBDEFB" stroke-width="2"/>
+  <rect x="50" y="100" width="320" height="50" rx="8" fill="#E3F2FD"/>
+  <text x="70" y="132" font-weight="bold" font-size="16" fill="#1565C0">tasks</text>
+  <rect x="220" y="115" width="130" height="20" rx="4" fill="#BBDEFB"/>
+  <text x="285" y="129" text-anchor="middle" font-size="10" font-weight="bold" fill="#0D47A1">PARENT - PRIMARY</text>
+  
+  <text x="70" y="170" font-size="10" font-weight="bold" fill="#90CAF9">ATTRIBUTE</text>
+  <text x="180" y="170" font-size="10" font-weight="bold" fill="#90CAF9">DATA TYPE / KEY</text>
+  <line x1="50" y1="180" x2="370" y2="180" stroke="#BBDEFB" stroke-width="1"/>
+
+  <text x="70" y="205" font-size="13" font-family="monospace" font-weight="bold" fill="#333">id</text>
+  <text x="180" y="205" font-size="12" fill="#757575">uuid</text>
+  <rect x="240" y="193" width="25" height="16" rx="4" fill="#FFE0B2"/><text x="252" y="205" text-anchor="middle" font-size="10" font-weight="bold" fill="#E65100">PK</text>
+  <line x1="50" y1="220" x2="370" y2="220" stroke="#BBDEFB" stroke-width="1" stroke-dasharray="4,4"/>
+
+  <text x="70" y="245" font-size="13" font-family="monospace" font-weight="bold" fill="#333">user_id</text>
+  <text x="180" y="245" font-size="12" fill="#757575">uuid</text>
+  <rect x="240" y="233" width="25" height="16" rx="4" fill="#E1BEE7"/><text x="252" y="245" text-anchor="middle" font-size="10" font-weight="bold" fill="#6A1B9A">FK</text>
+  <line x1="50" y1="260" x2="370" y2="260" stroke="#BBDEFB" stroke-width="1" stroke-dasharray="4,4"/>
+
+  <text x="70" y="285" font-size="13" font-family="monospace" font-weight="bold" fill="#333">title</text>
+  <text x="180" y="285" font-size="12" fill="#757575">text</text>
+  <line x1="50" y1="300" x2="370" y2="300" stroke="#BBDEFB" stroke-width="1" stroke-dasharray="4,4"/>
+
+  <text x="70" y="325" font-size="13" font-family="monospace" font-weight="bold" fill="#333">task_type</text>
+  <text x="180" y="325" font-size="12" fill="#757575">text</text>
+  <line x1="50" y1="340" x2="370" y2="340" stroke="#BBDEFB" stroke-width="1" stroke-dasharray="4,4"/>
+
+  <text x="70" y="365" font-size="13" font-family="monospace" font-weight="bold" fill="#333">status</text>
+  <text x="180" y="365" font-size="12" fill="#757575">text (enum)</text>
+  <line x1="50" y1="380" x2="370" y2="380" stroke="#BBDEFB" stroke-width="1" stroke-dasharray="4,4"/>
+
+  <text x="70" y="405" font-size="13" font-family="monospace" font-weight="bold" fill="#333">final_deadline</text>
+  <text x="180" y="405" font-size="12" fill="#757575">timestamptz</text>
+  <line x1="50" y1="420" x2="370" y2="420" stroke="#BBDEFB" stroke-width="1" stroke-dasharray="4,4"/>
+
+  <text x="70" y="445" font-size="13" font-family="monospace" font-weight="bold" fill="#333">notes</text>
+  <text x="180" y="445" font-size="12" fill="#757575">text</text>
+  <line x1="50" y1="460" x2="370" y2="460" stroke="#BBDEFB" stroke-width="1" stroke-dasharray="4,4"/>
+
+  <text x="70" y="485" font-size="13" font-family="monospace" font-weight="bold" fill="#333">created_at</text>
+  <text x="180" y="485" font-size="12" fill="#757575">timestamptz</text>
+
+
+  <!-- Relationship Box -->
+  <rect x="400" y="190" width="130" height="110" rx="8" fill="#FAFAFA" stroke="#E0E0E0" stroke-width="2"/>
+  <text x="465" y="220" text-anchor="middle" font-weight="bold" font-size="18" fill="#424242">1 : N</text>
+  <text x="465" y="240" text-anchor="middle" font-size="10" fill="#757575">ONE TO MANY</text>
+  
+  <rect x="410" y="260" width="110" height="25" rx="4" fill="#FFEBEE"/>
+  <text x="465" y="276" text-anchor="middle" font-weight="bold" font-size="10" fill="#C62828">NO CASCADE DEL</text>
+  
+
+  <!-- Checkpoints -->
+  <rect x="560" y="100" width="370" height="540" rx="8" fill="#F1F8E9" stroke="#C8E6C9" stroke-width="2"/>
+  <rect x="560" y="100" width="370" height="50" rx="8" fill="#E8F5E9"/>
+  <text x="580" y="132" font-weight="bold" font-size="16" fill="#2E7D32">checkpoints</text>
+  <rect x="780" y="115" width="130" height="20" rx="4" fill="#C8E6C9"/>
+  <text x="845" y="129" text-anchor="middle" font-size="10" font-weight="bold" fill="#1B5E20">CHILD - DEPENDENT</text>
+
+  <text x="580" y="170" font-size="10" font-weight="bold" fill="#A5D6A7">ATTRIBUTE</text>
+  <text x="740" y="170" font-size="10" font-weight="bold" fill="#A5D6A7">DATA TYPE / KEY</text>
+  <line x1="560" y1="180" x2="930" y2="180" stroke="#C8E6C9" stroke-width="1"/>
+
+  <text x="580" y="205" font-size="13" font-family="monospace" font-weight="bold" fill="#333">id</text>
+  <text x="740" y="205" font-size="12" fill="#757575">uuid</text>
+  <rect x="830" y="193" width="25" height="16" rx="4" fill="#FFE0B2"/><text x="842" y="205" text-anchor="middle" font-size="10" font-weight="bold" fill="#E65100">PK</text>
+  <line x1="560" y1="220" x2="930" y2="220" stroke="#C8E6C9" stroke-width="1" stroke-dasharray="4,4"/>
+
+  <text x="580" y="245" font-size="13" font-family="monospace" font-weight="bold" fill="#333">task_id</text>
+  <text x="740" y="245" font-size="12" fill="#757575">uuid</text>
+  <rect x="830" y="233" width="25" height="16" rx="4" fill="#E1BEE7"/><text x="842" y="245" text-anchor="middle" font-size="10" font-weight="bold" fill="#6A1B9A">FK</text>
+  <line x1="560" y1="260" x2="930" y2="260" stroke="#C8E6C9" stroke-width="1" stroke-dasharray="4,4"/>
+
+  <text x="580" y="285" font-size="13" font-family="monospace" font-weight="bold" fill="#333">sequence_number</text>
+  <text x="740" y="285" font-size="12" fill="#757575">integer</text>
+  <line x1="560" y1="300" x2="930" y2="300" stroke="#C8E6C9" stroke-width="1" stroke-dasharray="4,4"/>
+
+  <text x="580" y="325" font-size="13" font-family="monospace" font-weight="bold" fill="#333">type</text>
+  <text x="740" y="325" font-size="12" fill="#757575">text</text>
+  <line x1="560" y1="340" x2="930" y2="340" stroke="#C8E6C9" stroke-width="1" stroke-dasharray="4,4"/>
+
+  <text x="580" y="365" font-size="13" font-family="monospace" font-weight="bold" fill="#333">due_date</text>
+  <text x="740" y="365" font-size="12" fill="#757575">timestamptz</text>
+  <line x1="560" y1="380" x2="930" y2="380" stroke="#C8E6C9" stroke-width="1" stroke-dasharray="4,4"/>
+
+  <text x="580" y="405" font-size="13" font-family="monospace" font-weight="bold" fill="#333">status</text>
+  <text x="740" y="405" font-size="12" fill="#757575">text (enum)</text>
+  <line x1="560" y1="420" x2="930" y2="420" stroke="#C8E6C9" stroke-width="1" stroke-dasharray="4,4"/>
+
+  <text x="580" y="445" font-size="13" font-family="monospace" font-weight="bold" fill="#333">completed_at</text>
+  <text x="740" y="445" font-size="12" fill="#757575">timestamptz</text>
+  <line x1="560" y1="460" x2="930" y2="460" stroke="#C8E6C9" stroke-width="1" stroke-dasharray="4,4"/>
+
+  <text x="580" y="485" font-size="13" font-family="monospace" font-weight="bold" fill="#333">created_at</text>
+  <text x="740" y="485" font-size="12" fill="#757575">timestamptz</text>
+  <line x1="560" y1="500" x2="930" y2="500" stroke="#C8E6C9" stroke-width="1" stroke-dasharray="4,4"/>
+
+  <text x="580" y="525" font-size="13" font-family="monospace" font-weight="bold" fill="#333">ai_generated</text>
+  <text x="740" y="525" font-size="12" fill="#757575">boolean</text>
+  <line x1="560" y1="540" x2="930" y2="540" stroke="#C8E6C9" stroke-width="1" stroke-dasharray="4,4"/>
+
+  <text x="580" y="565" font-size="13" font-family="monospace" font-weight="bold" fill="#333">reminder_sent_urgent</text>
+  <text x="740" y="565" font-size="12" fill="#757575">boolean</text>
+  <line x1="560" y1="580" x2="930" y2="580" stroke="#C8E6C9" stroke-width="1" stroke-dasharray="4,4"/>
+
+  <text x="580" y="605" font-size="13" font-family="monospace" font-weight="bold" fill="#333">reminder_sent_overdue</text>
+  <text x="740" y="605" font-size="12" fill="#757575">boolean</text>
+
+
+  <!-- Sys Fallback Box -->
+  <rect x="960" y="190" width="80" height="90" rx="8" fill="#FAFAFA" stroke="#E0E0E0" stroke-width="2"/>
+  <text x="1000" y="220" text-anchor="middle" font-weight="bold" font-size="16" fill="#424242">SYS</text>
+  <text x="1000" y="240" text-anchor="middle" font-size="9" fill="#757575">FALLBACK</text>
+  <text x="1000" y="260" text-anchor="middle" font-size="9" fill="#757575">No FK Link</text>
+
+
+  <!-- Task Templates -->
+  <rect x="1070" y="100" width="280" height="260" rx="8" fill="#FFF8E1" stroke="#FFE082" stroke-width="2"/>
+  <rect x="1070" y="100" width="280" height="50" rx="8" fill="#FFECB3"/>
+  <text x="1090" y="132" font-weight="bold" font-size="16" fill="#F57F17">task_templates</text>
+  <rect x="1230" y="115" width="110" height="20" rx="4" fill="#FFE082"/>
+  <text x="1285" y="129" text-anchor="middle" font-size="10" font-weight="bold" fill="#E65100">SYSTEM - INTERNAL</text>
+
+  <text x="1090" y="170" font-size="10" font-weight="bold" fill="#FFCA28">ATTRIBUTE</text>
+  <text x="1220" y="170" font-size="10" font-weight="bold" fill="#FFCA28">DATA TYPE</text>
+  <line x1="1070" y1="180" x2="1350" y2="180" stroke="#FFE082" stroke-width="1"/>
+
+  <text x="1090" y="205" font-size="13" font-family="monospace" font-weight="bold" fill="#333">id</text>
+  <text x="1220" y="205" font-size="12" fill="#757575">uuid</text>
+  <rect x="1280" y="193" width="25" height="16" rx="4" fill="#FFE0B2"/><text x="1292" y="205" text-anchor="middle" font-size="10" font-weight="bold" fill="#E65100">PK</text>
+  <line x1="1070" y1="220" x2="1350" y2="220" stroke="#FFE082" stroke-width="1" stroke-dasharray="4,4"/>
+
+  <text x="1090" y="245" font-size="13" font-family="monospace" font-weight="bold" fill="#333">task_type</text>
+  <text x="1220" y="245" font-size="12" fill="#757575">text</text>
+  <line x1="1070" y1="260" x2="1350" y2="260" stroke="#FFE082" stroke-width="1" stroke-dasharray="4,4"/>
+
+  <text x="1090" y="285" font-size="13" font-family="monospace" font-weight="bold" fill="#333">checkpoint_sequence</text>
+  <text x="1220" y="285" font-size="12" fill="#757575">jsonb</text>
+  <line x1="1070" y1="300" x2="1350" y2="300" stroke="#FFE082" stroke-width="1" stroke-dasharray="4,4"/>
+
+  <text x="1090" y="325" font-size="13" font-family="monospace" font-weight="bold" fill="#333">created_at</text>
+  <text x="1220" y="325" font-size="12" fill="#757575">timestamptz</text>
+
+
+  <!-- Logic Boxes Bottom -->
+  <rect x="50" y="680" width="400" height="140" rx="8" fill="#FFF" stroke="#E0E0E0" stroke-width="2"/>
+  <text x="70" y="710" font-weight="bold" font-size="11" fill="#9E9E9E">RELATIONSHIP LOGIC</text>
+  <circle cx="70" cy="735" r="4" fill="#1976D2"/>
+  <text x="85" y="739" font-size="12" fill="#424242"><tspan font-family="monospace">tasks</tspan> is the parent container.</text>
+  <circle cx="70" cy="765" r="4" fill="#388E3C"/>
+  <text x="85" y="769" font-size="12" fill="#424242"><tspan font-family="monospace">checkpoints</tspan> belong to task via <tspan font-family="monospace">task_id</tspan> FK.</text>
+  <circle cx="70" cy="795" r="4" fill="#D32F2F"/>
+  <text x="85" y="799" font-size="12" fill="#424242">Client manually deletes checkpoints before task.</text>
+
+  <rect x="480" y="680" width="400" height="140" rx="8" fill="#FFF" stroke="#E0E0E0" stroke-width="2"/>
+  <text x="500" y="710" font-weight="bold" font-size="11" fill="#9E9E9E">PROGRESS CALCULATION</text>
+  <circle cx="500" cy="735" r="4" fill="#388E3C"/>
+  <text x="515" y="739" font-size="12" fill="#424242">Query checkpoints WHERE <tspan font-family="monospace">task_id</tspan> = ?</text>
+  <circle cx="500" cy="765" r="4" fill="#388E3C"/>
+  <text x="515" y="769" font-size="12" fill="#424242">Count rows WHERE <tspan font-family="monospace">status</tspan> = 'completed' vs total.</text>
+  <circle cx="500" cy="795" r="4" fill="#1976D2"/>
+  <text x="515" y="799" font-size="12" fill="#424242">Progress % = completed / total × 100.</text>
+
+  <rect x="910" y="680" width="440" height="140" rx="8" fill="#FFF" stroke="#E0E0E0" stroke-width="2"/>
+  <text x="930" y="710" font-weight="bold" font-size="11" fill="#9E9E9E">AI FALLBACK STRATEGY</text>
+  <circle cx="930" cy="735" r="4" fill="#6A1B9A"/>
+  <text x="945" y="739" font-size="12" fill="#424242">When NIM works, <tspan font-family="monospace">ai_generated</tspan> = true.</text>
+  <circle cx="930" cy="765" r="4" fill="#F57C00"/>
+  <text x="945" y="769" font-size="12" fill="#424242">When AI fails, <tspan font-family="monospace">task_templates</tspan> provides sequence.</text>
+  <circle cx="930" cy="795" r="4" fill="#F57C00"/>
+  <text x="945" y="799" font-size="12" fill="#424242">Matched by <tspan font-family="monospace">task_type</tspan>.</text>
+
+</svg>
+</div>
+</body>
+</html>

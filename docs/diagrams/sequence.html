@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Sequence Diagram — Task Creation</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background: #F0F4F8;
+  font-family: 'Segoe UI', Arial, sans-serif;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+h1 { font-size: 20px; font-weight: 700; color: #1A237E; margin-bottom: 4px; }
+p  { font-size: 12px; color: #78909C; margin-bottom: 20px; }
+.wrap {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.12);
+  padding: 20px;
+  overflow: auto;
+}
+</style>
+</head>
+<body>
+<h1>Sequence Diagram — Task Creation with AI Checkpoints</h1>
+<p>User → Frontend → Backend → NVIDIA NIM → Supabase → Frontend → User</p>
+<div class="wrap">
+<svg width="1400" height="1100" viewBox="0 0 1400 1100" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <marker id="arrow-blue" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M0,0 L10,5 L0,10 z" fill="#1E88E5"/>
+    </marker>
+    <marker id="arrow-green" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M0,0 L10,5 L0,10 z" fill="#43A047"/>
+    </marker>
+    <marker id="arrow-purple" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M0,0 L10,5 L0,10 z" fill="#8E24AA"/>
+    </marker>
+    <marker id="arrow-orange" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M0,0 L10,5 L0,10 z" fill="#FB8C00"/>
+    </marker>
+
+    <!-- Left pointing arrows -->
+    <marker id="arrow-blue-left" viewBox="0 0 10 10" refX="1" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M10,0 L0,5 L10,10 z" fill="#1E88E5"/>
+    </marker>
+    <marker id="arrow-green-left" viewBox="0 0 10 10" refX="1" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M10,0 L0,5 L10,10 z" fill="#43A047"/>
+    </marker>
+    <marker id="arrow-purple-left" viewBox="0 0 10 10" refX="1" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M10,0 L0,5 L10,10 z" fill="#8E24AA"/>
+    </marker>
+    <marker id="arrow-orange-left" viewBox="0 0 10 10" refX="1" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M10,0 L0,5 L10,10 z" fill="#FB8C00"/>
+    </marker>
+  </defs>
+
+  <!-- Lifelines -->
+  <line x1="200" y1="120" x2="200" y2="1050" stroke="#E0E0E0" stroke-width="2" stroke-dasharray="8,4"/>
+  <line x1="450" y1="120" x2="450" y2="1050" stroke="#E0E0E0" stroke-width="2" stroke-dasharray="8,4"/>
+  <line x1="700" y1="120" x2="700" y2="1050" stroke="#E0E0E0" stroke-width="2" stroke-dasharray="8,4"/>
+  <line x1="950" y1="120" x2="950" y2="1050" stroke="#E0E0E0" stroke-width="2" stroke-dasharray="8,4"/>
+  <line x1="1200" y1="120" x2="1200" y2="1050" stroke="#E0E0E0" stroke-width="2" stroke-dasharray="8,4"/>
+
+  <!-- Actor Boxes -->
+  <!-- User -->
+  <rect x="100" y="40" width="200" height="70" rx="8" fill="#FAFAFA" stroke="#E0E0E0" stroke-width="2"/>
+  <text x="200" y="70" text-anchor="middle" font-weight="700" font-size="14" fill="#424242">User</text>
+  <text x="200" y="90" text-anchor="middle" font-size="11" fill="#757575">Browser / Mobile</text>
+
+  <!-- Frontend -->
+  <rect x="350" y="40" width="200" height="70" rx="8" fill="#E3F2FD" stroke="#90CAF9" stroke-width="2"/>
+  <text x="450" y="70" text-anchor="middle" font-weight="700" font-size="14" fill="#1565C0">Frontend</text>
+  <text x="450" y="90" text-anchor="middle" font-size="11" fill="#1976D2">React 19 + Vite</text>
+
+  <!-- Backend -->
+  <rect x="600" y="40" width="200" height="70" rx="8" fill="#E8F5E9" stroke="#A5D6A7" stroke-width="2"/>
+  <text x="700" y="70" text-anchor="middle" font-weight="700" font-size="14" fill="#2E7D32">Backend</text>
+  <text x="700" y="90" text-anchor="middle" font-size="11" fill="#388E3C">Vercel /api/nvidia</text>
+
+  <!-- NVIDIA NIM -->
+  <rect x="850" y="40" width="200" height="70" rx="8" fill="#F3E5F5" stroke="#CE93D8" stroke-width="2"/>
+  <text x="950" y="70" text-anchor="middle" font-weight="700" font-size="14" fill="#6A1B9A">NVIDIA NIM</text>
+  <text x="950" y="90" text-anchor="middle" font-size="11" fill="#7B1FA2">External LLM API</text>
+
+  <!-- Supabase -->
+  <rect x="1100" y="40" width="200" height="70" rx="8" fill="#FFF3E0" stroke="#FFCC80" stroke-width="2"/>
+  <text x="1200" y="70" text-anchor="middle" font-weight="700" font-size="14" fill="#EF6C00">Supabase</text>
+  <text x="1200" y="90" text-anchor="middle" font-size="11" fill="#F57C00">PostgreSQL + Auth</text>
+
+
+  <!-- Interactions -->
+
+  <!-- 1. User -> Frontend -->
+  <circle cx="200" cy="180" r="10" fill="#1E88E5"/>
+  <text x="200" y="184" text-anchor="middle" font-size="10" fill="#fff" font-weight="bold">1</text>
+  <line x1="215" y1="180" x2="440" y2="180" stroke="#1E88E5" stroke-width="2" marker-end="url(#arrow-blue)"/>
+  <rect x="230" y="190" width="50" height="20" rx="4" fill="#E3F2FD"/>
+  <text x="255" y="204" text-anchor="middle" font-size="11" fill="#1565C0" font-family="monospace">Action</text>
+  <text x="290" y="204" font-size="12" fill="#757575">User enters title &amp; deadline in CreateTask modal, clicks "Create Task"</text>
+
+  <!-- 2. Frontend -> Backend -->
+  <circle cx="450" cy="270" r="10" fill="#43A047"/>
+  <text x="450" y="274" text-anchor="middle" font-size="10" fill="#fff" font-weight="bold">2</text>
+  <line x1="465" y1="270" x2="690" y2="270" stroke="#43A047" stroke-width="2" marker-end="url(#arrow-green)"/>
+  <rect x="480" y="280" width="120" height="20" rx="4" fill="#E8F5E9"/>
+  <text x="540" y="294" text-anchor="middle" font-size="11" fill="#2E7D32" font-family="monospace">POST /api/nvidia</text>
+  <text x="610" y="294" font-size="12" fill="#757575">React sends task context to proxy</text>
+
+  <!-- 3. Backend -> NVIDIA NIM -->
+  <circle cx="700" cy="360" r="10" fill="#8E24AA"/>
+  <text x="700" y="364" text-anchor="middle" font-size="10" fill="#fff" font-weight="bold">3</text>
+  <line x1="715" y1="360" x2="940" y2="360" stroke="#8E24AA" stroke-width="2" marker-end="url(#arrow-purple)"/>
+  <rect x="730" y="370" width="110" height="20" rx="4" fill="#F3E5F5"/>
+  <text x="785" y="384" text-anchor="middle" font-size="11" fill="#6A1B9A" font-family="monospace">NIM API Request</text>
+  <text x="850" y="384" font-size="12" fill="#757575">Serverless fn forwards details to NVIDIA NIM</text>
+
+  <!-- 4. NVIDIA NIM -> Backend (Return) -->
+  <circle cx="950" cy="450" r="10" fill="#8E24AA"/>
+  <text x="950" y="454" text-anchor="middle" font-size="10" fill="#fff" font-weight="bold">4</text>
+  <line x1="935" y1="450" x2="710" y2="450" stroke="#8E24AA" stroke-width="2" stroke-dasharray="6,4" marker-end="url(#arrow-purple-left)"/>
+  <rect x="730" y="460" width="110" height="20" rx="4" fill="#F3E5F5"/>
+  <text x="785" y="474" text-anchor="middle" font-size="11" fill="#6A1B9A" font-family="monospace">JSON Milestones</text>
+  <text x="850" y="474" font-size="12" fill="#757575">Returns structured timeline</text>
+
+  <!-- 5. Backend -> Frontend (Return) -->
+  <circle cx="700" cy="540" r="10" fill="#43A047"/>
+  <text x="700" y="544" text-anchor="middle" font-size="10" fill="#fff" font-weight="bold">5</text>
+  <line x1="685" y1="540" x2="460" y2="540" stroke="#43A047" stroke-width="2" stroke-dasharray="6,4" marker-end="url(#arrow-green-left)"/>
+  <rect x="480" y="550" width="160" height="20" rx="4" fill="#E8F5E9"/>
+  <text x="560" y="564" text-anchor="middle" font-size="11" fill="#2E7D32" font-family="monospace">AI Milestones Returned</text>
+  <text x="650" y="564" font-size="12" fill="#757575">Serverless fn passes milestones to React</text>
+
+  <!-- 6. Frontend -> Supabase (INSERT tasks) -->
+  <circle cx="450" cy="630" r="10" fill="#FB8C00"/>
+  <text x="450" y="634" text-anchor="middle" font-size="10" fill="#fff" font-weight="bold">6</text>
+  <line x1="465" y1="630" x2="1190" y2="630" stroke="#FB8C00" stroke-width="2" marker-end="url(#arrow-orange)"/>
+  <rect x="480" y="640" width="100" height="20" rx="4" fill="#FFF3E0"/>
+  <text x="530" y="654" text-anchor="middle" font-size="11" fill="#EF6C00" font-family="monospace">INSERT tasks</text>
+  <text x="590" y="654" font-size="12" fill="#757575">supabase.from('tasks').insert() - saves title &amp; deadline</text>
+
+  <!-- 7. Supabase -> Frontend (Returns task.id) -->
+  <circle cx="1200" cy="720" r="10" fill="#FB8C00"/>
+  <text x="1200" y="724" text-anchor="middle" font-size="10" fill="#fff" font-weight="bold">7</text>
+  <line x1="1185" y1="720" x2="460" y2="720" stroke="#FB8C00" stroke-width="2" stroke-dasharray="6,4" marker-end="url(#arrow-orange-left)"/>
+  <rect x="480" y="730" width="110" height="20" rx="4" fill="#FFF3E0"/>
+  <text x="535" y="744" text-anchor="middle" font-size="11" fill="#EF6C00" font-family="monospace">Returns task.id</text>
+  <text x="600" y="744" font-size="12" fill="#757575">PostgreSQL confirms insert &amp; returns unique id</text>
+
+  <!-- 8. Frontend -> Supabase (INSERT checkpoints) -->
+  <circle cx="450" cy="810" r="10" fill="#FB8C00"/>
+  <text x="450" y="814" text-anchor="middle" font-size="10" fill="#fff" font-weight="bold">8</text>
+  <line x1="465" y1="810" x2="1190" y2="810" stroke="#FB8C00" stroke-width="2" marker-end="url(#arrow-orange)"/>
+  <rect x="480" y="820" width="130" height="20" rx="4" fill="#FFF3E0"/>
+  <text x="545" y="834" text-anchor="middle" font-size="11" fill="#EF6C00" font-family="monospace">INSERT checkpoints</text>
+  <text x="620" y="834" font-size="12" fill="#757575">Maps AI milestones to task_id, bulk inserts records</text>
+
+  <!-- 9. Supabase -> Frontend (Checkpoints confirmed) -->
+  <circle cx="1200" cy="900" r="10" fill="#FB8C00"/>
+  <text x="1200" y="904" text-anchor="middle" font-size="10" fill="#fff" font-weight="bold">9</text>
+  <line x1="1185" y1="900" x2="460" y2="900" stroke="#FB8C00" stroke-width="2" stroke-dasharray="6,4" marker-end="url(#arrow-orange-left)"/>
+  <rect x="480" y="910" width="140" height="20" rx="4" fill="#FFF3E0"/>
+  <text x="550" y="924" text-anchor="middle" font-size="11" fill="#EF6C00" font-family="monospace">Checkpoints confirmed</text>
+  <text x="630" y="924" font-size="12" fill="#757575">DB confirms successful persistence</text>
+
+  <!-- 10. Frontend -> User (Toast) -->
+  <circle cx="450" cy="980" r="10" fill="#1E88E5"/>
+  <text x="450" y="984" text-anchor="middle" font-size="10" fill="#fff" font-weight="bold">10</text>
+  <line x1="435" y1="980" x2="210" y2="980" stroke="#1E88E5" stroke-width="2" stroke-dasharray="6,4" marker-end="url(#arrow-blue-left)"/>
+  <rect x="230" y="990" width="120" height="20" rx="4" fill="#E3F2FD"/>
+  <text x="290" y="1004" text-anchor="middle" font-size="11" fill="#1565C0" font-family="monospace">Toast + Re-render</text>
+  <text x="360" y="1004" font-size="12" fill="#757575">Shows success toast, closes modal, re-renders TaskList</text>
+
+</svg>
+</div>
+</body>
+</html>

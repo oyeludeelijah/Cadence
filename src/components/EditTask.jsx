@@ -40,6 +40,8 @@ function EditTask({ task, onSaved, onCancel }) {
   })
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState(null)   // { type: 'success'|'error', text }
+  const [conflictInfo, setConflictInfo]       = useState(null)  // { conflictCount, deadline, pendingCheckpoints }
+  const [resolutionChoice, setResolutionChoice] = useState(null) // 'reschedule' | 'keep'
 
   const handleChange = (e) => {
     const { name, value } = e.target
@@ -65,18 +67,17 @@ function EditTask({ task, onSaved, onCancel }) {
       return
     }
 
-    // Fix 5.2: targeted checkpoint-conflict check instead of always-on static warning.
-    // Count how many checkpoints would become overdue if this deadline is applied.
-    const conflictCount = existingCheckpoints.filter(
-      cp => cp.status !== 'completed' && new Date(cp.due_date) > deadline
+    // Fix 5.2 (updated): if deadline conflicts with pending checkpoints, show a
+    // resolution choice instead of a dead-end error.
+    const pendingCheckpoints = existingCheckpoints.filter(
+      cp => cp.status !== 'completed'
+    )
+    const conflictCount = pendingCheckpoints.filter(
+      cp => new Date(cp.due_date) > deadline
     ).length
-    if (conflictCount > 0) {
-      setMessage({
-        type: 'error',
-        text: `⚠️ ${conflictCount} checkpoint${conflictCount > 1 ? 's' : ''} ${
-          conflictCount > 1 ? 'are' : 'is'
-        } scheduled after this deadline and will immediately appear overdue. Move them first, or choose a later deadline.`,
-      })
+
+    if (conflictCount > 0 && !resolutionChoice) {
+      setConflictInfo({ conflictCount, deadline, pendingCheckpoints })
       return
     }
 
@@ -91,13 +92,29 @@ function EditTask({ task, onSaved, onCancel }) {
           notes:          form.notes.trim() || null,
         })
         .eq('id', task.id)
-        // Fix 5.1: defence-in-depth user_id filter alongside RLS.
-        // If RLS were ever misconfigured, this prevents updating another user's task.
         .eq('user_id', task.user_id)
 
       if (error) throw error
 
+      // If student chose to reschedule, proportionally redistribute pending checkpoint dates
+      if (resolutionChoice === 'reschedule' && conflictInfo) {
+        const now = new Date()
+        const span = conflictInfo.deadline - now
+        const count = conflictInfo.pendingCheckpoints.length
+
+        const updates = conflictInfo.pendingCheckpoints.map((cp, i) => {
+          const newDate = new Date(now.getTime() + span * ((i + 1) / (count + 1)))
+          return supabase
+            .from('checkpoints')
+            .update({ due_date: newDate.toISOString() })
+            .eq('id', cp.id)
+        })
+        await Promise.all(updates)
+      }
+
       setMessage({ type: 'success', text: 'Task updated successfully ✨' })
+      setConflictInfo(null)
+      setResolutionChoice(null)
       // Small delay so user sees success before modal closes
       setTimeout(() => { if (onSaved) onSaved() }, 1000)
     } catch {
@@ -186,6 +203,42 @@ function EditTask({ task, onSaved, onCancel }) {
             placeholder="Any extra context..."
           />
         </div>
+
+        {/* Conflict resolution choice — shown when new deadline conflicts with pending checkpoints */}
+        {conflictInfo && (
+          <div style={{
+            background: 'var(--warning-dim, rgba(245,158,11,0.1))',
+            border: '1px solid rgba(245,158,11,0.35)',
+            borderRadius: 'var(--r-md)',
+            padding: 'var(--s3)',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 'var(--s2)',
+          }}>
+            <p style={{ fontSize: 'var(--text-sm)', color: 'var(--text)', margin: 0, fontWeight: 600 }}>
+              ⚠️ {conflictInfo.conflictCount} pending checkpoint{conflictInfo.conflictCount > 1 ? 's' : ''} fall after this new deadline.
+            </p>
+            <p style={{ fontSize: 'var(--text-xs)', color: 'var(--text-2)', margin: 0 }}>How would you like to handle them?</p>
+            <div style={{ display: 'flex', gap: 'var(--s2)', flexWrap: 'wrap' }}>
+              <button
+                type="submit"
+                className="btn-primary"
+                onClick={() => setResolutionChoice('reschedule')}
+                style={{ flex: 1 }}
+              >
+                📅 Reschedule proportionally
+              </button>
+              <button
+                type="submit"
+                className="btn-secondary"
+                onClick={() => setResolutionChoice('keep')}
+                style={{ flex: 1 }}
+              >
+                Keep existing dates
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Actions */}
         <div style={{ display: 'flex', gap: 'var(--s2)', marginTop: 'var(--s1)' }}>

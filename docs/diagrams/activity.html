@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Activity Diagram — Create Task Workflow</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Arial, sans-serif; }
+body { background: #F0F4F8; padding: 24px; display: flex; flex-direction: column; align-items: center; }
+h1 { font-size: 20px; font-weight: 700; color: #1A237E; margin-bottom: 4px; }
+p  { font-size: 12px; color: #78909C; margin-bottom: 20px; }
+.wrap { background: white; border-radius: 12px; box-shadow: 0 4px 24px rgba(0,0,0,0.12); padding: 20px; overflow: auto; }
+</style>
+</head>
+<body>
+<h1>Activity Diagram — Create Task Workflow (Updated)</h1>
+<p>Full flow from user action through AI generation, fallback, DB persistence, and post-processing</p>
+<div class="wrap">
+<svg width="1400" height="1100" viewBox="0 0 1400 1100" xmlns="http://www.w3.org/2000/svg">
+
+  <defs>
+    <!-- Arrow heads -->
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M0,0 L10,5 L0,10 z" fill="#90A4AE"/>
+    </marker>
+  </defs>
+
+  <!-- Columns Backgrounds -->
+  <rect x="50" y="50" width="100" height="1020" fill="#FAFAFA" stroke="#E0E0E0"/>
+  <rect x="150" y="50" width="350" height="1020" fill="#F5F7FA" stroke="#E0E0E0"/>
+  <rect x="500" y="50" width="450" height="1020" fill="#F1F8E9" stroke="#E0E0E0"/>
+  <rect x="950" y="50" width="400" height="1020" fill="#F3E5F5" stroke="#E0E0E0"/>
+
+  <!-- Column Headers -->
+  <text x="100" y="80" text-anchor="middle" font-weight="bold" font-size="12" fill="#9E9E9E">PHASE</text>
+  <text x="325" y="80" text-anchor="middle" font-weight="bold" font-size="12" fill="#1565C0">USER</text>
+  <text x="725" y="80" text-anchor="middle" font-weight="bold" font-size="12" fill="#2E7D32">SYSTEM / FRONTEND</text>
+  <text x="1150" y="80" text-anchor="middle" font-weight="bold" font-size="12" fill="#6A1B9A">EXTERNAL / DB</text>
+  <line x1="50" y1="100" x2="1350" y2="100" stroke="#E0E0E0" stroke-width="2"/>
+
+  <!-- Start Node -->
+  <circle cx="325" cy="140" r="10" fill="#000"/>
+  <line x1="325" y1="150" x2="325" y2="170" stroke="#90A4AE" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- User Phase: Open Modal -->
+  <text x="100" y="200" text-anchor="middle" font-size="11" fill="#9E9E9E">INIT</text>
+  <line x1="50" y1="230" x2="1350" y2="230" stroke="#E0E0E0" stroke-width="1" stroke-dasharray="4,4"/>
+
+  <rect x="175" y="170" width="300" height="50" rx="8" fill="#FFF" stroke="#64B5F6" stroke-width="2"/>
+  <text x="190" y="190" font-weight="bold" font-size="12" fill="#1565C0">Open CreateTask Modal</text>
+  <text x="190" y="205" font-size="11" fill="#757575">Clicks "+ Create New Task" on TaskListPage</text>
+  <line x1="325" y1="220" x2="325" y2="240" stroke="#90A4AE" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- User Phase: Fill Form -->
+  <text x="100" y="270" text-anchor="middle" font-size="11" fill="#9E9E9E">VALIDATE</text>
+  <rect x="175" y="240" width="300" height="50" rx="8" fill="#FFF" stroke="#64B5F6" stroke-width="2"/>
+  <text x="190" y="260" font-weight="bold" font-size="12" fill="#1565C0">Fill Form Fields</text>
+  <text x="190" y="275" font-size="11" fill="#757575">Title · Task Type · Deadline · Notes (opt.)</text>
+  <line x1="325" y1="290" x2="325" y2="310" stroke="#90A4AE" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- User Phase: Submit -->
+  <text x="100" y="340" text-anchor="middle" font-size="11" fill="#9E9E9E">DECISION 1</text>
+  <rect x="175" y="310" width="300" height="50" rx="8" fill="#FFF" stroke="#64B5F6" stroke-width="2"/>
+  <text x="190" y="330" font-weight="bold" font-size="12" fill="#1565C0">Click "Create Task"</text>
+  <text x="190" y="345" font-size="11" fill="#757575">Submits the modal form</text>
+
+  <!-- Connect to System Validate -->
+  <line x1="475" y1="335" x2="520" y2="215" stroke="#90A4AE" stroke-width="2" marker-end="url(#arrow)" stroke-dasharray="4,4"/>
+
+  <!-- System Phase: Validate & Pre-process -->
+  <rect x="525" y="190" width="400" height="50" rx="8" fill="#FFF" stroke="#81C784" stroke-width="2"/>
+  <text x="540" y="210" font-weight="bold" font-size="12" fill="#2E7D32">Validate Inputs</text>
+  <text x="540" y="225" font-size="11" fill="#757575">Title &amp; Due Date present · Due Date in future</text>
+  <line x1="725" y1="240" x2="725" y2="260" stroke="#90A4AE" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <rect x="525" y="260" width="400" height="50" rx="8" fill="#FFF" stroke="#81C784" stroke-width="2"/>
+  <text x="540" y="280" font-weight="bold" font-size="12" fill="#2E7D32">Pre-process</text>
+  <text x="540" y="295" font-size="11" fill="#757575">Calc time span · Set aiActive = true</text>
+  <line x1="725" y1="310" x2="725" y2="330" stroke="#90A4AE" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- Decision 1: API Key? -->
+  <polygon points="725,330 765,360 725,390 685,360" fill="#FFF3E0" stroke="#FFB74D" stroke-width="2"/>
+  <text x="725" y="364" text-anchor="middle" font-weight="bold" font-size="11" fill="#E65100">D1</text>
+  <text x="780" y="364" font-weight="bold" font-size="11" fill="#E65100">API Key?</text>
+
+  <!-- D1 No -> Fallback -->
+  <line x1="765" y1="360" x2="975" y2="385" stroke="#90A4AE" stroke-width="2" marker-end="url(#arrow)"/>
+  <text x="800" y="355" font-size="11" fill="#E65100">X No / Fail</text>
+
+  <!-- D1 Yes -> Call Generate -->
+  <line x1="725" y1="390" x2="725" y2="420" stroke="#90A4AE" stroke-width="2" marker-end="url(#arrow)"/>
+  <text x="735" y="410" font-size="11" fill="#2E7D32">✓ Yes</text>
+
+  <!-- System Phase: Call API -->
+  <text x="100" y="450" text-anchor="middle" font-size="11" fill="#9E9E9E">DECISION 2</text>
+  <line x1="50" y1="410" x2="1350" y2="410" stroke="#E0E0E0" stroke-width="1" stroke-dasharray="4,4"/>
+
+  <rect x="525" y="420" width="400" height="60" rx="8" fill="#FFF" stroke="#81C784" stroke-width="2"/>
+  <text x="540" y="440" font-weight="bold" font-size="12" fill="#2E7D32">Call generateCheckpoints()</text>
+  <text x="540" y="455" font-size="11" fill="#757575">Sends prompt to /api/nvidia</text>
+  <text x="540" y="470" font-size="11" font-weight="bold" fill="#D32F2F">45s timeout/attempt · 3 retries · 100s total budget</text>
+  <line x1="725" y1="480" x2="725" y2="500" stroke="#90A4AE" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- External: NIM API -->
+  <rect x="975" y="270" width="350" height="50" rx="8" fill="#FFF" stroke="#BA68C8" stroke-width="2"/>
+  <text x="990" y="290" font-weight="bold" font-size="12" fill="#6A1B9A">NVIDIA NIM API</text>
+  <text x="990" y="305" font-size="11" fill="#757575">meta/llama-3.1-8b-instruct generates JSON</text>
+  
+  <line x1="925" y1="450" x2="975" y2="295" stroke="#90A4AE" stroke-width="2" marker-end="url(#arrow)" stroke-dasharray="4,4"/>
+
+  <!-- Decision 2: AI OK? -->
+  <polygon points="725,500 765,530 725,560 685,530" fill="#FFF3E0" stroke="#FFB74D" stroke-width="2"/>
+  <text x="725" y="534" text-anchor="middle" font-weight="bold" font-size="11" fill="#E65100">D2</text>
+  <text x="780" y="534" font-weight="bold" font-size="11" fill="#E65100">AI OK?</text>
+
+  <!-- External: Fallback -->
+  <rect x="975" y="370" width="350" height="60" rx="8" fill="#FFF" stroke="#FFB74D" stroke-width="2"/>
+  <text x="990" y="390" font-weight="bold" font-size="12" fill="#E65100">Fallback: Query task_templates</text>
+  <text x="990" y="405" font-size="11" fill="#757575">Calculates proportional due dates</text>
+  <text x="990" y="420" font-size="11" fill="#757575">adjustToWorkingHours(user_configured)</text>
+  
+  <!-- D2 null -> Fallback -->
+  <line x1="765" y1="530" x2="975" y2="400" stroke="#90A4AE" stroke-width="2" marker-end="url(#arrow)"/>
+  <text x="800" y="525" font-size="11" fill="#E65100">X null / Timeout</text>
+
+  <!-- D2 Yes -> Parse -->
+  <line x1="725" y1="560" x2="725" y2="590" stroke="#90A4AE" stroke-width="2" marker-end="url(#arrow)"/>
+  <text x="735" y="580" font-size="11" fill="#2E7D32">✓ Success</text>
+
+  <!-- System Phase: Parse & Normalize -->
+  <rect x="525" y="590" width="400" height="60" rx="8" fill="#FFF" stroke="#81C784" stroke-width="2"/>
+  <text x="540" y="610" font-weight="bold" font-size="12" fill="#2E7D32">Parse &amp; Normalize AI Response</text>
+  <text x="540" y="625" font-size="11" fill="#757575">Strip markdown fences · Parse JSON</text>
+  <text x="540" y="640" font-size="11" fill="#757575">If >36h span: lock times to workingHours.end - 1h</text>
+  <line x1="725" y1="650" x2="725" y2="690" stroke="#90A4AE" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- Fallback returns to flow -->
+  <line x1="1150" y1="430" x2="1150" y2="670" stroke="#90A4AE" stroke-width="2"/>
+  <line x1="1150" y1="670" x2="725" y2="670" stroke="#90A4AE" stroke-width="2"/>
+
+  <!-- System Phase: PERSIST -->
+  <text x="100" y="730" text-anchor="middle" font-size="11" fill="#9E9E9E">PERSIST</text>
+  <line x1="50" y1="680" x2="1350" y2="680" stroke="#E0E0E0" stroke-width="1" stroke-dasharray="4,4"/>
+
+  <rect x="525" y="690" width="400" height="50" rx="8" fill="#FFF" stroke="#81C784" stroke-width="2"/>
+  <text x="540" y="710" font-weight="bold" font-size="12" fill="#2E7D32">INSERT into tasks</text>
+  <text x="540" y="725" font-size="11" fill="#757575">Persists title, task_type, final_deadline, notes</text>
+  <line x1="725" y1="740" x2="725" y2="760" stroke="#90A4AE" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <rect x="525" y="760" width="400" height="50" rx="8" fill="#FFF" stroke="#81C784" stroke-width="2"/>
+  <text x="540" y="780" font-weight="bold" font-size="12" fill="#2E7D32">Bulk INSERT into checkpoints</text>
+  <text x="540" y="795" font-size="11" fill="#757575">Maps task_id + ai_generated flag to each milestone</text>
+  <line x1="725" y1="810" x2="725" y2="840" stroke="#90A4AE" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- External DB Confirm -->
+  <rect x="975" y="725" width="350" height="50" rx="8" fill="#FFF" stroke="#FFB74D" stroke-width="2"/>
+  <text x="990" y="745" font-weight="bold" font-size="12" fill="#E65100">Supabase PostgreSQL</text>
+  <text x="990" y="760" font-size="11" fill="#757575">Confirms inserts · Returns task.id</text>
+
+  <!-- System Phase: POST -->
+  <text x="100" y="870" text-anchor="middle" font-size="11" fill="#9E9E9E">POST</text>
+  <line x1="50" y1="830" x2="1350" y2="830" stroke="#E0E0E0" stroke-width="1" stroke-dasharray="4,4"/>
+
+  <rect x="525" y="840" width="400" height="50" rx="8" fill="#FFF" stroke="#81C784" stroke-width="2"/>
+  <text x="540" y="860" font-weight="bold" font-size="12" fill="#2E7D32">Post-process</text>
+  <text x="540" y="875" font-size="11" fill="#757575">setLoading(false) · setAiActive(false) · Show toast</text>
+  <line x1="725" y1="890" x2="725" y2="910" stroke="#90A4AE" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <rect x="525" y="910" width="400" height="50" rx="8" fill="#FFF" stroke="#81C784" stroke-width="2"/>
+  <text x="540" y="930" font-weight="bold" font-size="12" fill="#2E7D32">onTaskCreated() · Close Modal</text>
+  <text x="540" y="945" font-size="11" fill="#757575">Re-fetches TaskListPage · Closes modal</text>
+  <line x1="525" y1="935" x2="325" y2="935" stroke="#90A4AE" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- User Phase: END -->
+  <text x="100" y="980" text-anchor="middle" font-size="11" fill="#9E9E9E">END</text>
+  <line x1="50" y1="970" x2="1350" y2="970" stroke="#E0E0E0" stroke-width="1" stroke-dasharray="4,4"/>
+
+  <rect x="175" y="910" width="300" height="50" rx="8" fill="#FFF" stroke="#64B5F6" stroke-width="2"/>
+  <text x="190" y="930" font-weight="bold" font-size="12" fill="#1565C0">View Updated Dashboard</text>
+  <text x="190" y="945" font-size="11" fill="#757575">New task visible in urgency group</text>
+  <line x1="325" y1="960" x2="325" y2="980" stroke="#90A4AE" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- End Node -->
+  <circle cx="325" cy="1000" r="10" fill="#000" stroke="#fff" stroke-width="2"/>
+  <circle cx="325" cy="1000" r="14" fill="none" stroke="#000" stroke-width="2"/>
+
+</svg>
+</div>
+</body>
+</html>

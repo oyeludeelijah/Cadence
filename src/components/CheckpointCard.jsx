@@ -13,11 +13,13 @@ import {
 } from '../utils/checkpointHelpers'
 
 export default function CheckpointCard({ checkpoint, isCurrent, onToggle, checkpointLoading, isLocked }) {
-  const status = getCheckpointStatus(checkpoint)
+  const status = getCheckpointStatus(checkpoint, isLocked)
   const isCompleted = checkpoint.status === 'completed'
 
   const borderColor = isCompleted
     ? 'var(--success)'
+    : isLocked
+    ? 'var(--border)'
     : isCurrent
     ? 'var(--warning)'
     : status === 'overdue'
@@ -126,9 +128,10 @@ export default function CheckpointCard({ checkpoint, isCurrent, onToggle, checkp
             {/* Don't render inline badge when the absolute ⚡ Current badge is already showing */}
             {!(isCurrent && !isCompleted) && (
               <span className={`badge ${
-                isCompleted           ? 'badge-success' :
-                status === 'overdue'  ? 'badge-danger'  :
-                status === 'urgent'   ? 'badge-warning'  :
+                isCompleted          ? 'badge-success' :
+                status === 'locked'  ? 'badge-neutral'  :
+                status === 'overdue' ? 'badge-danger'   :
+                status === 'urgent'  ? 'badge-warning'  :
                 'badge-accent'
               }`}>
                 {isCompleted ? '✓ done' : status}

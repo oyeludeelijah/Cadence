@@ -278,6 +278,30 @@ function TaskDetailPage() {
     }
   }, [loading, checkpoints])
 
+  // ── Reopen task (Gap 12) ──────────────────────────────────────────────────
+  // Un-completes the last completed checkpoint. The Postgres trigger then
+  // automatically sets task.status back to 'active'.
+  async function reopenTask() {
+    const lastCompleted = [...checkpoints]
+      .reverse()
+      .find(cp => cp.status === 'completed')
+    if (!lastCompleted) return
+
+    try {
+      const { error } = await supabase
+        .from('checkpoints')
+        .update({ status: 'pending', completed_at: null })
+        .eq('id', lastCompleted.id)
+      if (error) throw error
+
+      silentRefreshRef.current = true
+      await fetchTaskDetails()
+      showToast('↩ Task reopened — last checkpoint set to pending', 'success')
+    } catch {
+      showToast('❌ Could not reopen task. Try again.', 'error')
+    }
+  }
+
   // ── Delete task ────────────────────────────────────────────────────────────
   async function confirmDelete() {
     setShowDelete(false)
@@ -384,6 +408,9 @@ function TaskDetailPage() {
       <div className="mobile-stack" style={{ display: 'flex', gap: 'var(--s2)', marginBottom: 'var(--s5)' }}>
         <button className="btn-secondary" onClick={() => navigate('/')}>← Back to Tasks</button>
         <div style={{ flex: 1 }} />
+        {progress === 100 && (
+          <button className="btn-secondary" onClick={reopenTask}>↩ Reopen</button>
+        )}
         <button className="btn-secondary" onClick={() => setShowEdit(true)}>✏️ Edit</button>
         <button className="btn-danger" onClick={() => setShowDelete(true)}>🗑 Delete Task</button>
       </div>

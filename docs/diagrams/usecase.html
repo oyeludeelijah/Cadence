@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>AI Accountability System — Use Case Diagram</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background: #fff;
+  font-family: Arial, sans-serif;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 20px;
+}
+</style>
+</head>
+<body>
+<svg width="780" height="620" viewBox="0 0 780 620" xmlns="http://www.w3.org/2000/svg">
+<defs>
+  <!-- solid arrowhead -->
+  <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5"
+          markerWidth="6" markerHeight="6" orient="auto">
+    <path d="M0,0 L10,5 L0,10 z" fill="#000"/>
+  </marker>
+  <!-- open arrowhead for extend/include dashed lines -->
+  <marker id="arr-open" viewBox="0 0 10 10" refX="9" refY="5"
+          markerWidth="6" markerHeight="6" orient="auto">
+    <path d="M0,0 L10,5 L0,10" fill="none" stroke="#000" stroke-width="1.5"/>
+  </marker>
+</defs>
+
+<!-- ═══════════════════════════════════════════
+     SYSTEM BOUNDARY
+════════════════════════════════════════════ -->
+<rect x="140" y="30" width="460" height="560" rx="0"
+      fill="none" stroke="#000" stroke-width="1.2" stroke-dasharray="8,4"/>
+<text x="152" y="52" font-size="11" font-weight="700" font-family="Arial" fill="#000">AI Accountability System</text>
+
+<!-- ═══════════════════════════════════════════
+     STUDENT ACTOR  (left, vertically centred)
+════════════════════════════════════════════ -->
+<!-- head -->
+<circle cx="58" cy="290" r="14" fill="none" stroke="#000" stroke-width="1.5"/>
+<!-- body -->
+<line x1="58" y1="304" x2="58" y2="340" stroke="#000" stroke-width="1.5"/>
+<!-- arms -->
+<line x1="58" y1="316" x2="38" y2="330" stroke="#000" stroke-width="1.5"/>
+<line x1="58" y1="316" x2="78" y2="330" stroke="#000" stroke-width="1.5"/>
+<!-- legs -->
+<line x1="58" y1="340" x2="40" y2="365" stroke="#000" stroke-width="1.5"/>
+<line x1="58" y1="340" x2="76" y2="365" stroke="#000" stroke-width="1.5"/>
+<text x="58" y="382" text-anchor="middle" font-size="11" font-family="Arial" fill="#000">Student</text>
+
+<!-- ═══════════════════════════════════════════
+     USE CASE RECTANGLES  (centre column)
+     x=175, width=200, height=28, spaced 62px
+════════════════════════════════════════════ -->
+
+<!-- UC1  Register & Login -->
+<rect x="175" y="68"  width="200" height="28" fill="none" stroke="#000" stroke-width="1"/>
+<text x="275" y="86" text-anchor="middle" font-size="10.5" font-family="Arial" fill="#000">Register &amp; Login</text>
+
+<!-- UC2  View Task List -->
+<rect x="175" y="120" width="200" height="28" fill="none" stroke="#000" stroke-width="1"/>
+<text x="275" y="138" text-anchor="middle" font-size="10.5" font-family="Arial" fill="#000">View Task List</text>
+
+<!-- UC3  Create Task -->
+<rect x="175" y="172" width="200" height="28" fill="none" stroke="#000" stroke-width="1"/>
+<text x="275" y="190" text-anchor="middle" font-size="10.5" font-family="Arial" fill="#000">Create Task</text>
+
+<!-- UC4  View Task Detail -->
+<rect x="175" y="224" width="200" height="28" fill="none" stroke="#000" stroke-width="1"/>
+<text x="275" y="242" text-anchor="middle" font-size="10.5" font-family="Arial" fill="#000">View Task Detail</text>
+
+<!-- UC5  Edit / Delete Task -->
+<rect x="175" y="276" width="200" height="28" fill="none" stroke="#000" stroke-width="1"/>
+<text x="275" y="294" text-anchor="middle" font-size="10.5" font-family="Arial" fill="#000">Edit / Delete Task</text>
+
+<!-- UC6  View Analytics Dashboard -->
+<rect x="175" y="328" width="200" height="28" fill="none" stroke="#000" stroke-width="1"/>
+<text x="275" y="346" text-anchor="middle" font-size="10.5" font-family="Arial" fill="#000">View Analytics Dashboard</text>
+
+<!-- UC7  Configure Settings -->
+<rect x="175" y="380" width="200" height="28" fill="none" stroke="#000" stroke-width="1"/>
+<text x="275" y="398" text-anchor="middle" font-size="10.5" font-family="Arial" fill="#000">Configure Settings</text>
+
+<!-- UC8  Mark Checkpoint Complete -->
+<rect x="175" y="432" width="200" height="28" fill="none" stroke="#000" stroke-width="1"/>
+<text x="275" y="450" text-anchor="middle" font-size="10.5" font-family="Arial" fill="#000">Mark Checkpoint Complete</text>
+
+<!-- UC9  Trigger Hourly Reminder (system-initiated) -->
+<rect x="175" y="496" width="200" height="28" fill="none" stroke="#000" stroke-width="1"/>
+<text x="275" y="514" text-anchor="middle" font-size="10.5" font-family="Arial" fill="#000">Trigger Hourly Reminder</text>
+
+<!-- UC10  Send Email Notifications -->
+<rect x="175" y="548" width="200" height="28" fill="none" stroke="#000" stroke-width="1"/>
+<text x="275" y="566" text-anchor="middle" font-size="10.5" font-family="Arial" fill="#000">Send Email Notifications</text>
+
+<!-- ═══════════════════════════════════════════
+     STUDENT → USE CASE LINES
+════════════════════════════════════════════ -->
+<line x1="72" y1="290" x2="175" y2="82"  stroke="#000" stroke-width="1"/>
+<line x1="72" y1="290" x2="175" y2="134" stroke="#000" stroke-width="1"/>
+<line x1="72" y1="290" x2="175" y2="186" stroke="#000" stroke-width="1"/>
+<line x1="72" y1="290" x2="175" y2="238" stroke="#000" stroke-width="1"/>
+<line x1="72" y1="290" x2="175" y2="290" stroke="#000" stroke-width="1"/>
+<line x1="72" y1="290" x2="175" y2="342" stroke="#000" stroke-width="1"/>
+<line x1="72" y1="290" x2="175" y2="394" stroke="#000" stroke-width="1"/>
+<line x1="72" y1="290" x2="175" y2="446" stroke="#000" stroke-width="1"/>
+
+<!-- ═══════════════════════════════════════════
+     EXTERNAL SYSTEM ACTORS  (right column)
+     x=620, width=148
+════════════════════════════════════════════ -->
+
+<!-- NVIDIA NIM API -->
+<rect x="618" y="152" width="148" height="46" fill="none" stroke="#000" stroke-width="1.2"/>
+<text x="692" y="170" text-anchor="middle" font-size="9" font-family="Arial" fill="#000">&lt;&lt;system&gt;&gt;</text>
+<text x="692" y="186" text-anchor="middle" font-size="10.5" font-weight="700" font-family="Arial" fill="#000">NVIDIA NIM API</text>
+
+<!-- Supabase -->
+<rect x="618" y="260" width="148" height="46" fill="none" stroke="#000" stroke-width="1.2"/>
+<text x="692" y="278" text-anchor="middle" font-size="9" font-family="Arial" fill="#000">&lt;&lt;system&gt;&gt;</text>
+<text x="692" y="294" text-anchor="middle" font-size="10.5" font-weight="700" font-family="Arial" fill="#000">Supabase</text>
+
+<!-- pg_cron -->
+<rect x="618" y="484" width="148" height="46" fill="none" stroke="#000" stroke-width="1.2"/>
+<text x="692" y="502" text-anchor="middle" font-size="9" font-family="Arial" fill="#000">&lt;&lt;scheduler&gt;&gt;</text>
+<text x="692" y="518" text-anchor="middle" font-size="10.5" font-weight="700" font-family="Arial" fill="#000">pg_cron</text>
+
+<!-- Resend API -->
+<rect x="618" y="548" width="148" height="46" fill="none" stroke="#000" stroke-width="1.2"/>
+<text x="692" y="566" text-anchor="middle" font-size="9" font-family="Arial" fill="#000">&lt;&lt;system&gt;&gt;</text>
+<text x="692" y="582" text-anchor="middle" font-size="10.5" font-weight="700" font-family="Arial" fill="#000">Resend API</text>
+
+<!-- ═══════════════════════════════════════════
+     USE CASE → EXTERNAL SYSTEM LINES
+════════════════════════════════════════════ -->
+<!-- Create Task → NVIDIA NIM API -->
+<line x1="375" y1="186" x2="618" y2="175" stroke="#000" stroke-width="1"/>
+
+<!-- Register/Login + View Task List → Supabase -->
+<line x1="375" y1="82"  x2="618" y2="275" stroke="#000" stroke-width="1"/>
+<line x1="375" y1="134" x2="618" y2="280" stroke="#000" stroke-width="1"/>
+
+<!-- Trigger Hourly Reminder → pg_cron -->
+<line x1="375" y1="510" x2="618" y2="507" stroke="#000" stroke-width="1"/>
+
+<!-- Send Email → Resend API -->
+<line x1="375" y1="562" x2="618" y2="562" stroke="#000" stroke-width="1"/>
+
+<!-- ═══════════════════════════════════════════
+     <<include>> / <<extend>> DASHED ARROWS
+════════════════════════════════════════════ -->
+
+<!-- Create Task --include--> Generate Checkpoint Plan
+<!-- (represented as NVIDIA NIM flow — label on the line) -->
+<text x="485" y="168" text-anchor="middle" font-size="8.5" font-family="Arial" fill="#000" font-style="italic">&lt;&lt;include&gt;&gt;</text>
+
+<!-- pg_cron --include--> Send Email (vertical inside system) -->
+<line x1="375" y1="524" x2="375" y2="548" stroke="#000" stroke-width="1" stroke-dasharray="5,3" marker-end="url(#arr-open)"/>
+<text x="385" y="540" font-size="8.5" font-family="Arial" fill="#000" font-style="italic">&lt;&lt;include&gt;&gt;</text>
+
+<!-- Mark Checkpoint Complete --extend-- Undo -->
+<!-- Undo Checkpoint box (small, inside system) -->
+<rect x="175" y="484" width="160" height="24" fill="none" stroke="#000" stroke-width="0.8" stroke-dasharray="4,3"/>
+<text x="255" y="499" text-anchor="middle" font-size="9.5" font-family="Arial" fill="#000">Undo Checkpoint Completion</text>
+
+<!-- Undo --extend--> Mark Checkpoint Complete -->
+<line x1="255" y1="484" x2="280" y2="460" stroke="#000" stroke-width="1" stroke-dasharray="5,3" marker-end="url(#arr-open)"/>
+<text x="233" y="474" font-size="8.5" font-family="Arial" fill="#000" font-style="italic">&lt;&lt;extend&gt;&gt;</text>
+
+<!-- Create Task --extend-- Fetch Task Templates (fallback) -->
+<rect x="390" y="196" width="150" height="24" fill="none" stroke="#000" stroke-width="0.8" stroke-dasharray="4,3"/>
+<text x="465" y="211" text-anchor="middle" font-size="9.5" font-family="Arial" fill="#000">Fetch Task Templates</text>
+
+<line x1="390" y1="210" x2="375" y2="197" stroke="#000" stroke-width="1" stroke-dasharray="5,3" marker-end="url(#arr-open)"/>
+<text x="392" y="199" font-size="8.5" font-family="Arial" fill="#000" font-style="italic">&lt;&lt;extend&gt;&gt;</text>
+
+</svg>
+</body>
+</html>

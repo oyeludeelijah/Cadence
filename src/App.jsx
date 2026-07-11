@@ -8,6 +8,8 @@ import LandingPage     from './pages/LandingPage'
 import FeaturesPage    from './pages/FeaturesPage'
 import AboutPage       from './pages/AboutPage'
 import ContactPage     from './pages/ContactPage'
+import AdminDashboard  from './pages/AdminDashboard'
+import ResetPasswordPage from './pages/ResetPasswordPage'
 import { AppShell }    from './components/AppShell'
 import { useAuth }     from './hooks/useAuth'
 import './App.css'
@@ -40,6 +42,7 @@ function App() {
         <Route path="/about"     element={<AboutPage />}    />
         <Route path="/contact"   element={<ContactPage />}  />
         <Route path="/auth"      element={<AuthPage />}     />
+        <Route path="/reset-password" element={<ResetPasswordPage />} />
         <Route path="*"          element={<Navigate to="/" replace />} />
       </Routes>
     )
@@ -53,6 +56,8 @@ function App() {
         <Route path="/tasks/:id"  element={<TaskDetailPage />} />
         <Route path="/analytics"  element={<AnalyticsPage />} />
         <Route path="/settings"   element={<SettingsPage />} />
+        <Route path="/admin"      element={<AdminDashboard />} />
+        <Route path="/reset-password" element={<ResetPasswordPage />} />
         <Route path="*"           element={<Navigate to="/" replace />} />
       </Routes>
     </AppShell>
