@@ -3,6 +3,10 @@
     {
       "source": "/nvidia-api/:path*",
       "destination": "/api/nvidia"
+    },
+    {
+      "source": "/((?!api/.*).*)",
+      "destination": "/index.html"
     }
   ]
 }
