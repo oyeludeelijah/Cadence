@@ -44,28 +44,28 @@
   --primary-glow:     var(--accent-glow);
   --card-shadow:      0 8px 40px rgba(0, 0, 0, 0.5);
 
-  /* Spacing System — strict 8px grid */
-  --s1:  8px;
-  --s2:  16px;
-  --s3:  24px;
-  --s4:  32px;
-  --s5:  40px;
-  --s6:  48px;
-  --s8:  64px;
-  --s10: 80px;
-  --s12: 96px;
-  --s16: 128px;
+  /* Spacing System — scaled to 80% (8px grid × 0.8) */
+  --s1:  6.4px;
+  --s2:  12.8px;
+  --s3:  19.2px;
+  --s4:  25.6px;
+  --s5:  32px;
+  --s6:  38.4px;
+  --s8:  51.2px;
+  --s10: 64px;
+  --s12: 76.8px;
+  --s16: 102.4px;
 
-  /* Typography Scale */
-  --text-xs:   12px;
-  --text-sm:   14px;
-  --text-base: 16px;
-  --text-lg:   20px;
-  --text-xl:   24px;
-  --text-2xl:  32px;
-  --text-3xl:  48px;
-  --text-4xl:  64px;
-  --text-5xl:  96px;
+  /* Typography Scale — scaled to 80% */
+  --text-xs:   9.6px;
+  --text-sm:   11.2px;
+  --text-base: 12.8px;
+  --text-lg:   16px;
+  --text-xl:   19.2px;
+  --text-2xl:  25.6px;
+  --text-3xl:  38.4px;
+  --text-4xl:  51.2px;
+  --text-5xl:  76.8px;
 
   /* Motion System */
   --ease-out:  cubic-bezier(0.25, 0.46, 0.45, 0.94);
@@ -76,15 +76,15 @@
   --dur-base:  240ms;
   --dur-slow:  400ms;
 
-  /* Radii */
-  --r-sm:  6px;
-  --r-md:  10px;
-  --r-lg:  16px;
-  --r-xl:  24px;
+  /* Radii — scaled to 80% */
+  --r-sm:  4.8px;
+  --r-md:  8px;
+  --r-lg:  12.8px;
+  --r-xl:  19.2px;
   --r-pill: 999px;
 
-  /* Container */
-  --container-max: 1120px;
+  /* Container — scaled to 80% */
+  --container-max: 896px;
   --container-padding: var(--s8);
 }
 
@@ -438,8 +438,8 @@ input, select, textarea {
   to { transform: rotate(360deg); }
 }
 .spinner {
-  width: 18px;
-  height: 18px;
+  width: 14.4px;
+  height: 14.4px;
   border: 2px solid rgba(255,255,255,0.1);
   border-top-color: currentColor;
   border-radius: 50%;
@@ -448,8 +448,8 @@ input, select, textarea {
   flex-shrink: 0;
 }
 .spinner-large {
-  width: 40px;
-  height: 40px;
+  width: 32px;
+  height: 32px;
   border-width: 3px;
   border-top-color: var(--accent);
 }
@@ -519,9 +519,9 @@ input, select, textarea {
 
 /* ── Checkbox (custom) ────────────────────────────────────────────────────── */
 .checkbox-btn {
-  width: 22px;
-  height: 22px;
-  border-radius: 6px;
+  width: 17.6px;
+  height: 17.6px;
+  border-radius: 4.8px;
   border: 2px solid var(--border-2);
   background: transparent;
   display: flex;
@@ -638,14 +638,14 @@ input, select, textarea {
 @media (max-width: 768px) {
   :root {
     --container-padding: var(--s3);
-    --text-3xl: 36px;
-    --text-4xl: 48px;
+    --text-3xl: 28.8px;
+    --text-4xl: 38.4px;
   }
 
-  body { font-size: 14px; }
+  body { font-size: 11.2px; }
 
-  h1 { font-size: 28px !important; }
-  h2 { font-size: 22px !important; }
+  h1 { font-size: 22.4px !important; }
+  h2 { font-size: 17.6px !important; }
 
   .mobile-stack {
     flex-direction: column !important;
@@ -757,7 +757,7 @@ input, select, textarea {
 .modal-panel {
   position: relative;
   width: 100%;
-  max-width: 580px;
+  max-width: 464px;
   max-height: 90dvh;           /* dvh respects mobile browser chrome     */
   overflow-y: auto;
   border-radius: var(--r-xl);
@@ -826,8 +826,8 @@ input, select, textarea {
   top: var(--s3);
   right: var(--s3);
   z-index: 10;
-  width: 32px;
-  height: 32px;
+  width: 25.6px;
+  height: 25.6px;
   border-radius: 50%;
   background: rgba(255, 255, 255, 0.07);
   border: 1px solid var(--border);
@@ -1023,10 +1023,10 @@ input, select, textarea {
 
 /* ── Tokens ──────────────────────────────────────────────────────────────── */
 :root {
-  --sidebar-w:           220px;
-  --sidebar-w-collapsed:  72px;
+  --sidebar-w:           176px;
+  --sidebar-w-collapsed:  57.6px;
   --sidebar-dur:         0.28s;
-  --topbar-h:             56px;
+  --topbar-h:             44.8px;
 }
 
 /* ── Shell container ─────────────────────────────────────────────────────── */
@@ -1122,8 +1122,8 @@ input, select, textarea {
 
 /* Avatar: shown when collapsed — fixed square */
 .sidebar-logo-img--avatar {
-  width: 36px;
-  height: 36px;
+  width: 28.8px;
+  height: 28.8px;
   border-radius: var(--r-md);
   flex-shrink: 0;
   object-fit: contain;
@@ -1131,9 +1131,9 @@ input, select, textarea {
 
 /* Full logo: shown when expanded */
 .sidebar-logo-img--full {
-  height: 50px;
+  height: 40px;
   width: auto;
-  max-width: 180px;
+  max-width: 144px;
   object-fit: contain;
   margin-left: -4px; /* visually align with the navigation items below */
 }
@@ -1142,9 +1142,9 @@ input, select, textarea {
 .sidebar-collapse-btn {
   position: absolute;
   top: var(--s3);
-  right: -12px;
-  width: 24px;
-  height: 24px;
+  right: -9.6px;
+  width: 19.2px;
+  height: 19.2px;
   border-radius: 50%;
   background: var(--surface-2);
   border: 1px solid var(--text-3);
@@ -1320,8 +1320,8 @@ input, select, textarea {
 }
 
 .sidebar-user-avatar {
-  width: 32px;
-  height: 32px;
+  width: 25.6px;
+  height: 25.6px;
   border-radius: 50%;
   background: var(--accent-dim);
   border: 1px solid rgba(35, 83, 71, 0.25);
@@ -1369,7 +1369,7 @@ input, select, textarea {
 }
 
 .mobile-topbar-logo {
-  height: 28px;
+  height: 22.4px;
   width: auto;
   object-fit: contain;
 }
@@ -1379,10 +1379,10 @@ input, select, textarea {
   display: flex;
   flex-direction: column;
   justify-content: center;
-  gap: 5px;
-  width: 36px;
-  height: 36px;
-  padding: 8px;
+  gap: 4px;
+  width: 28.8px;
+  height: 28.8px;
+  padding: 6.4px;
   background: transparent;
   border: none;
   cursor: pointer;
@@ -1541,7 +1541,7 @@ input, select, textarea {
   align-items: center;
   justify-content: center;
   background: #e8f0eb;
-  padding: 24px;
+  padding: 19.2px;
 }
 
 /* ── Device frame ─────────────────────────────────────────────────────────── */
@@ -1549,15 +1549,15 @@ input, select, textarea {
   display: grid;
   grid-template-columns: 1fr 1fr;
   width: 100%;
-  max-width: 1040px;
-  height: min(660px, 90vh);
-  border-radius: 28px;
+  max-width: 832px;
+  height: min(528px, 90vh);
+  border-radius: 22.4px;
   overflow: hidden;
-  border: 3px solid #1a2e1a;
+  border: 2.4px solid #1a2e1a;
   box-shadow:
-    0 0 0 6px rgba(26, 46, 26, 0.12),
-    0 40px 100px rgba(0, 0, 0, 0.30),
-    0 16px 40px rgba(0, 0, 0, 0.18);
+    0 0 0 4.8px rgba(26, 46, 26, 0.12),
+    0 32px 80px rgba(0, 0, 0, 0.30),
+    0 12.8px 32px rgba(0, 0, 0, 0.18);
   background-image: url('/auth-bg.webp');
   background-size: cover;
   background-position: center center;
@@ -1587,17 +1587,17 @@ input, select, textarea {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 32px 36px;
+  padding: 25.6px 28.8px;
   background: #ffffff;
   overflow: hidden;
-  margin: 10px;
-  border-radius: 20px;
-  box-shadow: -10px 0 30px rgba(0, 0, 0, 0.04);
+  margin: 8px;
+  border-radius: 16px;
+  box-shadow: -8px 0 24px rgba(0, 0, 0, 0.04);
 }
 
 .auth-form-card {
   width: 100%;
-  max-width: 360px;
+  max-width: 288px;
   background: transparent;
   border-radius: 0;
   padding: 0;
@@ -1607,7 +1607,7 @@ input, select, textarea {
 
 /* Logo wordmark area */
 .auth-brand {
-  margin-bottom: 20px;
+  margin-bottom: 16px;
 }
 
 /* Password show/hide toggle */

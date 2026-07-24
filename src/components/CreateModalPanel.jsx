@@ -10,7 +10,7 @@ import { useState, useCallback, useEffect } from 'react'
 import { useModalAnimation } from '../hooks/useModalAnimation'
 import CreateTask from './CreateTask'
 
-export default function CreateModalPanel({ onClose, onTaskCreated }) {
+export default function CreateModalPanel({ onClose, onTaskCreated, onUpgradeRequired }) {
   const { panelRef, close } = useModalAnimation(onClose)
   const [isDirty, setIsDirty] = useState(false)
   const [showDiscard, setShowDiscard] = useState(false)
@@ -80,15 +80,13 @@ export default function CreateModalPanel({ onClose, onTaskCreated }) {
           >
             ×
           </button>
-          <CreateTask 
+          <CreateTask
              onTaskCreated={() => {
-               close() 
-               // The API call completed, and after 1.8s CreateTask calls us.
-               // We close the GSAP animation, and then tell the parent to fetch.
-               // Wait a beat matching the animation out before fetching so UI doesn't stutter.
+               close()
                setTimeout(onTaskCreated, 180)
-             }} 
-             onIsDirtyChange={setIsDirty} 
+             }}
+             onIsDirtyChange={setIsDirty}
+             onUpgradeRequired={onUpgradeRequired}
           />
         </div>
       </div>

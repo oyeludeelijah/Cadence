@@ -6,7 +6,7 @@ import { TASK_TYPE_OPTIONS } from '../constants/taskTypes'
 import { clampToWorkingHours } from '../utils/normaliseDueDates'
 import { useTaskForm } from '../hooks/useTaskForm'
 
-function CreateTask({ onTaskCreated, onIsDirtyChange }) {
+function CreateTask({ onTaskCreated, onIsDirtyChange, onUpgradeRequired }) {
   const { user } = useAuth()
   const { form, handleChange, resetForm } = useTaskForm({ onIsDirtyChange })
   const [loading, setLoading]     = useState(false)
@@ -177,6 +177,12 @@ function CreateTask({ onTaskCreated, onIsDirtyChange }) {
       // Delay modal close so user can read the success/AI message before it disappears
       setTimeout(() => { if (onTaskCreated) onTaskCreated() }, 1800)
     } catch (err) {
+      // P0001 = FREE_TIER_LIMIT raised by create_task_with_checkpoints (defence-in-depth backstop)
+      // e.g. two tabs open: pre-emptive check passed but DB count changed before submission
+      if (err?.code === 'P0001') {
+        onUpgradeRequired?.()
+        return
+      }
       setMessage({ type: 'error', text: '⚠️ Connection error. Please check your internet and try again.' })
     } finally {
       setAiActive(false)

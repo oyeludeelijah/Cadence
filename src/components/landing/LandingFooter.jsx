@@ -1,14 +1,18 @@
 import { useNavigate } from 'react-router-dom';
 
-const FOOTER_LINKS = [
-  { label: 'Home',     to: '/'         },
-  { label: 'Features', to: '/features' },
-  { label: 'About',    to: '/about'    },
-  { label: 'Contact',  to: '/contact'  },
+const FOOTER_SECTIONS = [
+  { label: 'How it works', hash: 'how-it-works' },
+  { label: 'Features',     hash: 'features'     },
+  { label: 'FAQ',          hash: 'faq'          },
 ];
 
 export default function LandingFooter() {
   const navigate = useNavigate();
+
+  const scrollTo = (hash) => {
+    const el = document.getElementById(hash);
+    if (el) el.scrollIntoView({ behavior: 'smooth' });
+  };
 
   return (
     <footer className="lp-footer">
@@ -19,13 +23,13 @@ export default function LandingFooter() {
         </div>
 
         <div>
-          <div className="lp-footer-nav-title">Pages</div>
+          <div className="lp-footer-nav-title">Sections</div>
           <div className="lp-footer-nav-links">
-            {FOOTER_LINKS.map(({ label, to }) => (
+            {FOOTER_SECTIONS.map(({ label, hash }) => (
               <button
-                key={to}
+                key={hash}
                 className="lp-footer-nav-link"
-                onClick={() => navigate(to)}
+                onClick={() => scrollTo(hash)}
               >
                 {label}
               </button>
@@ -55,7 +59,7 @@ export default function LandingFooter() {
       </div>
 
       <div className="lp-footer-bottom">
-        <p className="lp-footer-copy">© 2025 Cadence. All rights reserved.</p>
+        <p className="lp-footer-copy">© 2025 Cadencee. All rights reserved.</p>
         <span className="lp-footer-credit">
           Built by{' '}
           <a

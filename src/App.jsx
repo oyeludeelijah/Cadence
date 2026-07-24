@@ -1,21 +1,29 @@
-import { Routes, Route, Navigate } from 'react-router-dom'
-import TaskListPage    from './pages/TaskListPage'
-import TaskDetailPage  from './pages/TaskDetailPage'
-import AnalyticsPage   from './pages/AnalyticsPage'
-import AuthPage        from './pages/AuthPage'
-import SettingsPage    from './pages/SettingsPage'
-import LandingPage     from './pages/LandingPage'
-import FeaturesPage    from './pages/FeaturesPage'
-import AboutPage       from './pages/AboutPage'
-import ContactPage     from './pages/ContactPage'
-import AdminDashboard  from './pages/AdminDashboard'
+import { Routes, Route, Navigate, useNavigate } from 'react-router-dom'
+import { useEffect, useRef } from 'react'
+import TaskListPage from './pages/TaskListPage'
+import TaskDetailPage from './pages/TaskDetailPage'
+import AnalyticsPage from './pages/AnalyticsPage'
+import AuthPage from './pages/AuthPage'
+import SettingsPage from './pages/SettingsPage'
+import LandingPage from './pages/LandingPage'
+import AdminDashboard from './pages/AdminDashboard'
 import ResetPasswordPage from './pages/ResetPasswordPage'
-import { AppShell }    from './components/AppShell'
-import { useAuth }     from './hooks/useAuth'
+import PaymentCallbackPage from './pages/PaymentCallbackPage'
+import { AppShell } from './components/AppShell'
+import { useAuth } from './hooks/useAuth'
 import './App.css'
 
 function App() {
   const { session, loading } = useAuth()
+  const navigate = useNavigate()
+  const prevSession = useRef(session)
+
+  useEffect(() => {
+    if (prevSession.current && !session) {
+      navigate('/auth')
+    }
+    prevSession.current = session
+  }, [session, navigate])
 
   // Don't flash the login page before the session is resolved
   if (loading) {
@@ -37,13 +45,10 @@ function App() {
   if (!session) {
     return (
       <Routes>
-        <Route path="/"          element={<LandingPage />} />
-        <Route path="/features"  element={<FeaturesPage />} />
-        <Route path="/about"     element={<AboutPage />}    />
-        <Route path="/contact"   element={<ContactPage />}  />
-        <Route path="/auth"      element={<AuthPage />}     />
+        <Route path="/" element={<LandingPage />} />
+        <Route path="/auth" element={<AuthPage />} />
         <Route path="/reset-password" element={<ResetPasswordPage />} />
-        <Route path="*"          element={<Navigate to="/" replace />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     )
   }
@@ -52,13 +57,14 @@ function App() {
   return (
     <AppShell>
       <Routes>
-        <Route path="/"           element={<TaskListPage />} />
-        <Route path="/tasks/:id"  element={<TaskDetailPage />} />
-        <Route path="/analytics"  element={<AnalyticsPage />} />
-        <Route path="/settings"   element={<SettingsPage />} />
-        <Route path="/admin"      element={<AdminDashboard />} />
+        <Route path="/" element={<TaskListPage />} />
+        <Route path="/tasks/:id" element={<TaskDetailPage />} />
+        <Route path="/analytics" element={<AnalyticsPage />} />
+        <Route path="/settings" element={<SettingsPage />} />
+        <Route path="/admin"          element={<AdminDashboard />} />
         <Route path="/reset-password" element={<ResetPasswordPage />} />
-        <Route path="*"           element={<Navigate to="/" replace />} />
+        <Route path="/payment/callback" element={<PaymentCallbackPage />} />
+        <Route path="*"               element={<Navigate to="/" replace />} />
       </Routes>
     </AppShell>
   )

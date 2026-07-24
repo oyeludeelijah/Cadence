@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { supabase } from '../supabaseClient'
+import { useSearchParams } from 'react-router-dom'
 
 // ── Deterministic star positions (no layout shift) ─────────────────────────
 const STARS = [
@@ -33,7 +34,9 @@ function EyeIcon({ open }) {
 
 // ── Main component ─────────────────────────────────────────────────────────
 function AuthPage() {
-  const [mode, setMode]             = useState('signin') // 'signin' | 'signup' | 'forgot'
+  const [searchParams] = useSearchParams()
+  const initialMode = searchParams.get('mode') === 'signup' ? 'signup' : 'signin'
+  const [mode, setMode]             = useState(initialMode) // 'signin' | 'signup' | 'forgot'
   const [email, setEmail]           = useState('')
   const [password, setPassword]     = useState('')
   const [showPassword, setShowPw]   = useState(false)
@@ -112,11 +115,20 @@ function AuthPage() {
   async function handleGoogleLogin() {
     setLoading(true)
     try {
+      const options = {
+        redirectTo: `${window.location.origin}/`,
+      }
+      
+      // If we are signing up, force Google to show the account chooser
+      if (mode === 'signup') {
+        options.queryParams = {
+          prompt: 'select_account'
+        }
+      }
+
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
-        options: {
-          redirectTo: `${window.location.origin}/`,
-        }
+        options
       })
       if (error) throw error
     } catch (err) {
@@ -141,16 +153,16 @@ function AuthPage() {
               <img
                 src="/logos/full/cadence-light-transparent.svg"
                 alt="Cadence"
-                style={{ height: '36px', width: 'auto', objectFit: 'contain' }}
+                style={{ height: '28.8px', width: 'auto', objectFit: 'contain' }}
               />
             </div>
-            <p style={{ fontSize: '12px', fontWeight: 700, color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: '6px' }}>
+            <p style={{ fontSize: '9.6px', fontWeight: 700, color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: '4.8px' }}>
               {isForgot ? 'Password recovery' : isSignUp ? 'Get started' : 'Welcome back'}
             </p>
-            <h1 style={{ fontSize: 'clamp(20px, 2vw, 28px)', fontWeight: 800, letterSpacing: '-0.03em', color: '#111827', marginBottom: '6px', lineHeight: 1.1 }}>
+            <h1 style={{ fontSize: 'clamp(16px, 2vw, 22.4px)', fontWeight: 800, letterSpacing: '-0.03em', color: '#111827', marginBottom: '4.8px', lineHeight: 1.1 }}>
               {isForgot ? 'Reset your password.' : isSignUp ? 'Create your account.' : 'Sign in to continue.'}
             </h1>
-            <p style={{ fontSize: '14px', color: '#6b7280', marginBottom: '20px' }}>
+            <p style={{ fontSize: '11.2px', color: '#6b7280', marginBottom: '16px' }}>
               {isForgot
                 ? "Enter your email and we'll send a reset link."
                 : isSignUp
@@ -171,16 +183,16 @@ function AuthPage() {
                   display: 'flex', 
                   alignItems: 'center', 
                   justifyContent: 'center', 
-                  gap: '10px',
-                  padding: '11px',
-                  borderRadius: '10px',
+                  gap: '8px',
+                  padding: '8.8px',
+                  borderRadius: '8px',
                   border: '1px solid #e5e7eb',
                   background: '#f9fafb',
                   color: '#111827',
-                  fontSize: '14px',
+                  fontSize: '11.2px',
                   fontWeight: 500,
                   cursor: 'pointer',
-                  marginBottom: '16px',
+                  marginBottom: '12.8px',
                   transition: 'all 0.15s ease'
                 }}
               >
@@ -193,16 +205,16 @@ function AuthPage() {
                 Continue with Google
               </button>
 
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: 'var(--s4)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '9.6px', marginBottom: 'var(--s4)' }}>
                 <div style={{ flex: 1, height: '1px', background: '#eee' }}></div>
-                <span style={{ fontSize: '12px', color: '#999', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Or continue with email</span>
+                <span style={{ fontSize: '9.6px', color: '#999', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Or continue with email</span>
                 <div style={{ flex: 1, height: '1px', background: '#eee' }}></div>
               </div>
             </>
             )}
 
             {isForgot ? (
-            <form onSubmit={handleForgotPassword} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+            <form onSubmit={handleForgotPassword} style={{ display: 'flex', flexDirection: 'column', gap: '11.2px' }}>
               <div className="field-group">
                 <label className="field-label" htmlFor="auth-email">Email address</label>
                 <input
@@ -260,7 +272,7 @@ function AuthPage() {
               </p>
             </form>
             ) : (
-            <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+            <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '11.2px' }}>
 
             {/* Email */}
             <div className="field-group">
@@ -314,7 +326,7 @@ function AuthPage() {
                   placeholder={isSignUp ? 'Create a password' : '••••••••'}
                   autoComplete={isSignUp ? 'new-password' : 'current-password'}
                   disabled={loading}
-                  style={{ paddingRight: '44px' }}
+                  style={{ paddingRight: '35.2px' }}
                 />
                 <button
                   type="button"
@@ -368,7 +380,7 @@ function AuthPage() {
 
             {/* Mode switch — hide on forgot */}
             {!isForgot && (
-            <p style={{ textAlign: 'center', marginTop: '16px', fontSize: '14px', color: '#6b7280' }}>
+            <p style={{ textAlign: 'center', marginTop: '12.8px', fontSize: '11.2px', color: '#6b7280' }}>
               {isSignUp ? 'Already have an account?' : "Don't have an account?"}
               {' '}
               <button

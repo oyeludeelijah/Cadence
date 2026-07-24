@@ -5,6 +5,7 @@ import { supabase } from '../supabaseClient'
 import { useReveal } from '../hooks/useReveal'
 import { useAuth } from '../hooks/useAuth'
 import DeleteConfirmModal from '../components/DeleteConfirmModal'
+import UpgradeModal from '../components/UpgradeModal'
 import {
   getCheckpointStatus,
   getOverdueText,
@@ -39,6 +40,7 @@ function TaskListPage() {
   const [showResolutionModal, setShowResolutionModal] = useState(false)
   const [showDeleteConfirm, setShowDelete]= useState(false)
   const [taskToDelete, setTaskToDelete]   = useState(null)
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false)
   const [error, setError]                 = useState(null)
 
   // ── Connection check ────────────────────────────────────────────────────────
@@ -159,12 +161,39 @@ function TaskListPage() {
       ...t.nextCheckpoint
     }))
 
-  function handleCreateClick() {
+  async function handleCreateClick() {
+    setError(null)
+
+    // ── Entitlement check (pre-emptive, mirrors DB function logic) ───────────
+    if (user) {
+      const [subRes, countRes] = await Promise.all([
+        supabase
+          .from('subscriptions')
+          .select('status, current_period_end')
+          .eq('user_id', user.id)
+          .maybeSingle(),
+        supabase
+          .from('tasks')
+          .select('id', { count: 'exact', head: true })
+          .eq('user_id', user.id)
+          .eq('status', 'active'),
+      ])
+      const sub    = subRes.data
+      const isPro  = sub?.status &&
+                     ['active', 'cancelled'].includes(sub.status) &&
+                     new Date(sub.current_period_end) > new Date()
+      const activeCount = countRes.count ?? 0
+
+      if (!isPro && activeCount >= 3) {
+        setShowUpgradeModal(true)
+        return
+      }
+    }
+    // ── End entitlement check ────────────────────────────────────────────────
+
     if (overdueCheckpointsList.length > 0) {
-      setError(null)
       setShowResolutionModal(true)
     } else {
-      setError(null)
       setShowCreate(true)
     }
   }
@@ -184,6 +213,11 @@ function TaskListPage() {
           onConfirm={confirmDelete}
           onCancel={() => { setShowDelete(false); setError(null); }}
         />
+      )}
+
+      {/* ── Upgrade Modal ──────────────────────────────────────────────────── */}
+      {showUpgradeModal && (
+        <UpgradeModal onClose={() => setShowUpgradeModal(false)} />
       )}
 
       {/* ── Page header ─────────────────────────────────────────────────────── */}
@@ -263,9 +297,10 @@ function TaskListPage() {
 
       {/* ── Create Task Modal ─────────────────────────────────────────────────── */}
       {showCreateForm && (
-        <CreateModalPanel 
+        <CreateModalPanel
           onClose={() => setShowCreate(false)}
           onTaskCreated={handleTaskCreated}
+          onUpgradeRequired={() => { setShowCreate(false); setShowUpgradeModal(true) }}
         />
       )}
 

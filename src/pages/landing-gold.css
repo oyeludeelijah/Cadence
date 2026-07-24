@@ -1,0 +1,566 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   LANDING GOLD — Surgical visual upgrade
+   Loaded AFTER landing.css. Remove the import in LandingPage.jsx to revert.
+
+   Target aesthetic  : editorial, paper-warm, asymmetric, Awwwards-tier
+   Accent            : #C17E47  — cognac amber, single deliberate color
+   Background        : #F7F4EF  — warm paper (no cold white)
+   Text              : #1A1612  — warm near-black (slight brown undertone)
+   Display font      : Fraunces — editorial optical-size serif
+   Body font         : Elms Sans (unchanged)
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Google Fonts ──────────────────────────────────────────────────────────── */
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;0,9..144,800;1,9..144,300;1,9..144,400&display=swap');
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   LAYER 1: TOKENS
+   All overrides scoped to .lp-page — zero bleed into the app UI.
+   ═══════════════════════════════════════════════════════════════════════════ */
+.lp-page {
+  /* Warm paper palette */
+  --bg:        #F7F4EF;
+  --surface:   #F0EDE7;
+  --surface-2: #E8E4DC;
+
+  /* Warm near-black text */
+  --text:   #1A1612;
+  --text-2: #7A6D62;
+  --text-3: rgba(122, 109, 98, 0.48);
+
+  /* Borders — warm, not cool gray */
+  --border:   rgba(26, 22, 18, 0.08);
+  --border-2: rgba(26, 22, 18, 0.15);
+
+  /* Single amber accent — replaces the green gradient everywhere */
+  --accent:       #C17E47;
+  --accent-hover: #A86D38;
+  --accent-dim:   rgba(193, 126, 71, 0.10);
+
+  /* Kill gradient tokens — replace with solid amber */
+  --theme-start: #C17E47;
+  --theme-end:   #A86D38;
+  --theme-grad:  #C17E47;
+  --theme-glow:  rgba(193, 126, 71, 0.22);
+
+  /* De-scale the 80% app type tokens for marketing readability */
+  --text-xs:   10px;
+  --text-sm:   13px;
+  --text-base: 15px;
+  --text-lg:   17px;
+  --text-xl:   21px;
+  --text-2xl:  27px;
+  --text-3xl:  40px;
+
+  /* Wider container — 896px is an app width, not a landing width */
+  --container-max: 1160px;
+
+  /* More generous section breathing room */
+  --lp-pad:        100px;
+  --lp-pad-mobile:  52px;
+
+  /* Premium easing curves (replace CSS keyword ease-in-out) */
+  --ease-snap: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-lift: cubic-bezier(0.16, 1, 0.30, 1);
+
+  background: var(--bg);
+  color: var(--text);
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   LAYER 2: TYPOGRAPHY
+   Fraunces on display headings. Body stays Elms Sans.
+   WHY: Fraunces is an optical-size serif — designed to look authoritative
+   at large sizes. It immediately signals "intentional design" vs.
+   system-ui at font-size: 2rem.
+   ═══════════════════════════════════════════════════════════════════════════ */
+.lp-page h1,
+.lp-page h2,
+.lp-page h3 {
+  font-family: 'Fraunces', Georgia, serif;
+}
+
+.lp-section-h {
+  font-family: 'Fraunces', Georgia, serif;
+  letter-spacing: -0.035em;
+  line-height: 1.05;
+}
+
+.lp-problem-title {
+  font-family: 'Fraunces', Georgia, serif;
+  font-size: 19px;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+  margin-bottom: 12px;
+}
+
+.lp-step-title {
+  font-family: 'Fraunces', Georgia, serif;
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  margin-bottom: 12px;
+}
+
+/* FAQ question text */
+.lp-faq-item button span:first-child {
+  font-family: 'Fraunces', Georgia, serif;
+  letter-spacing: -0.01em;
+  color: var(--text);
+}
+
+.lp-faq-item button:hover span:first-child {
+  color: var(--accent);
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   LAYER 3: HERO — ASYMMETRIC LEFT LAYOUT
+   Move the center panel from dead-center to a left-aligned editorial
+   composition. Floating widgets cluster right as visual counterweight.
+   This creates the "single focal point" rule — headline dominates left,
+   UI snippets animate right. Pure CSS change, zero JSX touch.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Hero background — warm paper + subtle amber radial warmth on right */
+.nh-hero {
+  background:
+    radial-gradient(ellipse at 78% 50%, rgba(193, 126, 71, 0.07) 0%, transparent 52%),
+    var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+}
+
+/* Shift panel from center to left — pure CSS, no JSX change */
+.nh-center-panel {
+  position: absolute;
+  top: 50%;
+  left: 8%;
+  right: auto;
+  transform: translateY(-50%);
+  text-align: left;
+  align-items: flex-start;
+  width: auto;
+  max-width: 48%;
+  padding: 0;
+  box-sizing: content-box;
+}
+
+/* Display headline — Fraunces, large, architecturally tight */
+.nh-headline-primary {
+  font-family: 'Fraunces', Georgia, serif;
+  font-size: clamp(46px, 5.5vw, 82px);
+  font-weight: 700;
+  line-height: 1.0;
+  letter-spacing: -0.04em;
+  color: var(--text);
+}
+
+/* Subtitle — readable body contrast */
+.nh-headline-secondary {
+  font-family: 'Elms Sans', system-ui, sans-serif;
+  font-size: clamp(14px, 1.3vw, 17px);
+  font-weight: 400;
+  color: var(--text-2);
+  line-height: 1.65;
+  letter-spacing: 0;
+  max-width: 42ch;
+  display: block;
+}
+
+/* Hero CTA — near-black on paper, no gradient */
+.nh-hero-cta {
+  background: var(--text);
+  color: var(--bg);
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  padding: 14px 32px;
+  border-radius: 3px;
+  border: none;
+  box-shadow: none;
+  cursor: pointer;
+  margin-top: 40px;
+  transition:
+    transform  0.4s var(--ease-snap),
+    background 0.3s var(--ease-snap),
+    box-shadow 0.4s var(--ease-snap);
+}
+
+.nh-hero-cta:hover {
+  background: #2A221C;
+  transform: translateY(-3px);
+  box-shadow: 0 12px 32px rgba(26, 22, 18, 0.18);
+  filter: none;
+}
+
+.nh-hero-cta:active {
+  transform: translateY(0) scale(0.98);
+  transition-duration: 0.1s;
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   LAYER 3b: FLOATING WIDGETS
+   Reposition to right-side cluster, fix palette crimes.
+   ═══════════════════════════════════════════════════════════════════════════ */
+.hw-widget {
+  background: #FFFEFB;
+  border: 1px solid rgba(26, 22, 18, 0.09);
+  border-radius: 10px;
+  box-shadow:
+    0 2px 12px rgba(26, 22, 18, 0.05),
+    0 1px 3px  rgba(26, 22, 18, 0.04);
+}
+
+/* Widget text — warm near-black */
+.hw-task-title         { color: #1A1612; }
+.hw-task-title--done   { color: #9B8F84; }
+.hw-task-title--urgent { color: #C17E47; }   /* amber overdue instead of #e65100 */
+.hw-task-sub           { color: #9B8F84; }
+.hw-progress-label     { color: #1A1612; }
+
+/* Reposition to right — creates editorial left-text / right-UI composition */
+.hw-widget--tl { left: auto; right: 8%;   top: 14%;    }
+.hw-widget--tr { left: auto; right: 2%;   top: 33%;    }
+.hw-widget--bl { left: auto; right: 9%;   bottom: 18%; }
+.hw-widget--br { left: auto; right: 1.5%; bottom: 31%; }
+
+/* FIX: AI row — purple → warm amber */
+.hw-ai-row   { background: rgba(193, 126, 71, 0.08); border-radius: 6px; }
+.hw-ai-spark { color: var(--accent); }
+.hw-ai-label { color: var(--accent); }
+
+/* FIX: Progress bar — Bootstrap blue → amber */
+.hw-progress-fill {
+  background: var(--accent);
+}
+
+/* Badge green — semantic (completed state), keep it green */
+.hw-badge--green { background: rgba(74, 222, 128, 0.12); color: #16a34a; }
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   LAYER 4: NAV
+   ═══════════════════════════════════════════════════════════════════════════ */
+.lp-nav.scrolled {
+  background: rgba(247, 244, 239, 0.93);
+  border-bottom-color: var(--border);
+  box-shadow: 0 1px 20px rgba(26, 22, 18, 0.06);
+}
+
+.lp-nav-cta {
+  background: var(--text);
+  color: var(--bg);
+  border-radius: 3px;
+  font-size: 11.5px;
+  padding: 7px 16px;
+  transition:
+    transform  0.3s var(--ease-snap),
+    background 0.3s var(--ease-snap),
+    box-shadow 0.3s var(--ease-snap);
+}
+
+.lp-nav-cta:hover {
+  background: #2A221C;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 14px rgba(26, 22, 18, 0.14);
+}
+
+.lp-nav-link {
+  font-size: 13px;
+  color: var(--text-2);
+}
+
+.lp-nav-link:hover,
+.lp-nav-link.active {
+  color: var(--text);
+}
+
+/* Mobile menu */
+.lp-mobile-menu {
+  background: rgba(247, 244, 239, 0.97);
+  border-bottom-color: var(--border);
+}
+
+.lp-mobile-cta {
+  background: var(--text);
+  color: var(--bg);
+  border-radius: 3px;
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   LAYER 5: SECTION COMPONENTS
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Section alt — warm paper-2 not cool #f5f5f5 */
+.lp-section-alt { background: var(--surface); }
+
+/* Eyebrow labels — amber instead of green */
+.lp-eyebrow {
+  color: var(--accent);
+  font-size: 10.5px;
+  letter-spacing: 0.18em;
+}
+
+/* Problem cards */
+.lp-problem-card {
+  padding: 28px 26px;
+  border-radius: 3px;
+  border: 1px solid var(--border);
+  background: #FFFEFB;
+  transition:
+    border-color 0.4s var(--ease-snap),
+    transform    0.4s var(--ease-snap);
+}
+
+.lp-problem-card:hover {
+  border-color: var(--border-2);
+  transform: translateY(-4px);
+}
+
+.lp-problem-num {
+  color: var(--accent);
+  font-size: 10.5px;
+  letter-spacing: 0.14em;
+  margin-bottom: 14px;
+}
+
+.lp-problem-body {
+  font-size: 14px;
+  color: var(--text-2);
+  line-height: 1.75;
+}
+
+.lp-problem-bridge {
+  font-size: 15px;
+  color: var(--text-2);
+  line-height: 1.85;
+  max-width: 600px;
+}
+
+/* Step cards — used by How It Works + Features sections */
+.lp-step {
+  padding: 28px 26px;
+  border-radius: 3px;
+  border: 1px solid var(--border);
+  background: #FFFEFB;
+  transition:
+    border-color 0.4s var(--ease-snap),
+    transform    0.4s var(--ease-snap);
+}
+
+.lp-step:hover {
+  border-color: var(--border-2);
+  transform: translateY(-4px);
+}
+
+.lp-step-label {
+  color: var(--accent);
+  font-size: 10.5px;
+  letter-spacing: 0.14em;
+  margin-bottom: 12px;
+}
+
+.lp-step-body {
+  font-size: 14px;
+  line-height: 1.75;
+}
+
+/* Stat cards */
+.lp-stat-card {
+  background: #FFFEFB;
+  border: 1px solid var(--border);
+  border-radius: 3px;
+}
+
+.lp-stat-card:hover {
+  border-color: var(--border-2);
+}
+
+/* Remove gradient from stat numbers — solid near-black is more premium */
+.lp-stat-digit {
+  background: none;
+  -webkit-background-clip: unset;
+  background-clip: unset;
+  -webkit-text-fill-color: var(--text);
+  color: var(--text);
+  font-size: clamp(48px, 6vw, 72px);
+}
+
+.lp-stat-unit {
+  background: none;
+  -webkit-background-clip: unset;
+  background-clip: unset;
+  -webkit-text-fill-color: var(--text);
+  color: var(--text);
+}
+
+.lp-stat-label {
+  font-size: 13px;
+  color: var(--text-2);
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   LAYER 5b: BUTTONS
+   Near-black fills. No gradient. Tactile hover physics.
+   ═══════════════════════════════════════════════════════════════════════════ */
+.lp-btn-primary {
+  background: var(--text);
+  border-radius: 3px;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  padding: 13px 28px;
+  box-shadow: none;
+  transition:
+    transform    0.4s var(--ease-snap),
+    background   0.3s var(--ease-snap),
+    box-shadow   0.4s var(--ease-snap);
+}
+
+.lp-btn-primary:hover {
+  background: #2A221C;
+  transform: translateY(-3px);
+  box-shadow: 0 10px 28px rgba(26, 22, 18, 0.16);
+}
+
+.lp-btn-primary:active {
+  transform: translateY(0) scale(0.97);
+  transition-duration: 0.1s;
+}
+
+.lp-btn-secondary {
+  border-radius: 3px;
+  font-size: 13px;
+  border-color: var(--border-2);
+  color: var(--text-2);
+  transition:
+    transform     0.4s var(--ease-snap),
+    border-color  0.3s var(--ease-snap),
+    color         0.3s var(--ease-snap),
+    background    0.3s var(--ease-snap);
+}
+
+.lp-btn-secondary:hover {
+  color: var(--text);
+  border-color: var(--text);
+  background: rgba(26, 22, 18, 0.04);
+  transform: translateY(-2px);
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   LAYER 6: CTA BANNER — inverted dark for conviction
+   The JSX eyebrow <p> already has inline color: rgba(255,255,255,0.6).
+   Honor that intent — give it the dark background it was always expecting.
+   ═══════════════════════════════════════════════════════════════════════════ */
+.lp-cta-banner {
+  background: #1A1612;
+  border: 1px solid rgba(247, 244, 239, 0.08);
+  border-radius: 6px;
+  padding: 88px 72px;
+}
+
+.lp-cta-banner h2 {
+  font-family: 'Fraunces', Georgia, serif;
+  color: #F7F4EF;
+  letter-spacing: -0.04em;
+}
+
+.lp-cta-banner p {
+  color: rgba(247, 244, 239, 0.55);
+}
+
+/* Button inside dark banner — paper on dark */
+.lp-cta-banner .lp-btn-primary {
+  background: #F7F4EF;
+  color: #1A1612;
+}
+
+.lp-cta-banner .lp-btn-primary:hover {
+  background: #FFFFFF;
+  transform: translateY(-3px);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.22);
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   LAYER 6b: ATMOSPHERE
+   Grain texture — felt, not seen.
+   WHY: Flat paper without grain reads as "flat white" in print, not "paper".
+   A 2.2% opacity SVG noise adds the tactile illusion of a physical surface.
+   ═══════════════════════════════════════════════════════════════════════════ */
+.lp-page::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9998;
+  opacity: 0.022;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* Footer */
+.lp-footer {
+  background: var(--bg);
+  border-top-color: var(--border);
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   RESPONSIVE OVERRIDES
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Tablet: revert to centered hero — asymmetry only works at full width */
+@media (max-width: 960px) {
+  .nh-center-panel {
+    left: 50%;
+    right: auto;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    align-items: center;
+    max-width: min(90%, 600px);
+    padding: 0 24px;
+    box-sizing: border-box;
+  }
+
+  .nh-headline-secondary {
+    max-width: none;
+  }
+
+  /* Revert widgets to original positions on tablet */
+  .hw-widget--tl { left: 6%;  right: auto; top: 18%;    }
+  .hw-widget--tr { right: 6%; left: auto;  top: 18%;    }
+  .hw-widget--bl { left: 5%;  right: auto; bottom: 18%; }
+  .hw-widget--br { right: 5%; left: auto;  bottom: 18%; }
+}
+
+@media (max-width: 768px) {
+  .lp-page { --lp-pad: var(--lp-pad-mobile); }
+
+  .lp-cta-banner {
+    padding: 52px 28px;
+  }
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   REDUCED MOTION
+   ═══════════════════════════════════════════════════════════════════════════ */
+@media (prefers-reduced-motion: reduce) {
+  .nh-hero-cta,
+  .lp-btn-primary,
+  .lp-btn-secondary,
+  .lp-nav-cta,
+  .lp-problem-card,
+  .lp-step,
+  .lp-stat-card {
+    transition: none;
+    transform: none !important;
+  }
+}

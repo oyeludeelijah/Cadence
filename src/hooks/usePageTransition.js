@@ -29,7 +29,8 @@ export function usePageTransition() {
 
     if (prefersReduced) {
       // Skip animation — just make sure the element is visible
-      gsap.set(el, { opacity: 1, y: 0 })
+      gsap.set(el, { opacity: 1 })
+      gsap.set(el, { clearProps: 'all' })
       return
     }
 
@@ -43,7 +44,7 @@ export function usePageTransition() {
           y: 0,
           duration: 0.32,
           ease: 'power2.out',
-          clearProps: 'opacity,transform', // hand CSS back control after animation
+          clearProps: 'all', // hand CSS back control after animation
         },
       )
     }, el)

@@ -46,7 +46,7 @@ export function useModalAnimation(onClose, duration = 0.25) {
           y: 0,
           duration,
           ease: 'back.out(1.4)',
-          clearProps: 'opacity,transform',
+          clearProps: 'all',
         },
       )
     }, el)
