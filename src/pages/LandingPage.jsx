@@ -5,8 +5,10 @@ import LandingNav from '../components/landing/LandingNav';
 import LandingFooter from '../components/landing/LandingFooter';
 import TiltCard from '../components/landing/TiltCard';
 import StatNumber from '../components/landing/StatNumber';
+import InteractiveDemo from '../components/landing/InteractiveDemo';
 import '../pages/landing.css';
 import './landing-gold.css';
+import dashboardScreenshot from '../assets/dashboard-screenshot.png';
 
 /* ── Small reusable reveal wrapper ─────────────────────────────────────── */
 function Reveal({ children, delay = 0, duration, inline = false }) {
@@ -128,53 +130,17 @@ export default function LandingPage() {
                   GET STARTED
                 </button>
               </Reveal>
-              <Reveal delay={600} duration={1200}>
-                <p style={{ marginTop: '14px', fontSize: '13px', color: 'var(--text-2)', opacity: 0.7 }}>
-                  Free for all students · No credit card required
-                </p>
+
+              {/* Product Screenshot */}
+              <Reveal delay={800} duration={1200}>
+                <div className="nh-hero-screenshot">
+                  <img
+                    src={dashboardScreenshot}
+                    alt="Cadence dashboard showing task list with checkpoints"
+                    className="nh-hero-screenshot-img"
+                  />
+                </div>
               </Reveal>
-            </div>
-
-            {/* Floating Widgets */}
-            <div className="hw-widget hw-widget--tl">
-              <div className="hw-widget-row">
-                <span className="hw-icon hw-icon--check">✓</span>
-                <div>
-                  <p className="hw-task-title hw-task-title--done">Research</p>
-                  <p className="hw-task-sub">Due: Today, 5pm</p>
-                </div>
-              </div>
-              <span className="hw-badge hw-badge--green">COMPLETED</span>
-            </div>
-
-            <div className="hw-widget hw-widget--tr hw-widget--pill">
-              <span className="hw-icon hw-icon--warn">⚠</span>
-              <div>
-                <p className="hw-task-title hw-task-title--urgent">OVERDUE</p>
-                <p className="hw-task-sub">Linear Algebra Problem Set</p>
-              </div>
-            </div>
-
-            <div className="hw-widget hw-widget--bl">
-              <div className="hw-widget-row">
-                <span className="hw-icon hw-icon--doc">📝</span>
-                <div>
-                  <p className="hw-task-title">Organic Chemistry Midterm</p>
-                  <p className="hw-task-sub">Exam Prep · Due in 7 days</p>
-                </div>
-              </div>
-              <div className="hw-ai-row">
-                <span className="hw-ai-spark">✦</span>
-                <p className="hw-ai-label">AI is planning your task...</p>
-              </div>
-            </div>
-
-            <div className="hw-widget hw-widget--br">
-              <p className="hw-progress-label">Checkpoint 3 of 5</p>
-              <div className="hw-progress-bar">
-                <div className="hw-progress-fill" style={{ width: '60%' }}></div>
-              </div>
-              <p className="hw-task-sub" style={{ marginTop: '6px' }}>Next: First Draft · Tomorrow</p>
             </div>
           </div>
         </section>
@@ -266,6 +232,22 @@ export default function LandingPage() {
                 </Reveal>
               ))}
             </div>
+          </div>
+        </section>
+
+        {/* ── SECTION 3b: INTERACTIVE DEMO ─────────────────────────────── */}
+        <section className="lp-section" id="try-it">
+          <div className="lp-wrap">
+            <Reveal>
+              <div className="lp-section-header centered">
+                <span className="lp-eyebrow">TRY IT</span>
+                <h2 className="lp-section-h">See what Cadence builds for you.</h2>
+              </div>
+            </Reveal>
+
+            <Reveal>
+              <InteractiveDemo />
+            </Reveal>
           </div>
         </section>
 

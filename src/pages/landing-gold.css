@@ -6,12 +6,13 @@
    Accent            : #C17E47  — cognac amber, single deliberate color
    Background        : #F7F4EF  — warm paper (no cold white)
    Text              : #1A1612  — warm near-black (slight brown undertone)
-   Display font      : Fraunces — editorial optical-size serif
-   Body font         : Elms Sans (unchanged)
+   Display font      : Goudy Bookletter 1911 — delicate display serif
+   Body/UI font      : Cantarell (site-wide)
    ═══════════════════════════════════════════════════════════════════════════ */
 
 /* ── Google Fonts ──────────────────────────────────────────────────────────── */
-@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;0,9..144,800;1,9..144,300;1,9..144,400&display=swap');
+/* Goudy Bookletter 1911 — display headings | Cantarell — body/description copy */
+@import url('https://fonts.googleapis.com/css2?family=Goudy+Bookletter+1911&family=Cantarell:wght@400;700&display=swap');
 
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -20,45 +21,51 @@
    ═══════════════════════════════════════════════════════════════════════════ */
 .lp-page {
   /* Warm paper palette */
-  --bg:        #F7F4EF;
-  --surface:   #F0EDE7;
+  --bg: #F7F4EF;
+  --surface: #F0EDE7;
   --surface-2: #E8E4DC;
+  --surface-bright: #FFFEFB;
 
   /* Warm near-black text */
-  --text:   #1A1612;
+  --text: #1A1612;
   --text-2: #7A6D62;
   --text-3: rgba(122, 109, 98, 0.48);
 
+  /* Inverse */
+  --inverse-bg: #1A1612;
+  --inverse-surface: #2A221C;
+  --inverse-text: #F7F4EF;
+
   /* Borders — warm, not cool gray */
-  --border:   rgba(26, 22, 18, 0.08);
+  --border: rgba(26, 22, 18, 0.08);
   --border-2: rgba(26, 22, 18, 0.15);
 
   /* Single amber accent — replaces the green gradient everywhere */
-  --accent:       #C17E47;
+  --accent: #C17E47;
   --accent-hover: #A86D38;
-  --accent-dim:   rgba(193, 126, 71, 0.10);
+  --accent-dim: rgba(193, 126, 71, 0.10);
 
   /* Kill gradient tokens — replace with solid amber */
   --theme-start: #C17E47;
-  --theme-end:   #A86D38;
-  --theme-grad:  #C17E47;
-  --theme-glow:  rgba(193, 126, 71, 0.22);
+  --theme-end: #A86D38;
+  --theme-grad: #C17E47;
+  --theme-glow: rgba(193, 126, 71, 0.22);
 
   /* De-scale the 80% app type tokens for marketing readability */
-  --text-xs:   10px;
-  --text-sm:   13px;
+  --text-xs: 10px;
+  --text-sm: 13px;
   --text-base: 15px;
-  --text-lg:   17px;
-  --text-xl:   21px;
-  --text-2xl:  27px;
-  --text-3xl:  40px;
+  --text-lg: 17px;
+  --text-xl: 21px;
+  --text-2xl: 27px;
+  --text-3xl: 40px;
 
   /* Wider container — 896px is an app width, not a landing width */
   --container-max: 1160px;
 
   /* More generous section breathing room */
-  --lp-pad:        100px;
-  --lp-pad-mobile:  52px;
+  --lp-pad: 100px;
+  --lp-pad-mobile: 52px;
 
   /* Premium easing curves (replace CSS keyword ease-in-out) */
   --ease-snap: cubic-bezier(0.22, 1, 0.36, 1);
@@ -66,30 +73,47 @@
 
   background: var(--bg);
   color: var(--text);
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+[data-theme="dark"] .lp-page {
+  --bg: #1A1612;
+  --surface: #201B17;
+  --surface-2: #26211D;
+  --surface-bright: #2A241F;
+
+  --text: #F7F4EF;
+  --text-2: #A89F95;
+  --text-3: rgba(247, 244, 239, 0.48);
+
+  --inverse-bg: #F7F4EF;
+  --inverse-surface: #FFFFFF;
+  --inverse-text: #1A1612;
+
+  --border: rgba(247, 244, 239, 0.08);
+  --border-2: rgba(247, 244, 239, 0.15);
+  --accent-dim: rgba(193, 126, 71, 0.12);
 }
 
 
 /* ═══════════════════════════════════════════════════════════════════════════
    LAYER 2: TYPOGRAPHY
-   Fraunces on display headings. Body stays Elms Sans.
-   WHY: Fraunces is an optical-size serif — designed to look authoritative
-   at large sizes. It immediately signals "intentional design" vs.
-   system-ui at font-size: 2rem.
+   Goudy Bookletter 1911 on display headings. Cantarell on body and UI copy.
    ═══════════════════════════════════════════════════════════════════════════ */
 .lp-page h1,
 .lp-page h2,
 .lp-page h3 {
-  font-family: 'Fraunces', Georgia, serif;
+  font-family: 'Goudy Bookletter 1911', Georgia, serif;
 }
 
 .lp-section-h {
-  font-family: 'Fraunces', Georgia, serif;
+  font-family: 'Goudy Bookletter 1911', Georgia, serif;
   letter-spacing: -0.035em;
   line-height: 1.05;
 }
 
 .lp-problem-title {
-  font-family: 'Fraunces', Georgia, serif;
+  font-family: 'Goudy Bookletter 1911', Georgia, serif;
   font-size: 19px;
   letter-spacing: -0.02em;
   line-height: 1.2;
@@ -97,7 +121,7 @@
 }
 
 .lp-step-title {
-  font-family: 'Fraunces', Georgia, serif;
+  font-family: 'Goudy Bookletter 1911', Georgia, serif;
   font-size: 17px;
   font-weight: 600;
   letter-spacing: -0.02em;
@@ -106,13 +130,24 @@
 
 /* FAQ question text */
 .lp-faq-item button span:first-child {
-  font-family: 'Fraunces', Georgia, serif;
+  font-family: 'Goudy Bookletter 1911', Georgia, serif;
   letter-spacing: -0.01em;
   color: var(--text);
 }
 
 .lp-faq-item button:hover span:first-child {
   color: var(--accent);
+}
+
+/* Landing body/description copy — Cantarell. Excludes nav/button/stat/footer UI text. */
+.lp-problem-body,
+.lp-problem-bridge,
+.lp-step-body,
+.lp-stat-label,
+.lp-faq-item .lp-faq-answer,
+.lp-footer-tagline,
+.lp-footer-copy {
+  font-family: 'Cantarell', sans-serif;
 }
 
 
@@ -124,56 +159,147 @@
    UI snippets animate right. Pure CSS change, zero JSX touch.
    ═══════════════════════════════════════════════════════════════════════════ */
 
-/* Hero background — warm paper + subtle amber radial warmth on right */
+/* Hero background — warm paper + subtle amber radial warmth centered */
 .nh-hero {
+  position: relative;
   background:
-    radial-gradient(ellipse at 78% 50%, rgba(193, 126, 71, 0.07) 0%, transparent 52%),
+    radial-gradient(ellipse at 50% 22%, rgba(193, 126, 71, 0.07) 0%, transparent 60%),
     var(--bg);
   color: var(--text);
-  min-height: 100vh;
+  padding-top: 15vh;
+  padding-bottom: 12vh;
 }
 
-/* Shift panel from center to left — pure CSS, no JSX change */
-.nh-center-panel {
+/* Pure CSS Grid background — top 3/4 height, faded behind headline */
+.nh-hero::before {
+  content: '';
   position: absolute;
-  top: 50%;
-  left: 8%;
-  right: auto;
-  transform: translateY(-50%);
-  text-align: left;
-  align-items: flex-start;
-  width: auto;
-  max-width: 48%;
-  padding: 0;
-  box-sizing: content-box;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 80%;
+  pointer-events: none;
+  z-index: 1;
+
+  /* 48px square grid lines */
+  background-image:
+    linear-gradient(to right, rgba(26, 22, 18, 0.07) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(26, 22, 18, 0.07) 1px, transparent 1px);
+  background-size: 48px 48px;
+
+  /* Composite mask: radial-gradient clears center behind headline; linear-gradient fades bottom edge */
+  -webkit-mask-image:
+    radial-gradient(ellipse 65% 50% at 50% 25%, rgba(0, 0, 0, 0.1) 0%, rgba(0, 0, 0, 1) 70%),
+    linear-gradient(to bottom, rgba(0, 0, 0, 1) 70%, transparent 100%);
+  mask-image:
+    radial-gradient(ellipse 65% 50% at 50% 25%, rgba(0, 0, 0, 0.1) 0%, rgba(0, 0, 0, 1) 70%),
+    linear-gradient(to bottom, rgba(0, 0, 0, 1) 70%, transparent 100%);
+  -webkit-mask-composite: source-in;
+  mask-composite: intersect;
 }
 
-/* Display headline — Fraunces, large, architecturally tight */
-.nh-headline-primary {
-  font-family: 'Fraunces', Georgia, serif;
-  font-size: clamp(46px, 5.5vw, 82px);
-  font-weight: 700;
-  line-height: 1.0;
-  letter-spacing: -0.04em;
+/* Center-aligned hero content panel — overrides landing.css absolute positioning */
+.nh-center-panel {
+  position: relative;
+  top: auto;
+  left: auto;
+  transform: none;
+  margin: 0 auto;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  max-width: 960px;
+  padding: 0 var(--container-padding, 24px);
+  box-sizing: border-box;
+  z-index: 10;
+}
+
+/* Hero container — flex column, no nav-offset padding since hero uses padding-top */
+.nh-hero .nh-container {
+  padding-top: 0;
+  justify-content: flex-start;
+  min-height: auto;
+}
+
+/* Neutral dot */
+.lp-timeline-dot {
+  width: 9px;
+  height: 9px;
+  background: var(--inverse-surface);
+  border-radius: 50%;
+  box-shadow: 0 0 0 4px var(--bg);
+  margin-top: 6px;
+  position: relative;
+  z-index: 1;
+}
+
+/* Hero Product Screenshot */
+.nh-hero-screenshot {
+  width: 100%;
+  max-width: 1000px;
+  margin: 64px auto 0;
+  position: relative;
+  z-index: 10;
+  border-radius: 8px;
+  border: 1px solid rgba(26, 22, 18, 0.10);
+  box-shadow:
+    0 4px 12px rgba(26, 22, 18, 0.06),
+    0 16px 48px rgba(26, 22, 18, 0.10),
+    0 32px 80px rgba(26, 22, 18, 0.06);
+  overflow: hidden;
+}
+
+.nh-hero-screenshot-img {
+  display: block;
+  width: 100%;
+  height: auto;
+  object-fit: contain;
+}
+
+.nh-headline {
+  max-width: 920px;
+  width: 100%;
+  margin: 0 auto;
+  align-items: center;
+}
+
+/* Display headline — Goudy Bookletter 1911 (400 regular weight) */
+.nh-headline-primary,
+.nh-headline-primary .reveal {
+  font-family: 'Goudy Bookletter 1911', Georgia, serif;
+  font-size: clamp(42px, 4.5vw, 72px);
+  font-weight: 400;
+  line-height: 1.1;
+  letter-spacing: -0.015em;
   color: var(--text);
 }
 
-/* Subtitle — readable body contrast */
-.nh-headline-secondary {
-  font-family: 'Elms Sans', system-ui, sans-serif;
-  font-size: clamp(14px, 1.3vw, 17px);
+/* Subtitle — Cantarell */
+
+.nh-headline-secondary,
+.nh-headline-secondary .reveal {
+  font-family: 'Cantarell', sans-serif;
+  font-size: clamp(15px, 1.4vw, 18px);
   font-weight: 400;
   color: var(--text-2);
   line-height: 1.65;
   letter-spacing: 0;
   max-width: 42ch;
   display: block;
+  margin: 0 auto;
 }
 
 /* Hero CTA — near-black on paper, no gradient */
 .nh-hero-cta {
   background: var(--text);
   color: var(--bg);
+}
+
+
+
+.nh-hero-cta {
   font-size: 11.5px;
   font-weight: 600;
   letter-spacing: 0.08em;
@@ -184,7 +310,7 @@
   cursor: pointer;
   margin-top: 40px;
   transition:
-    transform  0.4s var(--ease-snap),
+    transform 0.4s var(--ease-snap),
     background 0.3s var(--ease-snap),
     box-shadow 0.4s var(--ease-snap);
 }
@@ -203,46 +329,6 @@
 
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   LAYER 3b: FLOATING WIDGETS
-   Reposition to right-side cluster, fix palette crimes.
-   ═══════════════════════════════════════════════════════════════════════════ */
-.hw-widget {
-  background: #FFFEFB;
-  border: 1px solid rgba(26, 22, 18, 0.09);
-  border-radius: 10px;
-  box-shadow:
-    0 2px 12px rgba(26, 22, 18, 0.05),
-    0 1px 3px  rgba(26, 22, 18, 0.04);
-}
-
-/* Widget text — warm near-black */
-.hw-task-title         { color: #1A1612; }
-.hw-task-title--done   { color: #9B8F84; }
-.hw-task-title--urgent { color: #C17E47; }   /* amber overdue instead of #e65100 */
-.hw-task-sub           { color: #9B8F84; }
-.hw-progress-label     { color: #1A1612; }
-
-/* Reposition to right — creates editorial left-text / right-UI composition */
-.hw-widget--tl { left: auto; right: 8%;   top: 14%;    }
-.hw-widget--tr { left: auto; right: 2%;   top: 33%;    }
-.hw-widget--bl { left: auto; right: 9%;   bottom: 18%; }
-.hw-widget--br { left: auto; right: 1.5%; bottom: 31%; }
-
-/* FIX: AI row — purple → warm amber */
-.hw-ai-row   { background: rgba(193, 126, 71, 0.08); border-radius: 6px; }
-.hw-ai-spark { color: var(--accent); }
-.hw-ai-label { color: var(--accent); }
-
-/* FIX: Progress bar — Bootstrap blue → amber */
-.hw-progress-fill {
-  background: var(--accent);
-}
-
-/* Badge green — semantic (completed state), keep it green */
-.hw-badge--green { background: rgba(74, 222, 128, 0.12); color: #16a34a; }
-
-
-/* ═══════════════════════════════════════════════════════════════════════════
    LAYER 4: NAV
    ═══════════════════════════════════════════════════════════════════════════ */
 .lp-nav.scrolled {
@@ -258,7 +344,7 @@
   font-size: 11.5px;
   padding: 7px 16px;
   transition:
-    transform  0.3s var(--ease-snap),
+    transform 0.3s var(--ease-snap),
     background 0.3s var(--ease-snap),
     box-shadow 0.3s var(--ease-snap);
 }
@@ -297,7 +383,9 @@
    ═══════════════════════════════════════════════════════════════════════════ */
 
 /* Section alt — warm paper-2 not cool #f5f5f5 */
-.lp-section-alt { background: var(--surface); }
+.lp-section-alt {
+  background: var(--surface);
+}
 
 /* Eyebrow labels — amber instead of green */
 .lp-eyebrow {
@@ -306,15 +394,35 @@
   letter-spacing: 0.18em;
 }
 
-/* Problem cards */
+/* Grid container Reveal wrappers — ensure equal height card alignment */
+.lp-steps-row > .reveal,
+.lp-problem-grid > .reveal,
+.lp-features-grid > .reveal {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.lp-steps-row .reveal > *,
+.lp-problem-grid .reveal > *,
+.lp-features-grid .reveal > * {
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+}
+
 .lp-problem-card {
   padding: 28px 26px;
   border-radius: 3px;
   border: 1px solid var(--border);
-  background: #FFFEFB;
+  background: var(--surface-bright);
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  box-sizing: border-box;
   transition:
     border-color 0.4s var(--ease-snap),
-    transform    0.4s var(--ease-snap);
+    transform 0.4s var(--ease-snap);
 }
 
 .lp-problem-card:hover {
@@ -347,10 +455,14 @@
   padding: 28px 26px;
   border-radius: 3px;
   border: 1px solid var(--border);
-  background: #FFFEFB;
+  background: var(--surface-bright);
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  box-sizing: border-box;
   transition:
     border-color 0.4s var(--ease-snap),
-    transform    0.4s var(--ease-snap);
+    transform 0.4s var(--ease-snap);
 }
 
 .lp-step:hover {
@@ -372,7 +484,7 @@
 
 /* Stat cards */
 .lp-stat-card {
-  background: #FFFEFB;
+  background: var(--surface-bright);
   border: 1px solid var(--border);
   border-radius: 3px;
 }
@@ -418,9 +530,9 @@
   padding: 13px 28px;
   box-shadow: none;
   transition:
-    transform    0.4s var(--ease-snap),
-    background   0.3s var(--ease-snap),
-    box-shadow   0.4s var(--ease-snap);
+    transform 0.4s var(--ease-snap),
+    background 0.3s var(--ease-snap),
+    box-shadow 0.4s var(--ease-snap);
 }
 
 .lp-btn-primary:hover {
@@ -440,10 +552,10 @@
   border-color: var(--border-2);
   color: var(--text-2);
   transition:
-    transform     0.4s var(--ease-snap),
-    border-color  0.3s var(--ease-snap),
-    color         0.3s var(--ease-snap),
-    background    0.3s var(--ease-snap);
+    transform 0.4s var(--ease-snap),
+    border-color 0.3s var(--ease-snap),
+    color 0.3s var(--ease-snap),
+    background 0.3s var(--ease-snap);
 }
 
 .lp-btn-secondary:hover {
@@ -460,34 +572,292 @@
    Honor that intent — give it the dark background it was always expecting.
    ═══════════════════════════════════════════════════════════════════════════ */
 .lp-cta-banner {
-  background: #1A1612;
-  border: 1px solid rgba(247, 244, 239, 0.08);
+  background: var(--inverse-bg);
+  border: 1px solid rgba(122, 109, 98, 0.15);
   border-radius: 6px;
   padding: 88px 72px;
 }
 
 .lp-cta-banner h2 {
-  font-family: 'Fraunces', Georgia, serif;
-  color: #F7F4EF;
+  font-family: 'Goudy Bookletter 1911', Georgia, serif;
+  color: var(--inverse-text);
   letter-spacing: -0.04em;
 }
 
 .lp-cta-banner p {
-  color: rgba(247, 244, 239, 0.55);
+  color: var(--text-2);
 }
 
 /* Button inside dark banner — paper on dark */
 .lp-cta-banner .lp-btn-primary {
-  background: #F7F4EF;
-  color: #1A1612;
+  background: var(--bg);
+  color: var(--text);
+  box-shadow: none;
 }
 
 .lp-cta-banner .lp-btn-primary:hover {
-  background: #FFFFFF;
+  background: var(--surface-bright);
   transform: translateY(-3px);
   box-shadow: 0 10px 28px rgba(0, 0, 0, 0.22);
 }
 
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   LAYER 7: INTERACTIVE DEMO
+   ═══════════════════════════════════════════════════════════════════════════ */
+.demo-card {
+  max-width: 640px;
+  margin: 0 auto;
+  background: var(--surface-bright);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+/* Tabs */
+.demo-tabs {
+  display: flex;
+  border-bottom: 1px solid var(--border);
+}
+
+.demo-tab {
+  flex: 1;
+  padding: 12px 16px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-2);
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+  transition: color 0.2s, border-color 0.2s;
+}
+
+.demo-tab:hover {
+  color: var(--text);
+}
+
+.demo-tab.active {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+}
+
+/* Form */
+.demo-form {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.demo-field-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.demo-field-row {
+  display: flex;
+  gap: 12px;
+}
+
+.demo-field-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-2);
+  letter-spacing: 0.02em;
+}
+
+.demo-field-input,
+.demo-field-select,
+.demo-field-textarea {
+  width: 100%;
+  padding: 10px 12px;
+  font-size: 14px;
+  font-family: 'Cantarell', sans-serif;
+  color: var(--text);
+  background: var(--bg);
+  border: 1px solid var(--border-2);
+  border-radius: 3px;
+  outline: none;
+  box-sizing: border-box;
+}
+
+.demo-field-textarea {
+  resize: none;
+  line-height: 1.6;
+}
+
+.demo-field-select {
+  appearance: none;
+  cursor: default;
+}
+
+.demo-submit {
+  width: 100%;
+  padding: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--bg);
+  background: var(--text);
+  border: none;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.2s;
+  margin-top: 4px;
+}
+
+.demo-submit:hover {
+  background: var(--inverse-surface);
+  transform: translateY(-1px);
+}
+
+/* Generating */
+.demo-generating {
+  padding: 64px 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.demo-spinner {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: 3px solid var(--border);
+  border-top-color: var(--accent);
+  animation: demo-spin 1s linear infinite;
+}
+
+@keyframes demo-spin {
+  to { transform: rotate(360deg); }
+}
+
+.demo-generating-text {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text);
+  text-align: center;
+}
+
+.demo-progress-dots {
+  display: flex;
+  gap: 6px;
+}
+
+.demo-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 3px;
+  background: var(--border-2);
+  transition: all 0.4s ease;
+}
+
+.demo-dot.active {
+  background: var(--accent);
+}
+
+.demo-dot.current {
+  width: 20px;
+  border-radius: 3px;
+}
+
+/* Result */
+.demo-result {
+  padding: 24px;
+}
+
+.demo-result-header {
+  margin-bottom: 20px;
+}
+
+.demo-result-title {
+  font-family: 'Goudy Bookletter 1911', Georgia, serif;
+  font-size: 20px;
+  font-weight: 400;
+  color: var(--text);
+  margin: 0 0 6px;
+}
+
+.demo-result-summary {
+  font-size: 14px;
+  color: var(--text-2);
+  line-height: 1.5;
+  margin: 0;
+}
+
+.demo-checkpoints {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.demo-checkpoint {
+  display: flex;
+  gap: 14px;
+  padding: 14px 0;
+  border-top: 1px solid var(--border);
+}
+
+.demo-checkpoint:last-child {
+  border-bottom: 1px solid var(--border);
+}
+
+.demo-cp-number {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--accent-dim);
+  color: var(--accent);
+  font-size: 11px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.demo-cp-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.demo-cp-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 2px;
+}
+
+.demo-cp-desc {
+  font-size: 13px;
+  color: var(--text-2);
+  line-height: 1.5;
+  margin: 0;
+}
+
+.demo-reset {
+  margin-top: 16px;
+  padding: 0;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--accent);
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.demo-reset:hover {
+  text-decoration: underline;
+}
+
+@media (max-width: 520px) {
+  .demo-field-row {
+    flex-direction: column;
+  }
+}
 
 /* ═══════════════════════════════════════════════════════════════════════════
    LAYER 6b: ATMOSPHERE
@@ -516,32 +886,22 @@
    RESPONSIVE OVERRIDES
    ═══════════════════════════════════════════════════════════════════════════ */
 
-/* Tablet: revert to centered hero — asymmetry only works at full width */
+/* Tablet: tighten panel width — centering is handled by margin: auto, no position overrides needed */
 @media (max-width: 960px) {
   .nh-center-panel {
-    left: 50%;
-    right: auto;
-    transform: translate(-50%, -50%);
-    text-align: center;
-    align-items: center;
     max-width: min(90%, 600px);
     padding: 0 24px;
-    box-sizing: border-box;
   }
 
   .nh-headline-secondary {
     max-width: none;
   }
-
-  /* Revert widgets to original positions on tablet */
-  .hw-widget--tl { left: 6%;  right: auto; top: 18%;    }
-  .hw-widget--tr { right: 6%; left: auto;  top: 18%;    }
-  .hw-widget--bl { left: 5%;  right: auto; bottom: 18%; }
-  .hw-widget--br { right: 5%; left: auto;  bottom: 18%; }
 }
 
 @media (max-width: 768px) {
-  .lp-page { --lp-pad: var(--lp-pad-mobile); }
+  .lp-page {
+    --lp-pad: var(--lp-pad-mobile);
+  }
 
   .lp-cta-banner {
     padding: 52px 28px;
@@ -553,6 +913,7 @@
    REDUCED MOTION
    ═══════════════════════════════════════════════════════════════════════════ */
 @media (prefers-reduced-motion: reduce) {
+
   .nh-hero-cta,
   .lp-btn-primary,
   .lp-btn-secondary,

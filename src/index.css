@@ -93,7 +93,10 @@
   box-sizing: border-box;
   margin: 0;
   padding: 0;
-  font-family: 'Elms Sans', sans-serif;
+}
+
+body, input, button, select, textarea {
+  font-family: 'Cantarell', sans-serif;
 }
 
 /* ── Base ─────────────────────────────────────────────────────────────────── */
@@ -297,7 +300,7 @@ input, select, textarea {
   width: 100%;
   padding: var(--s2) var(--s3);
   font-size: var(--text-base);
-  font-family: 'Elms Sans', sans-serif;
+  font-family: 'Cantarell', sans-serif;
   color: var(--text);
   background-color: rgba(255, 255, 255, 0.04);  /* background-color not shorthand — preserves select arrow */
   border: 1px solid var(--border-2);

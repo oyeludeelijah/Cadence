@@ -64,6 +64,12 @@ A color-coded system that tells you exactly where you stand:
 - **Procrastination Index**: Measure how early or late you typically complete checkpoints, with visual distribution buckets.
 - **Visualisations**: Fully responsive data visualisations built with Recharts.
 
+### 10. **Premium & Settings Ecosystem** *(New)*
+- **Custom Working Hours**: Adjust when checkpoints are scheduled (e.g. 9 AM–9 PM).
+- **Data Export**: Export your task data as JSON.
+- **Payment Integration**: Stripe callback polling functionality for premium upgrades.
+- **Admin Dashboard**: System logging and observability for administrators.
+
 ---
 
 ## Tech Stack 🛠️
@@ -158,6 +164,21 @@ You'll need these tables in Supabase:
 | `task_type` | text | |
 | `checkpoint_sequence` | jsonb | Array of checkpoint definitions |
 
+### `subscriptions`
+| Column | Type | Notes |
+|---|---|---|
+| `id` | uuid | primary key |
+| `user_id` | uuid | FK → auth.users(id) |
+| `status` | text | e.g. `'active'` |
+| `current_period_end` | timestamptz | |
+
+### `system_logs`
+| Column | Type | Notes |
+|---|---|---|
+| `id` | uuid | primary key |
+| `created_at` | timestamptz | |
+| `event` | text | |
+
 **No cascade deletes** — the app manually deletes checkpoints before the parent task.
 **RLS is enabled** — users can only see and manage their own data. Auth uses Supabase email/password.
 
@@ -170,23 +191,35 @@ src/
 ├── App.jsx
 ├── index.css                  # Full design system for core app
 ├── supabaseClient.js
+├── contexts/
+│   └── AuthContext.jsx        # Singleton auth state provider
 ├── pages/
 │   ├── LandingPage.jsx        # Public landing page (Tailwind CSS)
 │   ├── AuthPage.jsx           # Sign In / Sign Up page
 │   ├── TaskListPage.jsx       # Home — task list, grouping, urgency sections
 │   ├── TaskDetailPage.jsx     # Individual task — checkpoints, undo, progress
-│   └── AnalyticsPage.jsx      # Metrics and Recharts visualisations
+│   ├── AnalyticsPage.jsx      # Metrics and Recharts visualisations
+│   ├── SettingsPage.jsx       # User settings and data export
+│   ├── AdminDashboard.jsx     # System intelligence logs
+│   ├── PaymentCallbackPage.jsx# Stripe subscription callback
+│   └── ResetPasswordPage.jsx  # Password reset flow
 ├── components/
 │   ├── landing/               # Tailwind components for public pages
 │   ├── CreateTask.jsx         # Task creation form with AI integration
 │   ├── EditTask.jsx           # Task edit form (metadata only)
+│   ├── CheckpointCard.jsx     # Visual component for a checkpoint
+│   ├── TaskCard.jsx           # Visual component for a task preview
+│   ├── OverdueResolutionModal.jsx # Handle overdue tasks
 │   └── DeleteConfirmModal.jsx # Confirmation modal for task deletion
 ├── hooks/
+│   ├── useAuth.js             # Consumes AuthContext
 │   ├── useReveal.js           # Intersection Observer scroll-reveal hook
 │   └── useTheme.js            # Dark/light mode hook with anti-FOUC
 └── utils/
+    ├── buildCheckpointPrompt.js # Logic for crafting AI prompts
     ├── checkpointHelpers.js   # Status logic (getCheckpointStatus, etc.)
     ├── generateCheckpoints.js # AI checkpoint generation orchestration
+    ├── normaliseDueDates.js   # Binds dates within working hours
     └── nimApiClient.js        # NVIDIA NIM API client with retry and fallback logic
 
 vite.config.js                 # Dev proxy: /nvidia-api → NVIDIA NIM endpoint

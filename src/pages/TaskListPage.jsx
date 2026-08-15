@@ -184,7 +184,7 @@ function TaskListPage() {
                      new Date(sub.current_period_end) > new Date()
       const activeCount = countRes.count ?? 0
 
-      if (!isPro && activeCount >= 3) {
+      if (!isPro && activeCount >= 50) {
         setShowUpgradeModal(true)
         return
       }

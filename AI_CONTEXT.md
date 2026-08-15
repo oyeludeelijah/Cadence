@@ -15,7 +15,8 @@ Helps students break large academic tasks (essays, problem sets, exam prep) into
 - Recharts 3.x (Analytics visualisations)
 - Supabase (PostgreSQL + PostgREST) — backend and database
 - Core app uses Vanilla CSS (`src/index.css`). Landing pages use Tailwind CSS v4
-- No state management library — pure useState, useEffect, useCallback, useRef
+- React Context API used for centralized state (e.g. `AuthContext` to prevent redundant auth subscriptions)
+- No external state management library (Redux, Zustand) — pure useState, useEffect, useCallback, useRef
 - JavaScript/JSX throughout
 - **No extra AI packages** — AI calls use plain `fetch` via a Vite proxy (see AI section below)
 - **Supabase Edge Functions + pg_cron** with Resend for hourly automated email reminders
@@ -27,37 +28,51 @@ Helps students break large academic tasks (essays, problem sets, exam prep) into
 api/
 └── nvidia.js                  # Vercel serverless proxy for production AI
 src/
-├── App.jsx                    # Route guard — unauthenticated users see LandingPage on /, AuthPage on /auth
+├── App.jsx                    # Route guard
 ├── index.css                  # Full design system for core app
 ├── supabaseClient.js
+├── contexts/
+│   └── AuthContext.jsx        # Single source of truth for Supabase auth state
 ├── pages/
-│   ├── LandingPage.jsx        # Public landing page (Tailwind CSS / Cosmos UI)
-│   ├── FeaturesPage.jsx       # Public features overview
-│   ├── AboutPage.jsx          # Public about page
-│   ├── ContactPage.jsx        # Public contact page
+│   ├── LandingPage.jsx        # Public landing page (Tailwind CSS)
 │   ├── AuthPage.jsx           # Sign In / Sign Up page
 │   ├── TaskListPage.jsx       # Home — task list, grouping, urgency sections
 │   ├── TaskDetailPage.jsx     # Individual task — checkpoints, undo, progress
-│   └── AnalyticsPage.jsx      # Metrics computation and Recharts visualisations
+│   ├── AnalyticsPage.jsx      # Metrics computation and Recharts visualisations
+│   ├── SettingsPage.jsx       # User settings, working hours, and data export
+│   ├── AdminDashboard.jsx     # System intelligence and logging
+│   ├── PaymentCallbackPage.jsx# Stripe subscription callback polling
+│   └── ResetPasswordPage.jsx  # Password reset flow
 ├── components/
 │   ├── landing/               # Tailwind components for public pages
-│   ├── CreateTask.jsx         # ~290 lines — attaches user_id on task insert
-│   ├── EditTask.jsx           # ~160 lines — pre-filled edit form (metadata only)
+│   ├── CreateTask.jsx         # Form to create tasks with AI integration
+│   ├── EditTask.jsx           # Pre-filled edit form (metadata only)
+│   ├── CheckpointCard.jsx     # UI for individual checkpoints
+│   ├── TaskCard.jsx           # Task preview card in lists
+│   ├── UrgencyGroup.jsx       # Task grouping by urgency
+│   ├── CreateModalPanel.jsx   # Slide-out panel for creation
 │   ├── AppShell.jsx           # Persistent layout wrapper (sidebar + main)
-│   ├── Sidebar.jsx            # Shows user email + Sign Out button, GSAP collapse animation
-│   ├── DeleteConfirmModal.jsx # ~91 lines
+│   ├── Sidebar.jsx            # User email, Sign Out, GSAP collapse animation
+│   ├── DeleteConfirmModal.jsx # Confirmation for deletions
+│   ├── OverdueResolutionModal.jsx # Resolves overdue items
+│   ├── UpgradeModal.jsx       # Premium subscription trigger
+│   ├── ErrorBoundary.jsx      # Global error catching
 │   ├── AnimatedCounter.jsx    # GSAP number scrubber for analytics
 │   └── AnimatedToast.jsx      # Generic toast notification system
 ├── hooks/
-│   ├── useAuth.js             # Wraps Supabase session — returns { session, loading, user }
+│   ├── useAuth.js             # Consumes AuthContext
 │   ├── useReveal.js           # CSS scroll reveal
 │   ├── useTheme.js            # Dark/light mode
+│   ├── useTaskForm.js         # Logic for task creation/editing
 │   ├── useModalAnimation.js   # GSAP modal enter/exit logic
 │   └── usePageTransition.js   # GSAP page fade-in
 └── utils/
-    ├── checkpointHelpers.js   # getCheckpointStatus(), getOverdueText(), getTimeUntilDue()
-    ├── generateCheckpoints.js # Orchestrates AI checkpoint generation and date normalization
-    └── nimApiClient.js        # HTTP transport layer for NVIDIA NIM with retry/backoff logic
+    ├── checkpointHelpers.js   # Status logic
+    ├── buildCheckpointPrompt.js # Constructs the prompt for the LLM
+    ├── generateCheckpoints.js # Orchestrates AI checkpoint generation
+    ├── normaliseDueDates.js   # Adjusts times to working hours
+    ├── taskGrouping.js        # Helper for grouping tasks by urgency
+    └── nimApiClient.js        # NVIDIA NIM HTTP client with backoff
 
 vite.config.js                 # Has proxy config for local dev AI
 vercel.json                    # Rewrite rule for production AI proxy
@@ -76,6 +91,8 @@ supabase/
 - **tasks** — `id`, `user_id` (FK to auth.users), `title`, `task_type` ('essay'|'problem_set'|'exam_prep'), `final_deadline`, `notes`, `status` ('active'|'completed'), `created_at`
 - **checkpoints** — `id`, `task_id` (FK), `checkpoint_number`, `checkpoint_type`, `due_date`, `status` ('pending'|'completed'), `completed_at`, `created_at`, `ai_generated` (boolean, default false), `reminder_sent_urgent` (boolean, default false), `reminder_sent_overdue` (boolean, default false)
 - **task_templates** — `id`, `task_type`, `checkpoint_sequence` (JSONB) — fallback only, do not remove
+- **subscriptions** — tracks user subscription status and `current_period_end`
+- **system_logs** — tracks system events for the admin dashboard
 
 - No cascade deletes — app manually deletes checkpoints before task
 - **RLS is enabled** on both `tasks` and `checkpoints` tables
@@ -183,7 +200,7 @@ stream:      false
 
 ## What's fully working
 
-Task creation (AI + fallback), **Edit task (metadata updates — Confirmed ✅)**, urgency grouping, tab switching, checkpoint toggle, 10s undo (survives refresh), deletion with user-visible errors, progress bars, 4-state status, dark/light mode + anti-FOUC, scroll-reveal, mobile responsive (768px), connection indicator, loading/error states, AI badge on task cards and detail page, **user authentication (email/password sign-up + sign-in + sign-out)**, **RLS — users only see their own tasks**, **Automated Email Notifications (Supabase Edge function via pg_cron + Resend)** with anti-spam database tracking, **Analytics Dashboard (Recharts visualisations)**, and **Premium GSAP Animations** (counters, staggered entry for checkpoints, standardized modal physics).
+Task creation (AI + fallback), **Edit task (metadata updates — Confirmed ✅)**, urgency grouping, tab switching, checkpoint toggle, 10s undo (survives refresh), deletion with user-visible errors, progress bars, 4-state status, dark/light mode + anti-FOUC, scroll-reveal, mobile responsive (768px), connection indicator, loading/error states, AI badge on task cards and detail page, **user authentication (email/password sign-up + sign-in + sign-out via Context API)**, **RLS — users only see their own tasks**, **Automated Email Notifications (Supabase Edge function via pg_cron + Resend)** with anti-spam database tracking, **Analytics Dashboard (Recharts visualisations)**, **Premium GSAP Animations** (counters, staggered entry for checkpoints, standardized modal physics), **User Settings** (custom working hours, data export), **Payment Integration** (Stripe polling via `subscriptions`), and an **Admin Dashboard** (`system_logs`).
 
 ---
 

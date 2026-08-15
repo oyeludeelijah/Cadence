@@ -27,17 +27,20 @@ export function buildCheckpointPrompt(
     essay: {
       goal: 'a writing and composition workflow (research -> outline -> drafting -> editing)',
       rules: 'Checkpoints must focus on researching sources, organizing thesis/arguments, writing draft sections, and proofreading.',
-      forbidden: 'FORBIDDEN WORDS: Do NOT use "problem set", "calculations", "flashcards", "exam", "quiz", "formulas", "equations".'
+      forbidden: 'FORBIDDEN WORDS: Do NOT use "problem set", "calculations", "flashcards", "exam", "quiz", "formulas", "equations".',
+      verbs: 'Writing-specific casual verbs to use: "dig into", "sketch out", "knock out", "pull together", "tighten up", "look over". Do NOT start with "work through", "tackle", "figure out" — those are for problem sets.'
     },
     problem_set: {
       goal: 'a problem-solving and technical calculation workflow (review requirements -> solve problem batches -> verify solutions)',
       rules: 'Checkpoints must focus on analyzing problems, working out solutions/calculations, and checking final answers.',
-      forbidden: 'FORBIDDEN WORDS: Do NOT use the words "essay", "paper", "draft", "thesis", "outline", "paragraph", "writing".'
+      forbidden: 'FORBIDDEN WORDS: Do NOT use the words "essay", "paper", "draft", "thesis", "outline", "paragraph", "writing".',
+      verbs: 'Problem-solving casual verbs to use: "work through", "tackle", "figure out", "double-check", "go over", "crunch". Do NOT start with "knock out the draft", "read through" — those are for essays.'
     },
     exam_prep: {
       goal: 'a revision and study workflow (review notes -> create study aids -> practice testing)',
       rules: 'Checkpoints must focus on reviewing lecture materials, creating study guides/flashcards, and self-testing.',
-      forbidden: 'FORBIDDEN WORDS: Do NOT use "essay", "paper", "submit assignment", "problem set submission", "draft".'
+      forbidden: 'FORBIDDEN WORDS: Do NOT use "essay", "paper", "submit assignment", "problem set submission", "draft".',
+      verbs: 'Revision casual verbs to use: "go over", "brush up on", "make flashcards for", "test yourself on", "lock in". Do NOT start with "knock out the draft", "work through problems" — those are for essay/problem set.'
     }
   }
 
@@ -59,7 +62,7 @@ Guidance: ${config.rules}
 ${config.forbidden}
 
 Each checkpoint must have:
-- "checkpoint_type": a short, friendly action label written like a helpful nudge from a friend. Must strictly follow the ${taskType} workflow and reflect the task title "${taskTitle}" and notes.
+- "checkpoint_type": a short, casual nudge — written the way a friend would say it, not an academic checklist. Keep it under 6 words where possible. Use plain everyday language: no Title Casing every word, no formal verbs like "Finalize", "Conduct", "Execute". IMPORTANT: use the type-specific verbs below — different task types must use different verbs so checkpoints don't look identical. ${config.verbs} Must still be specific to the task title "${taskTitle}" and notes — no generic placeholders.
 - "checkpoint_number": integer starting at 1
 - "due_date": ISO 8601 timestamp, spaced proportionally between now and the deadline
 - "status": "pending"
