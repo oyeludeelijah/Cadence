@@ -11,24 +11,41 @@ import { useState, useEffect } from 'react'
  * Applies [data-theme="dark|light"] to <html> so CSS can respond.
  * The index.html inline script also reads localStorage to set the
  * attribute synchronously before React hydrates (prevents FOUC).
+ *
+ * All hook instances stay in sync via a MutationObserver on <html>'s
+ * data-theme attribute — toggling in one component (e.g. nav) propagates
+ * to all others (e.g. footer) without needing a context provider.
  */
 export function useTheme() {
   const [theme, setTheme] = useState(() => {
     if (typeof window === 'undefined') return 'light'
     const saved = localStorage.getItem('theme')
     if (saved === 'light' || saved === 'dark') return saved
-    // Default to light; respect OS dark preference if explicitly set
     return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
   })
 
+  // Write to DOM + localStorage when this instance changes theme
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme)
     localStorage.setItem('theme', theme)
   }, [theme])
 
-  // Fix 7.4: react to live OS theme changes while the app is open.
-  // Previously the OS preference was only read once at mount — changing the
-  // system theme while the tab was open had no effect.
+  // Sync from DOM — picks up changes made by sibling hook instances
+  useEffect(() => {
+    const observer = new MutationObserver(() => {
+      const current = document.documentElement.getAttribute('data-theme')
+      if ((current === 'dark' || current === 'light') && current !== theme) {
+        setTheme(current)
+      }
+    })
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['data-theme'],
+    })
+    return () => observer.disconnect()
+  }, [theme])
+
+  // React to live OS theme changes while the app is open.
   // Only applies when the user has no explicit localStorage override.
   useEffect(() => {
     const mq = window.matchMedia('(prefers-color-scheme: dark)')

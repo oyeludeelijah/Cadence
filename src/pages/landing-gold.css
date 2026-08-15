@@ -316,9 +316,10 @@
 }
 
 .nh-hero-cta:hover {
-  background: #2A221C;
+  background: var(--accent);
+  color: #fff;
   transform: translateY(-3px);
-  box-shadow: 0 12px 32px rgba(26, 22, 18, 0.18);
+  box-shadow: 0 12px 32px rgba(193, 126, 71, 0.28);
   filter: none;
 }
 
@@ -337,6 +338,11 @@
   box-shadow: 0 1px 20px rgba(26, 22, 18, 0.06);
 }
 
+[data-theme="dark"] .lp-nav.scrolled {
+  background: rgba(26, 22, 18, 0.93);
+  box-shadow: 0 1px 20px rgba(0, 0, 0, 0.2);
+}
+
 .lp-nav-cta {
   background: var(--text);
   color: var(--bg);
@@ -350,9 +356,10 @@
 }
 
 .lp-nav-cta:hover {
-  background: #2A221C;
+  background: var(--accent);
+  color: #fff;
   transform: translateY(-2px);
-  box-shadow: 0 4px 14px rgba(26, 22, 18, 0.14);
+  box-shadow: 0 4px 14px rgba(193, 126, 71, 0.22);
 }
 
 .lp-nav-link {
@@ -536,9 +543,10 @@
 }
 
 .lp-btn-primary:hover {
-  background: #2A221C;
+  background: var(--accent);
+  color: #fff;
   transform: translateY(-3px);
-  box-shadow: 0 10px 28px rgba(26, 22, 18, 0.16);
+  box-shadow: 0 10px 28px rgba(193, 126, 71, 0.25);
 }
 
 .lp-btn-primary:active {
@@ -599,6 +607,30 @@
   background: var(--surface-bright);
   transform: translateY(-3px);
   box-shadow: 0 10px 28px rgba(0, 0, 0, 0.22);
+}
+
+/* Dark mode: keep banner as an elevated dark surface, don't flip it light */
+[data-theme="dark"] .lp-cta-banner {
+  background: var(--surface-2);
+  border-color: var(--border-2);
+}
+
+[data-theme="dark"] .lp-cta-banner h2 {
+  color: var(--text);
+}
+
+[data-theme="dark"] .lp-cta-banner p {
+  color: var(--text-2);
+}
+
+[data-theme="dark"] .lp-cta-banner .lp-btn-primary {
+  background: var(--accent);
+  color: #fff;
+}
+
+[data-theme="dark"] .lp-cta-banner .lp-btn-primary:hover {
+  background: var(--accent-hover);
+  box-shadow: 0 10px 28px rgba(193, 126, 71, 0.25);
 }
 
 
@@ -710,6 +742,15 @@
 .demo-submit:hover {
   background: var(--inverse-surface);
   transform: translateY(-1px);
+}
+
+/* Dark mode: button is light (--text=#F7F4EF), force dark text explicitly */
+[data-theme="dark"] .demo-submit {
+  color: #1A1612;
+}
+
+[data-theme="dark"] .demo-submit:hover {
+  background: #F0EDE7;
 }
 
 /* Generating */

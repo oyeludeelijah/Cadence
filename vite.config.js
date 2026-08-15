@@ -5,7 +5,7 @@ import react from '@vitejs/plugin-react'
 export default defineConfig({
   plugins: [react()],
   server: {
-    port: 3000,
+    port: 4000,
     proxy: {
       // Proxies /nvidia-api/* → https://integrate.api.nvidia.com/v1/*
       // This runs in Node.js (server-side), so CORS is never an issue.

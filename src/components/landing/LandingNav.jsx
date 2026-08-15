@@ -73,7 +73,13 @@ export default function LandingNav() {
             onClick={() => scrollTo('hero')}
             style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}
           >
-            <img src="/logos/full/cadence-light-transparent.svg" alt="Cadence" style={{ height: '40px', width: 'auto' }} />
+            <img
+              src={theme === 'dark'
+                ? '/logos/full/cadence-dark-transparent.svg'
+                : '/logos/full/cadence-light-transparent.svg'}
+              alt="Cadence"
+              style={{ height: '40px', width: 'auto' }}
+            />
           </button>
 
           {/* Desktop links */}

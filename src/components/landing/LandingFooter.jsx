@@ -1,4 +1,5 @@
 import { useNavigate } from 'react-router-dom';
+import { useTheme } from '../../hooks/useTheme';
 
 const FOOTER_SECTIONS = [
   { label: 'How it works', hash: 'how-it-works' },
@@ -8,17 +9,27 @@ const FOOTER_SECTIONS = [
 
 export default function LandingFooter() {
   const navigate = useNavigate();
+  const { theme } = useTheme();
 
   const scrollTo = (hash) => {
     const el = document.getElementById(hash);
-    if (el) el.scrollIntoView({ behavior: 'smooth' });
+    if (el) {
+      const top = el.getBoundingClientRect().top + window.scrollY - 72;
+      window.scrollTo({ top, behavior: 'smooth' });
+    }
   };
 
   return (
     <footer className="lp-footer">
       <div className="lp-footer-inner">
         <div>
-          <img src="/logos/full/cadence-fullcolor-white.svg" alt="Cadence" style={{ height: '48px', width: 'auto', marginBottom: '1rem' }} />
+          <img
+            src={theme === 'dark'
+              ? '/logos/full/cadence-dark-transparent.svg'
+              : '/logos/full/cadence-light-transparent.svg'}
+            alt="Cadence"
+            style={{ height: '48px', width: 'auto', marginBottom: '1rem' }}
+          />
           <p className="lp-footer-tagline">Stop abandoning your assignments.</p>
         </div>
 
