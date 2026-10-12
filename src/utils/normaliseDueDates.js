@@ -56,3 +56,68 @@ export function clampToWorkingHours(date, workingHours) {
 
   return date
 }
+
+/**
+ * Validates and deterministically repairs a list of checkpoint due-dates so that:
+ *   1. All dates are strictly increasing in checkpoint_number order.
+ *   2. All dates are before the task deadline.
+ *   3. No date is in the past.
+ *   4. Dates fall within working hours (unless the deadline is < 24h away).
+ *
+ * If the list already satisfies all rules, it is returned unchanged.
+ * If any rule is violated, the entire list is re-spaced evenly across
+ * [now+1min, deadline-1min], preserving the checkpoint metadata.
+ * Working-hour clamping is re-applied after re-spacing (unless span < 24h).
+ *
+ * This is a pure repair function — it never discards AI output, it fixes it.
+ *
+ * @param {Array<{due_date: string, checkpoint_number: number, [key: string]: any}>} checkpoints
+ *   Must already be sorted by checkpoint_number ascending.
+ * @param {Date} now          - Current time reference (injectable for testing)
+ * @param {Date} deadlineDate - Task final deadline
+ * @param {{ start: number, end: number }} workingHours
+ * @returns {Array} The same array (possibly mutated) with repaired due_dates
+ */
+export function validateAndRepairDueDates(checkpoints, now, deadlineDate, workingHours = { start: 9, end: 21 }) {
+  if (!checkpoints || checkpoints.length === 0) return checkpoints
+
+  const spanMs = deadlineDate.getTime() - now.getTime()
+  const n = checkpoints.length
+
+  // Check if the list is already valid
+  let isValid = true
+  let prevMs = now.getTime()
+  for (const cp of checkpoints) {
+    const ms = new Date(cp.due_date).getTime()
+    if (isNaN(ms) || ms <= prevMs || ms > deadlineDate.getTime()) {
+      isValid = false
+      break
+    }
+    prevMs = ms
+  }
+
+  if (isValid) return checkpoints
+
+  // Re-space evenly: slot i gets position (i+1)/(n+1) of the span
+  console.warn('[validateAndRepairDueDates] Out-of-order or out-of-bounds due dates detected — re-spacing evenly.')
+
+  return checkpoints.map((cp, i) => {
+    const slotMs = now.getTime() + (spanMs * (i + 1)) / (n + 1)
+    const repaired = new Date(slotMs)
+
+    // Re-apply working-hour clamping unless it's an emergency (< 24h)
+    if (spanMs >= 24 * 60 * 60 * 1000) {
+      clampToWorkingHours(repaired, workingHours)
+    }
+
+    // Hard clamp: must stay strictly between now and deadline
+    if (repaired >= deadlineDate) {
+      repaired.setTime(deadlineDate.getTime() - 60_000)
+    }
+    if (repaired <= now) {
+      repaired.setTime(now.getTime() + 60_000)
+    }
+
+    return { ...cp, due_date: repaired.toISOString() }
+  })
+}

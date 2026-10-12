@@ -12,7 +12,7 @@
 
 import { buildCheckpointPrompt } from './buildCheckpointPrompt'
 import { callNim }               from './nimApiClient'
-import { clampToWorkingHours }   from './normaliseDueDates'
+import { clampToWorkingHours, validateAndRepairDueDates } from './normaliseDueDates'
 
 /**
  * @param {string} taskTitle     - Task title entered by the user

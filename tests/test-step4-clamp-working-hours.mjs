@@ -100,7 +100,7 @@ const genSource = readFileSync(path.join(root, 'src/utils/generateCheckpoints.js
 const ctSource  = readFileSync(path.join(root, 'src/components/CreateTask.jsx'),   'utf8')
 
 assert(
-  genSource.includes("import { clampToWorkingHours }"),
+  genSource.includes("clampToWorkingHours") && genSource.includes("from './normaliseDueDates'"),
   'generateCheckpoints.js imports clampToWorkingHours'
 )
 assert(
@@ -108,7 +108,7 @@ assert(
   'generateCheckpoints.js calls clampToWorkingHours'
 )
 assert(
-  ctSource.includes("import { clampToWorkingHours }"),
+  ctSource.includes("clampToWorkingHours") && ctSource.includes("from '../utils/normaliseDueDates'"),
   'CreateTask.jsx imports clampToWorkingHours'
 )
 assert(

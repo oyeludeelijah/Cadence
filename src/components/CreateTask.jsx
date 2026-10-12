@@ -3,7 +3,7 @@ import { supabase } from '../supabaseClient'
 import { generateCheckpoints } from '../utils/generateCheckpoints'
 import { useAuth } from '../hooks/useAuth'
 import { TASK_TYPE_OPTIONS } from '../constants/taskTypes'
-import { clampToWorkingHours } from '../utils/normaliseDueDates'
+import { clampToWorkingHours, validateAndRepairDueDates } from '../utils/normaliseDueDates'
 import { useTaskForm } from '../hooks/useTaskForm'
 
 function CreateTask({ onTaskCreated, onIsDirtyChange, onUpgradeRequired }) {
@@ -53,11 +53,13 @@ function CreateTask({ onTaskCreated, onIsDirtyChange, onUpgradeRequired }) {
     const now = new Date()
     
     const workingHours = user?.user_metadata?.working_hours || { start: 9, end: 21 }
+    const startHour = parseInt(workingHours.start, 10)
+    const endHour   = parseInt(workingHours.end,   10)
 
     // Rule 1: skip adjustment for tight deadlines (< 24h)
     // proportional timing is more important than "sleep" for emergencies
     if (spanMs < TWENTY_FOUR_HOURS) {
-      return rawDate > now && rawDate < deadline ? rawDate : new Date(now.getTime() + (deadline - now) / 2)
+      return rawDate > now && rawDate <= deadline ? rawDate : new Date(now.getTime() + (deadline - now) / 2)
     }
 
     const d = new Date(rawDate)
@@ -65,11 +67,23 @@ function CreateTask({ onTaskCreated, onIsDirtyChange, onUpgradeRequired }) {
     // Clamp to working hours using the shared utility
     clampToWorkingHours(d, workingHours)
 
+    // If clamping pushed `d` past the deadline, roll back to the latest valid working-hours slot on or before the deadline
+    if (d > deadline) {
+      if (startHour <= endHour) {
+        d.setDate(d.getDate() - 1)
+        d.setHours(endHour, 0, 0, 0)
+      } else {
+        if (d.getHours() >= startHour) {
+          d.setHours(endHour, 0, 0, 0)
+        }
+      }
+    }
+
     // Rule 2: safety net — never push past the deadline or into the past
     // If adjusted time is invalid, fall back to unadjusted rawDate (if valid)
     // or else halfway between now and deadline.
-    if (d > now && d < deadline) return d
-    if (rawDate > now && rawDate < deadline) return rawDate
+    if (d > now && d <= deadline) return d
+    if (rawDate > now && rawDate <= deadline) return rawDate
     return new Date(now.getTime() + (deadline - now) / 2)
   }
 
@@ -112,12 +126,16 @@ function CreateTask({ onTaskCreated, onIsDirtyChange, onUpgradeRequired }) {
       setAiActive(false)
 
       let checkpointSource   // 'ai' | 'template'
-      let rawSequence        // array of { checkpoint_type, checkpoint_number, due_date }
+      let rawSequence        // array of { checkpoint_type, rationale?, checkpoint_number, due_date }
+      let planTitle = null
+      let planSummary = null
 
       if (aiCheckpoints) {
-        // AI succeeded
+        // AI succeeded — aiCheckpoints is now { planTitle, planSummary, checkpoints }
         checkpointSource = 'ai'
-        rawSequence = aiCheckpoints
+        rawSequence = aiCheckpoints.checkpoints
+        planTitle   = aiCheckpoints.planTitle
+        planSummary = aiCheckpoints.planSummary
       } else {
         // ── Step 1b: Fall back to task_templates ─────────────────────────────
         const { data: template, error: fetchError } = await supabase
@@ -134,7 +152,7 @@ function CreateTask({ onTaskCreated, onIsDirtyChange, onUpgradeRequired }) {
         }
 
         checkpointSource = 'template'
-        rawSequence = template.checkpoint_sequence.map((cp, i) => {
+        const generatedSequence = template.checkpoint_sequence.map((cp, i) => {
           const rawDate = new Date(now.getTime() + spanMs * cp.percentage_of_time)
           return {
             checkpoint_number: i + 1,
@@ -142,6 +160,14 @@ function CreateTask({ onTaskCreated, onIsDirtyChange, onUpgradeRequired }) {
             due_date:          adjustToWorkingHours(rawDate, deadline, spanMs).toISOString(),
           }
         })
+
+        // Run the shared validator to ensure strict monotonic ordering and deadline compliance
+        rawSequence = validateAndRepairDueDates(
+          generatedSequence,
+          now,
+          deadline,
+          user?.user_metadata?.working_hours || { start: 9, end: 21 }
+        )
       }
 
       // ── Steps 2+3: Atomically insert task + checkpoints via RPC ─────────────
@@ -151,6 +177,7 @@ function CreateTask({ onTaskCreated, onIsDirtyChange, onUpgradeRequired }) {
       const checkpointRows = rawSequence.map((cp) => ({
         checkpoint_number: cp.checkpoint_number,
         checkpoint_type:   cp.checkpoint_type,
+        rationale:         cp.rationale ?? null,
         due_date:          cp.due_date,
         status:            'pending',
         ai_generated:      isAI,
@@ -164,6 +191,8 @@ function CreateTask({ onTaskCreated, onIsDirtyChange, onUpgradeRequired }) {
           notes:          form.notes.trim() || null,
           status:         'active',
           user_id:        user.id,
+          plan_title:     planTitle,
+          plan_summary:   planSummary,
         },
         p_checkpoints: checkpointRows,
       })
@@ -229,47 +258,48 @@ function CreateTask({ onTaskCreated, onIsDirtyChange, onUpgradeRequired }) {
           />
         </div>
 
-        {/* Task Type */}
-        <div className="field-group">
-          <label className="field-label" htmlFor="task-type">Task Type</label>
-          <select
-            id="task-type"
-            className="field-select"
-            name="taskType"
-            value={form.taskType}
-            onChange={handleChange}
-          >
-            {TASK_TYPE_OPTIONS.map(o => (
-              <option key={o.value} value={o.value}>{o.label}</option>
-            ))}
-          </select>
-        </div>
+        {/* Task Type & Final Deadline */}
+        <div className="field-row">
+          <div className="field-group">
+            <label className="field-label" htmlFor="task-type">Task Type</label>
+            <select
+              id="task-type"
+              className="field-select"
+              name="taskType"
+              value={form.taskType}
+              onChange={handleChange}
+            >
+              {TASK_TYPE_OPTIONS.map(o => (
+                <option key={o.value} value={o.value}>{o.label}</option>
+              ))}
+            </select>
+          </div>
 
-        {/* Due Date */}
-        <div 
-          className="field-group date-picker-group"
-          style={{ cursor: 'pointer' }}
-          onClick={(e) => {
-            const input = e.currentTarget.querySelector('input');
-            if (input) {
-              if (typeof input.showPicker === 'function') {
-                input.showPicker();
-              } else {
-                input.click();
-              }
-            }
-          }}
-        >
-          <label className="field-label" htmlFor="task-due">Final Deadline</label>
-          <input
-            id="task-due"
-            className="field-input clickable-input"
-            type="datetime-local"
-            name="dueDate"
-            value={form.dueDate}
-            onChange={handleChange}
+          <div 
+            className="field-group date-picker-group"
             style={{ cursor: 'pointer' }}
-          />
+            onClick={(e) => {
+              const input = e.currentTarget.querySelector('input');
+              if (input) {
+                if (typeof input.showPicker === 'function') {
+                  input.showPicker();
+                } else {
+                  input.click();
+                }
+              }
+            }}
+          >
+            <label className="field-label" htmlFor="task-due">Final Deadline</label>
+            <input
+              id="task-due"
+              className="field-input clickable-input"
+              type="datetime-local"
+              name="dueDate"
+              value={form.dueDate}
+              onChange={handleChange}
+              style={{ cursor: 'pointer' }}
+            />
+          </div>
         </div>
 
         {/* Notes */}
