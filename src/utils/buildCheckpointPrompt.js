@@ -54,22 +54,28 @@ Deadline: ${deadlineISO}
 Notes: ${notes || 'None'}
 Current Time: ${currentTimeISO}
 
-Return ONLY a valid JSON array. No explanation, no markdown, no backticks. Just the raw JSON array.
+Return ONLY a valid JSON object. No explanation, no markdown, no backticks. Just the raw JSON.
 
 WORKFLOW MANDATE FOR THIS TASK:
 Target Workflow: ${config.goal}
 Guidance: ${config.rules}
 ${config.forbidden}
 
-Each checkpoint must have:
+The JSON object must have exactly these top-level keys:
+- "plan_title": a short headline for the plan, e.g. "Your 10-Day Essay Plan". Use the actual number of days/hours from now until the deadline and the task type.
+- "plan_summary": one sentence (max 20 words) describing the overall strategy. Written casually, like a smart friend summarising the approach. Must be specific to this task's title and notes.
+- "checkpoints": an array of checkpoint objects.
+
+Each checkpoint object must have:
 - "checkpoint_type": a short, casual nudge — written the way a friend would say it, not an academic checklist. Keep it under 6 words where possible. Use plain everyday language: no Title Casing every word, no formal verbs like "Finalize", "Conduct", "Execute". IMPORTANT: use the type-specific verbs below — different task types must use different verbs so checkpoints don't look identical. ${config.verbs} Must still be specific to the task title "${taskTitle}" and notes — no generic placeholders.
+- "rationale": one short sentence (max 15 words) explaining WHY this checkpoint matters at this point. Written as a calm nudge, not a command.
 - "checkpoint_number": integer starting at 1
 - "due_date": ISO 8601 timestamp, spaced proportionally between now and the deadline
 - "status": "pending"
 
 Rules:
 - 3-5 checkpoints maximum
-- Checkpoint names MUST reflect the specific task title, task type, and notes — NEVER reuse generic stage names
+- Checkpoint names and rationales MUST reflect the specific task title, task type, and notes — NEVER reuse generic stage names
 - First checkpoint due within 24-48 hours of now
 - Last checkpoint due at least 2 hours before the final deadline
 - Space checkpoints proportionally across the available time

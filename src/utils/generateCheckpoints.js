@@ -20,8 +20,8 @@ import { clampToWorkingHours, validateAndRepairDueDates } from './normaliseDueDa
  * @param {Date}   deadlineDate  - Final deadline as a Date object
  * @param {string} notes         - Optional notes from the user
  *
- * @returns {Promise<Array|null>}
- *   Array of { checkpoint_type, checkpoint_number, due_date, status:'pending' }
+ * @returns {Promise<{planTitle: string, planSummary: string, checkpoints: Array}|null>}
+ *   Object with plan metadata and normalised checkpoints,
  *   or null on any failure (caller falls back to task_templates).
  */
 export async function generateCheckpoints(taskTitle, taskType, deadlineDate, notes, workingHours = { start: 9, end: 21 }) {
@@ -69,13 +69,22 @@ export async function generateCheckpoints(taskTitle, taskType, deadlineDate, not
     let consistentHour = endHour - 1
     if (consistentHour < 0) consistentHour += 24
 
-    return parsed.map((cp, i) => {
+    const { plan_title, plan_summary, checkpoints: rawCheckpoints } = parsed
+
+    // FIX: use rawCheckpoints.length (the array), not parsed.length (the object).
+    // Previously `parsed.length` was always `undefined` because `parsed` is an object
+    // {plan_title, plan_summary, checkpoints}, not an array. This made
+    // `proportionalSlot()` return `new Date(NaN)`, silently breaking the fallback.
+    const totalCheckpoints = rawCheckpoints.length
+
+    const perItemNormalised = rawCheckpoints.map((cp, i) => {
       const rawAiDate = new Date(cp.due_date)
       let aiDate = new Date(cp.due_date)
 
       // Proportional slot helper: evenly spaces checkpoint i within [now, deadline)
+      // FIX: was `parsed.length + 1` (always NaN); now correctly `totalCheckpoints + 1`.
       const proportionalSlot = () =>
-        new Date(now.getTime() + (spanMs * (i + 1)) / (parsed.length + 1))
+        new Date(now.getTime() + (spanMs * (i + 1)) / (totalCheckpoints + 1))
 
       if (spanMs > (36 * 60 * 60 * 1000)) {
         // Long-term task: Fix to consistent working hour
@@ -111,11 +120,28 @@ export async function generateCheckpoints(taskTitle, taskType, deadlineDate, not
 
       return {
         checkpoint_type:   cp.checkpoint_type,
+        rationale:         cp.rationale ?? null,
         checkpoint_number: cp.checkpoint_number ?? i + 1,
         due_date:          aiDate.toISOString(),
         status:            'pending',
       }
     })
+
+    // Final validation pass: enforce strict monotonic ordering and all-before-deadline.
+    // This catches any case where per-item clamping still produces out-of-order dates
+    // (e.g. AI returned checkpoint 4 before checkpoint 3, as in the reported bug).
+    const validatedCheckpoints = validateAndRepairDueDates(
+      perItemNormalised,
+      now,
+      deadlineDate,
+      workingHours
+    )
+
+    return {
+      planTitle:   plan_title,
+      planSummary: plan_summary,
+      checkpoints: validatedCheckpoints,
+    }
   } catch (err) {
     console.warn('[generateCheckpoints] NVIDIA call failed — falling back to templates:', err.message)
     return null

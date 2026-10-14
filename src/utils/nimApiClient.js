@@ -15,14 +15,14 @@
 const NVIDIA_ENDPOINT = '/nvidia-api/chat/completions'
 
 const MODEL_CONFIG = {
-  model:       'meta/llama-3.1-8b-instruct', // fast 8B model, great at JSON
+  model:       'nvidia/nemotron-3.5-lightning-30b-a3b', // Testing lightning variant
   temperature: 0.3,
-  max_tokens:  512,  // 3-5 checkpoints in JSON fits easily under 512 tokens
+  max_tokens:  1024, // Lightning model needs smaller token limits to complete before timeout
   stream:      false,
 }
 
-// NIM can be slow (observed ~26s latency in testing). Allow 45s per attempt.
-const TIMEOUT_MS  = 45_000
+// NIM can be slow. Allow 90s per attempt to prevent premature aborts.
+const TIMEOUT_MS  = 90_000
 
 // Retry config — exponential backoff with jitter
 const MAX_RETRIES           = 3
@@ -88,7 +88,7 @@ async function attemptFetch(prompt, apiKey) {
  * @param {string} prompt  - The fully-formed user message string
  * @param {string} apiKey  - NVIDIA NIM API key (nvapi-…)
  *
- * @returns {Promise<Array>} Parsed JSON array of checkpoint objects
+ * @returns {Promise<{plan_title: string, plan_summary: string, checkpoints: Array}>} Parsed plan object
  * @throws  {Error}         On permanent failure, exhausted retries, malformed JSON,
  *                          or a response that fails structural validation
  */
@@ -158,7 +158,12 @@ export async function callNim(prompt, apiKey) {
 
     // ── Success path ─────────────────────────────────────────────────────────
     const data = await response.json()
-    const raw  = data?.choices?.[0]?.message?.content?.trim()
+
+    // DEBUG — log full response structure to diagnose model-specific formats (remove once stable)
+    console.log('[nimApiClient] Raw response data:', JSON.stringify(data?.choices?.[0]?.message, null, 2))
+
+    // reasoning_content is the model's internal thinking scratchpad — the actual answer is always in content
+    const raw = data?.choices?.[0]?.message?.content?.trim()
     const usage = data?.usage || {}
 
     console.info(JSON.stringify({
@@ -191,10 +196,14 @@ export async function callNim(prompt, apiKey) {
     // Basic structural validation — bail early rather than letting malformed data
     // propagate to the normalisation layer
     if (
-      !Array.isArray(parsed) ||
-      parsed.length === 0    ||
-      !parsed[0].checkpoint_type ||
-      !parsed[0].due_date
+      !parsed ||
+      typeof parsed !== 'object'             ||
+      typeof parsed.plan_title !== 'string'  ||
+      typeof parsed.plan_summary !== 'string'||
+      !Array.isArray(parsed.checkpoints)     ||
+      parsed.checkpoints.length === 0        ||
+      !parsed.checkpoints[0].checkpoint_type ||
+      !parsed.checkpoints[0].due_date
     ) {
       throw new Error(`Unexpected response shape from NIM: ${JSON.stringify(parsed).slice(0, 200)}`)
     }
