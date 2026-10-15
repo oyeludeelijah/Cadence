@@ -17,19 +17,29 @@ function computeMetrics(allTasks) {
   const allCheckpoints = allTasks.flatMap(t => t.checkpoints || [])
   const completed      = allCheckpoints.filter(cp => cp.status === 'completed' && cp.completed_at)
 
+  const now = new Date()
+
+  // Resolved checkpoints: status completed, OR due_date already passed.
+  // Pending future checkpoints must not count.
+  const isResolved = cp => cp.status === 'completed' || (cp.due_date && new Date(cp.due_date) < now)
+
+  // On-time: completed on or before due_date
+  const isOnTime = cp => cp.status === 'completed' && cp.completed_at && cp.due_date && new Date(cp.completed_at) <= new Date(cp.due_date)
+
+  const resolved = allCheckpoints.filter(isResolved)
+  const onTimeCount = resolved.filter(isOnTime).length
+
   // ── Summary stats ──────────────────────────────────────────────────────────
   const totalTasks     = allTasks.length
   const completedTasks = allTasks.filter(t => t.status === 'completed').length
   const totalCPs       = allCheckpoints.length
   const completedCPs   = completed.length
+  const resolvedCPs    = resolved.length
 
-  // On-time: completed_at strictly before due_date
-  const onTimeCount = completed.filter(
-    cp => new Date(cp.completed_at) < new Date(cp.due_date)
-  ).length
-  const onTimeRate = completedCPs > 0
-    ? Math.round((onTimeCount / completedCPs) * 100)
-    : null   // null = not enough data
+  // On-time rate = on-time / resolved
+  const onTimeRate = resolvedCPs > 0
+    ? Math.round((onTimeCount / resolvedCPs) * 100)
+    : null   // null = not enough resolved data
 
   // ── Streak — consecutive active days (desc from today) with ≥1 completion ──
   // An "active day" is any calendar day that falls within at least one task's
@@ -70,18 +80,18 @@ function computeMetrics(allTasks) {
     }
   }
 
-  // ── AI vs Template ─────────────────────────────────────────────────────────
-  const aiCompleted  = completed.filter(cp => cp.ai_generated)
-  const tplCompleted = completed.filter(cp => !cp.ai_generated)
+  // ── AI vs Template (on-time / resolved; n is resolved count) ────────────────
+  const aiResolved  = resolved.filter(cp => cp.ai_generated)
+  const tplResolved = resolved.filter(cp => !cp.ai_generated)
 
-  function onTimeRateFor(group) {
+  function calcOnTimeRate(group) {
     if (group.length === 0) return null
-    const n = group.filter(cp => new Date(cp.completed_at) < new Date(cp.due_date)).length
-    return Math.round((n / group.length) * 100)
+    const onTime = group.filter(isOnTime).length
+    return Math.round((onTime / group.length) * 100)
   }
 
-  const aiOnTimeRate  = onTimeRateFor(aiCompleted)
-  const tplOnTimeRate = onTimeRateFor(tplCompleted)
+  const aiOnTimeRate  = calcOnTimeRate(aiResolved)
+  const tplOnTimeRate = calcOnTimeRate(tplResolved)
 
   // ── Procrastination Index ──────────────────────────────────────────────────
   // Mean of (completed_at − due_date) in hours across all completed checkpoints.
@@ -104,13 +114,14 @@ function computeMetrics(allTasks) {
     completedTasks,
     totalCPs,
     completedCPs,
+    resolvedCPs,
     onTimeRate,
     streak,
     // AI vs Template
     aiOnTimeRate,
     tplOnTimeRate,
-    aiSampleSize:  aiCompleted.length,
-    tplSampleSize: tplCompleted.length,
+    aiSampleSize:  aiResolved.length,
+    tplSampleSize: tplResolved.length,
     // Procrastination
     procrastinationIndex,
     distribution: [
@@ -120,6 +131,149 @@ function computeMetrics(allTasks) {
     ],
     hasEnoughData: completedCPs >= 1,
   }
+}
+
+// ── Inline SVG Line Icons (matching sidebar 2px stroke style) ────────────────
+const IconTasks = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" />
+    <rect x="8" y="2" width="8" height="4" rx="1" ry="1" />
+    <path d="M9 12h6" />
+    <path d="M9 16h6" />
+  </svg>
+)
+
+const IconCheckpoints = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+    <polyline points="22 4 12 14.01 9 11.01" />
+  </svg>
+)
+
+const IconTarget = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <circle cx="12" cy="12" r="10" />
+    <circle cx="12" cy="12" r="6" />
+    <circle cx="12" cy="12" r="2" />
+  </svg>
+)
+
+const IconClock = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <circle cx="12" cy="12" r="10" />
+    <polyline points="12 6 12 12 16 14" />
+  </svg>
+)
+
+const IconFlame = () => (
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z" />
+  </svg>
+)
+
+const IconAlert = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z" />
+    <line x1="12" y1="9" x2="12" y2="13" />
+    <line x1="12" y1="17" x2="12.01" y2="17" />
+  </svg>
+)
+
+const IconChart = () => (
+  <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <line x1="18" y1="20" x2="18" y2="10" />
+    <line x1="12" y1="20" x2="12" y2="4" />
+    <line x1="6" y1="20" x2="6" y2="14" />
+    <line x1="2" y1="20" x2="22" y2="20" />
+  </svg>
+)
+
+// ── Distribution color map ───────────────────────────────────────────────────
+const DIST_COLORS = {
+  early:  'var(--success)',
+  ontime: 'var(--chart-ontime, var(--text-2))',
+  late:   'var(--danger)',
+}
+
+// ── Custom Tooltips (defined outside render to satisfy react-hooks/static-components) ──
+function AiTooltip({ active, payload }) {
+  if (!active || !payload?.length) return null
+  const d = payload[0].payload
+  return (
+    <div className="glass" style={{
+      padding: '10px 14px',
+      borderRadius: 'var(--r-lg)',
+      fontSize: 'var(--text-sm)',
+      minWidth: '150px',
+      boxShadow: '0 8px 24px rgba(0, 0, 0, 0.4)',
+    }}>
+      <p style={{ fontWeight: 700, color: 'var(--text)', marginBottom: '4px' }}>{d.name}</p>
+      <p style={{ color: d.fill, margin: '2px 0', fontWeight: 600 }}>
+        On-time: <strong>{d.n === 0 ? 'No data yet' : `${d.rate}%`}</strong>
+      </p>
+      <p style={{ color: 'var(--text-2)', margin: '2px 0', fontSize: 'var(--text-xs)' }}>
+        Resolved: {d.n} checkpoint{d.n !== 1 ? 's' : ''}
+      </p>
+    </div>
+  )
+}
+
+function DistTooltip({ active, payload }) {
+  if (!active || !payload?.length) return null
+  const d = payload[0].payload
+  return (
+    <div className="glass" style={{
+      padding: '10px 14px',
+      borderRadius: 'var(--r-lg)',
+      fontSize: 'var(--text-sm)',
+      boxShadow: '0 8px 24px rgba(0, 0, 0, 0.4)',
+    }}>
+      <p style={{ fontWeight: 700, color: 'var(--text)', marginBottom: '4px' }}>{d.label}</p>
+      <p style={{ color: DIST_COLORS[d.key] || 'var(--text-2)', margin: 0, fontWeight: 600 }}>
+        {d.count} checkpoint{d.count !== 1 ? 's' : ''}
+      </p>
+    </div>
+  )
+}
+
+// ── ActionSub component (defined outside render to satisfy lint & >= 44px tap target) ──
+function ActionSub({ text, color, taskId, onNavigate }) {
+  if (!taskId) {
+    return (
+      <p style={{
+        fontSize: 'var(--text-xs)',
+        color: color || 'var(--text-2)',
+        margin: 0,
+        lineHeight: 1.4,
+      }}>
+        {text}
+      </p>
+    )
+  }
+  return (
+    <button
+      onClick={() => onNavigate(`/tasks/${taskId}`)}
+      style={{
+        background: 'none',
+        border: 'none',
+        padding: '6px 0',
+        minHeight: '44px',
+        display: 'inline-flex',
+        alignItems: 'center',
+        cursor: 'pointer',
+        fontSize: 'var(--text-xs)',
+        color: color || 'var(--text-2)',
+        margin: 0,
+        textDecoration: 'underline',
+        textAlign: 'left',
+        touchAction: 'manipulation',
+        lineHeight: 1.3,
+      }}
+      aria-label={`${text} for task`}
+    >
+      {text} →
+    </button>
+  )
 }
 
 // ─── AnalyticsPage ────────────────────────────────────────────────────────────
@@ -143,7 +297,7 @@ function AnalyticsPage() {
       if (fetchErr) throw fetchErr
       setAllTasks(data || [])
       setError(null)
-    } catch (err) {
+    } catch {
       setError('Could not load analytics data. Please check your connection.')
     } finally {
       setLoading(false)
@@ -170,8 +324,9 @@ function AnalyticsPage() {
   if (error) {
     return (
       <div style={{ maxWidth: 'var(--container-max)', margin: '0 auto' }}>
-        <div className="alert alert-danger">
-          <span>⚠️</span><span>{error}</span>
+        <div className="alert alert-danger" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <IconAlert />
+          <span>{error}</span>
         </div>
       </div>
     )
@@ -182,36 +337,69 @@ function AnalyticsPage() {
     <div ref={pageRef} style={{ maxWidth: 'var(--container-max)', margin: '0 auto' }}>
       <div className="mesh-gradient" />
 
-      {/* Header */}
-      <header style={{ marginBottom: 'var(--s6)', paddingBottom: 'var(--s4)',
-                       borderBottom: '1px solid var(--border)' }}>
-        <p className="section-eyebrow" style={{ marginBottom: '6px' }}>Insights</p>
-        <h1 style={{ fontSize: 'clamp(22px, 3vw, 32px)', fontWeight: 800,
-                     letterSpacing: '-0.03em', color: 'var(--text)', lineHeight: 1.1 }}>
-          Analytics
-        </h1>
-        <p style={{ color: 'var(--text-2)', fontSize: 'var(--text-sm)', marginTop: '6px' }}>
-          How are your checkpoints performing?
-        </p>
+      {/* Header with integrated Streak Badge */}
+      <header style={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'flex-start',
+        gap: 'var(--s3)',
+        marginBottom: 'var(--s6)',
+        paddingBottom: 'var(--s4)',
+        borderBottom: '1px solid var(--border)',
+        flexWrap: 'wrap',
+      }}>
+        <div>
+          <p className="section-eyebrow" style={{ marginBottom: '6px' }}>Insights</p>
+          <h1 style={{
+            fontSize: 'clamp(22px, 3vw, 32px)',
+            fontWeight: 800,
+            letterSpacing: '-0.03em',
+            color: 'var(--text)',
+            lineHeight: 1.1,
+          }}>
+            Analytics
+          </h1>
+          <p style={{ color: 'var(--text-2)', fontSize: 'var(--text-sm)', marginTop: '6px' }}>
+            How are your checkpoints performing?
+          </p>
+        </div>
+
+        {/* 3. Streak chip inside page header (not floating alone) */}
+        {metrics.streak > 0 && (
+          <div className="badge badge-warning" style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '6px',
+            padding: '6px 12px',
+            fontSize: 'var(--text-xs)',
+            fontWeight: 600,
+            borderRadius: 'var(--r-pill)',
+            marginTop: '4px',
+          }}>
+            <IconFlame />
+            <span>{metrics.streak}-day streak</span>
+          </div>
+        )}
       </header>
 
       {/* Empty state — no tasks yet */}
       {allTasks.length === 0 && (
-        <div className="glass empty-state" style={{ borderRadius: 'var(--r-xl)',
-                                                     maxWidth: '520px', margin: '0 auto' }}>
-          <span className="empty-state-icon">📊</span>
+        <div className="glass empty-state" style={{ borderRadius: 'var(--r-xl)', maxWidth: '520px', margin: '0 auto' }}>
+          <div style={{ color: 'var(--text-2)', marginBottom: 'var(--s3)', display: 'flex', justifyContent: 'center' }}>
+            <IconChart />
+          </div>
           <h3>No data yet</h3>
           <p>Create tasks and complete some checkpoints to see your analytics.</p>
         </div>
       )}
 
-      {/* ── Sections — populated by Chunks 3 & 4 ── */}
+      {/* ── Sections ── */}
       {allTasks.length > 0 && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--s8)' }}>
-          {/* Summary Cards — Chunk 3 */}
+          {/* Summary Cards */}
           <SummaryCards metrics={metrics} allTasks={allTasks} />
 
-          {/* Charts — Chunk 4 */}
+          {/* Charts */}
           <Charts metrics={metrics} />
         </div>
       )}
@@ -224,10 +412,10 @@ function SummaryCards({ metrics, allTasks }) {
   const navigate = useNavigate()
   const {
     totalTasks, completedTasks, completedCPs,
-    onTimeRate, streak, procrastinationIndex,
+    onTimeRate, procrastinationIndex,
   } = metrics
 
-  // Find the active task with the most overdue checkpoints (for prescriptive CTAs)
+  // Find active task with most overdue checkpoints for targeted prescriptive CTA
   const mostAtRiskTask = allTasks
     .filter(t => t.status !== 'completed')
     .map(t => ({
@@ -239,140 +427,129 @@ function SummaryCards({ metrics, allTasks }) {
     .sort((a, b) => b.overdueCount - a.overdueCount)
     .find(t => t.overdueCount > 0)
 
-  // Procrastination display helpers
-  const piAbs    = procrastinationIndex !== null ? Math.abs(procrastinationIndex) : null
-  const piSuffix = procrastinationIndex !== null ? (procrastinationIndex < 0 ? 'h early' : 'h late') : ''
-  const piColor  = procrastinationIndex === null  ? 'var(--text-3)'
-                 : procrastinationIndex < 0        ? 'var(--success, #22c55e)'
-                 :                                   'var(--danger)'
+  // ── Metric Status Thresholds (explicit & commented) ───────────────────────
+  // On-time rate thresholds:
+  // - >= 70%: consistent (var(--success))
+  // - 40% to 69%: room to improve (var(--warning))
+  // - < 40%: struggling / high delinquency (var(--danger))
+  // Primary metric text stays in var(--text); only critical rate (<40%) gets an accent,
+  // preventing the page from shouting in red across every card.
+  const onTimeStatusColor = onTimeRate === null ? 'var(--text-2)'
+                          : onTimeRate >= 70    ? 'var(--success)'
+                          : onTimeRate >= 40    ? 'var(--warning)'
+                          :                       'var(--danger)'
 
-  // On-time rate colour
-  const onTimeColor = onTimeRate === null  ? 'var(--text-3)'
-                    : onTimeRate >= 70     ? 'var(--success, #22c55e)'
-                    : onTimeRate >= 40     ? 'var(--warning, #f59e0b)'
-                    :                        'var(--danger)'
+  // Procrastination Index thresholds (mean completion offset in hours):
+  // - <= -1h: ahead of schedule (var(--success))
+  // - -1h to +4h: normal operating variance (var(--text-2))
+  // - +4h to +12h: moderate delay (var(--warning))
+  // - > +12h: critically late (var(--danger))
+  const piStatusColor = procrastinationIndex === null ? 'var(--text-2)'
+                      : procrastinationIndex <= -1    ? 'var(--success)'
+                      : procrastinationIndex <= 4     ? 'var(--text-2)'
+                      : procrastinationIndex <= 12    ? 'var(--warning)'
+                      :                                 'var(--danger)'
 
-  // Helper: render sub as a button-link when there's an actionable task
-  function ActionSub({ text, color, taskId }) {
-    if (!taskId) return <p style={{ fontSize: 'var(--text-xs)', color, margin: 0 }}>{text}</p>
-    return (
-      <button
-        onClick={() => navigate(`/tasks/${taskId}`)}
-        style={{
-          background: 'none', border: 'none', padding: 0, cursor: 'pointer',
-          fontSize: 'var(--text-xs)', color, margin: 0, textDecoration: 'underline',
-          textAlign: 'left',
-        }}
-      >
-        {text} →
-      </button>
-    )
-  }
+  const piAbs = procrastinationIndex !== null ? Math.abs(procrastinationIndex) : null
 
   const cards = [
     {
-      icon: '📋',
+      icon: <IconTasks />,
       label: 'Total Tasks',
       value: <AnimatedCounter value={totalTasks} />,
       sub: `${completedTasks} completed`,
-      subColor: completedTasks > 0 ? 'var(--success, #22c55e)' : 'var(--text-3)',
+      subColor: completedTasks > 0 ? 'var(--success)' : 'var(--text-2)',
     },
     {
-      icon: '✅',
+      icon: <IconCheckpoints />,
       label: 'Checkpoints Done',
       value: <AnimatedCounter value={completedCPs} />,
       sub: completedCPs === 1 ? '1 checkpoint' : `${completedCPs} checkpoints`,
-      subColor: 'var(--text-3)',
+      subColor: 'var(--text-2)',
     },
     {
-      icon: '🎯',
+      icon: <IconTarget />,
       label: 'On-Time Rate',
-      value: <AnimatedCounter value={onTimeRate} suffix="%" />,
-      sub: onTimeRate === null ? 'complete a checkpoint to start'
-         : onTimeRate >= 70   ? 'great consistency'
-         : onTimeRate >= 40   ? 'room to improve'
-         : mostAtRiskTask     ? `View most at-risk task`
-         :                      'falling behind',
-      subColor: onTimeColor,
-      valueColor: onTimeColor,
-      // Link to most at-risk task when rate is bad
+      value: onTimeRate === null ? '—' : <AnimatedCounter value={onTimeRate} suffix="%" />,
+      sub: onTimeRate === null ? 'No resolved checkpoints yet'
+         : onTimeRate >= 70    ? 'Great consistency'
+         : onTimeRate >= 40    ? 'Room to improve'
+         : mostAtRiskTask      ? 'View most at-risk task'
+         :                       'Falling behind',
+      subColor: onTimeStatusColor,
+      valueColor: onTimeRate !== null && onTimeRate < 40 ? 'var(--danger)' : 'var(--text)',
       actionTaskId: onTimeRate !== null && onTimeRate < 40 ? mostAtRiskTask?.id : null,
     },
     {
-      icon: '⏱️',
+      icon: <IconClock />,
       label: 'Procrastination Index',
-      value: <AnimatedCounter value={piAbs} suffix={piSuffix} decimals={1} />,
-      sub: procrastinationIndex === null ? 'no data yet'
-         : procrastinationIndex < 0      ? 'you\'re ahead of schedule'
+      value: piAbs === null ? (
+        '—'
+      ) : (
+        <span style={{ display: 'inline-flex', alignItems: 'baseline', gap: '3px', whiteSpace: 'nowrap' }}>
+          <AnimatedCounter value={piAbs} decimals={1} />
+          <span style={{ fontSize: 'var(--text-sm)', fontWeight: 500, color: 'var(--text-2)' }}>h</span>
+          <span style={{ fontSize: 'var(--text-xs)', fontWeight: 600, color: piStatusColor, marginLeft: '3px' }}>
+            {procrastinationIndex < 0 ? 'early' : 'late'}
+          </span>
+        </span>
+      ),
+      sub: procrastinationIndex === null ? 'No data yet'
+         : procrastinationIndex < 0      ? "You're ahead of schedule"
          : mostAtRiskTask                ? 'View task needing attention'
-         :                                 'you\'re running late',
-      subColor: piColor,
-      valueColor: piColor,
-      actionTaskId: procrastinationIndex !== null && procrastinationIndex > 1 ? mostAtRiskTask?.id : null,
+         :                                 "You're running late",
+      subColor: piStatusColor,
+      valueColor: 'var(--text)',
+      actionTaskId: procrastinationIndex !== null && procrastinationIndex > 4 ? mostAtRiskTask?.id : null,
     },
   ]
 
   return (
     <section>
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
-        gap: 'var(--s3)',
-      }}>
+      <div className="analytics-stats-grid">
         {cards.map(card => (
           <div
             key={card.label}
-            className="glass"
-            style={{
-              padding: 'var(--s4)',
-              borderRadius: 'var(--r-xl)',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: 'var(--s1)',
-              borderTop: '1px solid rgba(99,102,241,0.15)',
-            }}
+            className="glass analytics-stat-card"
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span style={{ fontSize: '18px' }}>{card.icon}</span>
-              <span style={{ fontSize: 'var(--text-xs)', color: 'var(--text-3)',
-                             fontWeight: 600, textTransform: 'uppercase',
-                             letterSpacing: '0.06em' }}>
+              <span style={{ color: 'var(--text-2)', display: 'inline-flex' }}>{card.icon}</span>
+              <span style={{
+                fontSize: 'var(--text-xs)',
+                color: 'var(--text-2)',
+                fontWeight: 600,
+                textTransform: 'uppercase',
+                letterSpacing: '0.06em',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap',
+              }}>
                 {card.label}
               </span>
             </div>
-            <p style={{
-              fontSize: 'clamp(26px, 4vw, 36px)',
-              fontWeight: 800,
-              letterSpacing: '-0.03em',
-              color: card.valueColor ?? 'var(--text)',
-              margin: '4px 0 2px',
-              lineHeight: 1,
+            <div style={{
+              fontSize: 'clamp(20px, 3.2vw, 28px)',
+              fontWeight: 700,
+              letterSpacing: '-0.02em',
+              color: card.valueColor || 'var(--text)',
+              margin: '2px 0',
+              lineHeight: 1.2,
+              display: 'flex',
+              alignItems: 'baseline',
+              gap: '4px',
+              whiteSpace: 'nowrap',
             }}>
               {card.value}
-            </p>
-            <ActionSub text={card.sub} color={card.subColor} taskId={card.actionTaskId} />
+            </div>
+            <ActionSub
+              text={card.sub}
+              color={card.subColor}
+              taskId={card.actionTaskId}
+              onNavigate={navigate}
+            />
           </div>
         ))}
       </div>
-
-      {/* Streak badge — only shown when streak > 0 */}
-      {streak > 0 && (
-        <div style={{
-          marginTop: 'var(--s3)',
-          display: 'inline-flex',
-          alignItems: 'center',
-          gap: '8px',
-          background: 'rgba(245,158,11,0.12)',
-          border: '1px solid rgba(245,158,11,0.3)',
-          borderRadius: 'var(--r-full)',
-          padding: '6px 14px',
-          fontSize: 'var(--text-sm)',
-          fontWeight: 600,
-          color: 'var(--warning, #f59e0b)',
-        }}>
-          🔥 {streak}-day streak
-        </div>
-      )}
     </section>
   )
 }
@@ -393,67 +570,35 @@ function Charts({ metrics }) {
       name: 'AI Generated',
       rate: aiOnTimeRate ?? 0,
       n:    aiSampleSize,
-      fill: 'var(--accent, #6366f1)',
+      fill: 'var(--chart-1, #8EB69B)',
     },
     {
       name: 'Template',
       rate: tplOnTimeRate ?? 0,
       n:    tplSampleSize,
-      fill: 'var(--success, #22c55e)',
+      fill: 'var(--chart-2, #4ade80)',
     },
   ]
 
-  // ── Distribution colours ───────────────────────────────────────────────────
-  const distColors = {
-    early:  'var(--success, #22c55e)',
-    ontime: 'var(--accent,  #6366f1)',
-    late:   'var(--danger,  #ef4444)',
-  }
-
-  // ── Procrastination insight sentence ──────────────────────────────────────
-  function insightSentence() {
-    if (procrastinationIndex === null) return null
+  // Procrastination insight sentence (plain language, no emoji)
+  let insightSentence = null
+  if (procrastinationIndex !== null && completedCPs > 0) {
     const early = distribution.find(d => d.key === 'early')?.count ?? 0
-    const total = completedCPs
-    const pct   = total > 0 ? Math.round((early / total) * 100) : 0
-    if (procrastinationIndex < -1) return `You complete ${pct}% of checkpoints early — you're ahead of schedule. 🎉`
-    if (procrastinationIndex > 1)  return `You tend to run late. Focus on completing checkpoints a day early.`
-    return `You're generally on time. Keep it up!`
-  }
-
-  // ── Custom tooltip for AI vs Template ─────────────────────────────────────
-  function AiTooltip({ active, payload }) {
-    if (!active || !payload?.length) return null
-    const d = payload[0].payload
-    return (
-      <div className="glass" style={{ padding: '10px 14px', borderRadius: 'var(--r-lg)',
-                                       fontSize: 'var(--text-sm)', minWidth: '140px' }}>
-        <p style={{ fontWeight: 700, color: 'var(--text)', marginBottom: '4px' }}>{d.name}</p>
-        <p style={{ color: d.fill, margin: '2px 0' }}>On-time: <strong>{d.n === 0 ? '—' : `${d.rate}%`}</strong></p>
-        <p style={{ color: 'var(--text-3)', margin: '2px 0' }}>Sample: {d.n} checkpoint{d.n !== 1 ? 's' : ''}</p>
-      </div>
-    )
-  }
-
-  // ── Custom tooltip for distribution ───────────────────────────────────────
-  function DistTooltip({ active, payload }) {
-    if (!active || !payload?.length) return null
-    const d = payload[0].payload
-    return (
-      <div className="glass" style={{ padding: '10px 14px', borderRadius: 'var(--r-lg)',
-                                       fontSize: 'var(--text-sm)' }}>
-        <p style={{ fontWeight: 700, color: 'var(--text)', marginBottom: '4px' }}>{d.label}</p>
-        <p style={{ color: distColors[d.key], margin: 0 }}>{d.count} checkpoint{d.count !== 1 ? 's' : ''}</p>
-      </div>
-    )
+    const pct   = Math.round((early / completedCPs) * 100)
+    if (procrastinationIndex < -1) {
+      insightSentence = `You complete ${pct}% of checkpoints early — you're consistently ahead of schedule.`
+    } else if (procrastinationIndex > 1) {
+      insightSentence = `You tend to run late on checkpoints. Aim to start milestones a day earlier.`
+    } else {
+      insightSentence = `You are generally on time. Your checkpoint pacing is balanced.`
+    }
   }
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--s6)' }}>
 
       {/* ── AI vs Template ── */}
-      <section className="glass" style={{ borderRadius: 'var(--r-xl)', padding: 'var(--s5)',
-                                           borderTop: '1px solid rgba(99,102,241,0.2)' }}>
+      <section className="glass analytics-chart-card">
         <div style={{ marginBottom: 'var(--s4)' }}>
           <p className="section-eyebrow" style={{ marginBottom: '4px' }}>Effectiveness</p>
           <h2 style={{ fontSize: 'var(--text-lg)', fontWeight: 700, color: 'var(--text)', margin: 0 }}>
@@ -465,8 +610,10 @@ function Charts({ metrics }) {
         </div>
 
         {!hasAiVsTemplate ? (
-          <div style={{ textAlign: 'center', padding: 'var(--s8) 0', color: 'var(--text-3)' }}>
-            <p style={{ fontSize: '2rem', margin: '0 0 8px' }}>📊</p>
+          <div style={{ textAlign: 'center', padding: 'var(--s8) 0', color: 'var(--text-2)' }}>
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 'var(--s2)' }}>
+              <IconChart />
+            </div>
             <p style={{ fontWeight: 600 }}>No completed checkpoints yet</p>
             <p style={{ fontSize: 'var(--text-sm)', marginTop: '4px' }}>
               Mark some checkpoints complete to see this chart.
@@ -475,35 +622,68 @@ function Charts({ metrics }) {
         ) : (
           <>
             <ResponsiveContainer width="100%" height={220}>
-              <BarChart data={aiVsTemplateData} margin={{ top: 16, right: 16, bottom: 0, left: 0 }}
-                        barCategoryGap="35%">
-                <CartesianGrid strokeDasharray="3 3" stroke="var(--border, rgba(255,255,255,0.08))" vertical={false} />
-                <XAxis dataKey="name" tick={{ fill: 'var(--text-2)', fontSize: 12 }}
-                       axisLine={false} tickLine={false} />
-                <YAxis domain={[0, 100]} tickFormatter={v => `${v}%`}
-                       tick={{ fill: 'var(--text-3)', fontSize: 11 }}
-                       axisLine={false} tickLine={false} width={38} />
-                <Tooltip content={<AiTooltip />} cursor={{ fill: 'rgba(255,255,255,0.04)' }} />
-                <Bar dataKey="rate" radius={[6, 6, 0, 0]} maxBarSize={80}>
+              <BarChart
+                data={aiVsTemplateData}
+                margin={{ top: 20, right: 16, bottom: 4, left: 0 }}
+                barCategoryGap="35%"
+              >
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--chart-grid, var(--border))" vertical={false} />
+                <XAxis
+                  dataKey="name"
+                  tick={{ fill: 'var(--text-2)', fontSize: 12 }}
+                  axisLine={false}
+                  tickLine={false}
+                  interval={0}
+                />
+                <YAxis
+                  domain={[0, 100]}
+                  tickFormatter={v => `${v}%`}
+                  tick={{ fill: 'var(--text-2)', fontSize: 11 }}
+                  axisLine={false}
+                  tickLine={false}
+                  width={40}
+                />
+                <Tooltip content={<AiTooltip />} cursor={{ fill: 'var(--chart-cursor, rgba(255,255,255,0.04))' }} />
+                <Bar dataKey="rate" radius={[6, 6, 0, 0]} maxBarSize={70} minPointSize={6}>
                   {aiVsTemplateData.map(entry => (
-                    <Cell key={entry.name} fill={entry.fill} fillOpacity={entry.n === 0 ? 0.25 : 0.85} />
+                    <Cell
+                      key={entry.name}
+                      fill={entry.n === 0 ? 'transparent' : entry.fill}
+                      fillOpacity={entry.n === 0 ? 0 : entry.rate === 0 ? 0.6 : 0.85}
+                    />
                   ))}
-                  <LabelList dataKey="rate" position="top"
-                             formatter={v => v === 0 ? '—' : `${v}%`}
-                             style={{ fill: 'var(--text-2)', fontSize: 12, fontWeight: 600 }} />
+                  <LabelList
+                    dataKey="rate"
+                    position="top"
+                    content={(props) => {
+                      const { x, y, width, index } = props
+                      const item = aiVsTemplateData[index]
+                      if (!item) return null
+                      const text = item.n === 0 ? 'No data yet' : `${item.rate}%`
+                      const isZero = item.n > 0 && item.rate === 0
+                      return (
+                        <text
+                          x={x + width / 2}
+                          y={isZero ? y - 6 : y - 8}
+                          fill="var(--text-2)"
+                          textAnchor="middle"
+                          fontSize={12}
+                          fontWeight={600}
+                        >
+                          {text}
+                        </text>
+                      )
+                    }}
+                  />
                 </Bar>
               </BarChart>
             </ResponsiveContainer>
 
             {/* Legend */}
-            <div style={{ display: 'flex', gap: 'var(--s4)', marginTop: 'var(--s3)',
-                          flexWrap: 'wrap', justifyContent: 'center' }}>
+            <div style={{ display: 'flex', gap: 'var(--s4)', marginTop: 'var(--s3)', flexWrap: 'wrap', justifyContent: 'center' }}>
               {aiVsTemplateData.map(d => (
-                <div key={d.name} style={{ display: 'flex', alignItems: 'center',
-                                            gap: '6px', fontSize: 'var(--text-xs)',
-                                            color: 'var(--text-2)' }}>
-                  <span style={{ width: 10, height: 10, borderRadius: 2,
-                                  background: d.fill, display: 'inline-block' }} />
+                <div key={d.name} style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: 'var(--text-xs)', color: 'var(--text-2)' }}>
+                  <span style={{ width: 10, height: 10, borderRadius: 2, background: d.fill, display: 'inline-block' }} />
                   {d.name} (n={d.n})
                 </div>
               ))}
@@ -513,8 +693,7 @@ function Charts({ metrics }) {
       </section>
 
       {/* ── Procrastination Distribution ── */}
-      <section className="glass" style={{ borderRadius: 'var(--r-xl)', padding: 'var(--s5)',
-                                           borderTop: '1px solid rgba(99,102,241,0.2)' }}>
+      <section className="glass analytics-chart-card">
         <div style={{ marginBottom: 'var(--s4)' }}>
           <p className="section-eyebrow" style={{ marginBottom: '4px' }}>Timing</p>
           <h2 style={{ fontSize: 'var(--text-lg)', fontWeight: 700, color: 'var(--text)', margin: 0 }}>
@@ -526,8 +705,10 @@ function Charts({ metrics }) {
         </div>
 
         {!hasDist ? (
-          <div style={{ textAlign: 'center', padding: 'var(--s8) 0', color: 'var(--text-3)' }}>
-            <p style={{ fontSize: '2rem', margin: '0 0 8px' }}>⏱️</p>
+          <div style={{ textAlign: 'center', padding: 'var(--s8) 0', color: 'var(--text-2)' }}>
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 'var(--s2)' }}>
+              <IconClock />
+            </div>
             <p style={{ fontWeight: 600 }}>No completed checkpoints yet</p>
             <p style={{ fontSize: 'var(--text-sm)', marginTop: '4px' }}>
               Complete some checkpoints to see your timing patterns.
@@ -536,33 +717,54 @@ function Charts({ metrics }) {
         ) : (
           <>
             <ResponsiveContainer width="100%" height={200}>
-              <BarChart data={distribution} margin={{ top: 16, right: 16, bottom: 0, left: 0 }}
-                        barCategoryGap="35%">
-                <CartesianGrid strokeDasharray="3 3" stroke="var(--border, rgba(255,255,255,0.08))" vertical={false} />
-                <XAxis dataKey="label" tick={{ fill: 'var(--text-2)', fontSize: 12 }}
-                       axisLine={false} tickLine={false} />
-                <YAxis allowDecimals={false} tick={{ fill: 'var(--text-3)', fontSize: 11 }}
-                       axisLine={false} tickLine={false} width={28} />
-                <Tooltip content={<DistTooltip />} cursor={{ fill: 'rgba(255,255,255,0.04)' }} />
-                <Bar dataKey="count" radius={[6, 6, 0, 0]} maxBarSize={80}>
+              <BarChart
+                data={distribution}
+                margin={{ top: 20, right: 16, bottom: 4, left: 0 }}
+                barCategoryGap="35%"
+              >
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--chart-grid, var(--border))" vertical={false} />
+                <XAxis
+                  dataKey="label"
+                  tick={{ fill: 'var(--text-2)', fontSize: 11 }}
+                  axisLine={false}
+                  tickLine={false}
+                  interval={0}
+                />
+                <YAxis
+                  allowDecimals={false}
+                  tick={{ fill: 'var(--text-2)', fontSize: 11 }}
+                  axisLine={false}
+                  tickLine={false}
+                  width={28}
+                />
+                <Tooltip content={<DistTooltip />} cursor={{ fill: 'var(--chart-cursor, rgba(255,255,255,0.04))' }} />
+                <Bar dataKey="count" radius={[6, 6, 0, 0]} maxBarSize={70} minPointSize={4}>
                   {distribution.map(entry => (
-                    <Cell key={entry.key} fill={distColors[entry.key]} fillOpacity={0.85} />
+                    <Cell key={entry.key} fill={DIST_COLORS[entry.key] || 'var(--text-2)'} fillOpacity={entry.count === 0 ? 0.3 : 0.85} />
                   ))}
-                  <LabelList dataKey="count" position="top"
-                             style={{ fill: 'var(--text-2)', fontSize: 12, fontWeight: 600 }} />
+                  <LabelList
+                    dataKey="count"
+                    position="top"
+                    style={{ fill: 'var(--text-2)', fontSize: 12, fontWeight: 600 }}
+                  />
                 </Bar>
               </BarChart>
             </ResponsiveContainer>
 
             {/* Insight sentence */}
-            {insightSentence() && (
-              <p style={{ marginTop: 'var(--s3)', fontSize: 'var(--text-sm)',
-                          color: 'var(--text-2)', textAlign: 'center',
-                          padding: '10px 16px',
-                          background: 'rgba(99,102,241,0.06)',
-                          borderRadius: 'var(--r-lg)',
-                          border: '1px solid rgba(99,102,241,0.12)' }}>
-                {insightSentence()}
+            {insightSentence && (
+              <p style={{
+                marginTop: 'var(--s4)',
+                fontSize: 'var(--text-sm)',
+                color: 'var(--text-2)',
+                textAlign: 'center',
+                padding: '10px 16px',
+                background: 'rgba(35, 83, 71, 0.12)',
+                borderRadius: 'var(--r-lg)',
+                border: '1px solid var(--border)',
+                lineHeight: 1.5,
+              }}>
+                {insightSentence}
               </p>
             )}
           </>
@@ -571,6 +773,5 @@ function Charts({ metrics }) {
     </div>
   )
 }
-
 
 export default AnalyticsPage

@@ -33,6 +33,13 @@
   --danger:       #ef4444;
   --danger-dim:   rgba(239, 68, 68, 0.12);
 
+  /* Chart Tokens */
+  --chart-1:          #8EB69B;   /* sage — AI Generated */
+  --chart-2:          #4ade80;   /* emerald — Template */
+  --chart-ontime:     #8EB69B;
+  --chart-grid:       rgba(218, 241, 222, 0.08);
+  --chart-cursor:     rgba(255, 255, 255, 0.04);
+
   /* Legacy aliases (backwards compatibility) */
   --bg-color:         var(--bg);
   --text-color:       var(--text);
@@ -915,7 +922,15 @@ input, select, textarea {
   --accent-dim:  rgba(35, 83, 71, 0.10);
   --success-dim: rgba(74, 222, 128, 0.10);
   --warning-dim: rgba(245, 158, 11, 0.10);
+  --danger:       #dc2626;   /* red 600 — passes 4.5:1 on light surface */
   --danger-dim:  rgba(239, 68, 68, 0.10);
+
+  /* Chart Tokens */
+  --chart-1:      #235347;   /* deep forest — AI Generated */
+  --chart-2:      #16a34a;   /* vibrant green — Template */
+  --chart-ontime: #235347;
+  --chart-grid:   rgba(5, 31, 32, 0.08);
+  --chart-cursor: rgba(0, 0, 0, 0.04);
   --glass-bg:    rgba(255, 255, 255, 0.70);
   --glass-border: rgba(5, 31, 32, 0.08);
   --card-shadow: 0 4px 24px rgba(5, 31, 32, 0.08);
@@ -2193,6 +2208,29 @@ input, select, textarea {
   background: rgba(240, 245, 242, 0.70) !important;
   border-color: rgba(5, 31, 32, 0.05) !important;
 }
+
+/* ── Analytics Page Components ─────────────────────────────────────────────── */
+.analytics-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--s3);
+}
+
+.analytics-stat-card {
+  padding: var(--s4);
+  border-radius: var(--r-xl);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  border-top: 1px solid var(--border-2);
+}
+
+.analytics-chart-card {
+  border-radius: var(--r-xl);
+  padding: var(--s5);
+  border-top: 1px solid var(--border-2);
+}
+
 
 
 
