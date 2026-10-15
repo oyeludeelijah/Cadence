@@ -142,7 +142,12 @@ function AuthPage() {
       <div className="auth-device-frame">
 
         {/* LEFT PANEL — illustrated scene */}
-        <div className="auth-left" />
+        <div className="auth-left">
+          <div className="auth-left-overlay">
+            <p className="auth-overlay-label">No more guessing</p>
+            <p className="auth-overlay-statement">Every deadline becomes a plan. Every plan becomes checkpoints.</p>
+          </div>
+        </div>
 
         {/* RIGHT PANEL — auth form */}
         <div className="auth-right">

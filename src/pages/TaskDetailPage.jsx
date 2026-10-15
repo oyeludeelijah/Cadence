@@ -528,9 +528,22 @@ function TaskDetailPage() {
 
       {/* ── Checkpoints ──────────────────────────────────────────────────────── */}
       <div>
-        <h2 style={{ fontSize: 'var(--text-lg)', fontWeight: 600, marginBottom: 'var(--s4)', color: 'var(--text)', letterSpacing: '-0.01em' }}>
-          Checkpoints
-        </h2>
+        {task.plan_title ? (
+          <div style={{ marginBottom: 'var(--s4)' }}>
+            <h2 style={{ fontSize: 'var(--text-lg)', fontWeight: 600, color: 'var(--text)', letterSpacing: '-0.01em', marginBottom: '4px' }}>
+              {task.plan_title}
+            </h2>
+            {task.plan_summary && (
+              <p style={{ fontSize: 'var(--text-sm)', color: 'var(--text-2)', margin: 0 }}>
+                {task.plan_summary}
+              </p>
+            )}
+          </div>
+        ) : (
+          <h2 style={{ fontSize: 'var(--text-lg)', fontWeight: 600, marginBottom: 'var(--s4)', color: 'var(--text)', letterSpacing: '-0.01em' }}>
+            Checkpoints
+          </h2>
+        )}
 
         {checkpoints.length === 0 ? (
           <p style={{ color: 'var(--text-3)', fontSize: 'var(--text-sm)', margin: 0 }}>

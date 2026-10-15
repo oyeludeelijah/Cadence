@@ -1,136 +1,73 @@
 # AI Accountability System 🎯
 
-> **Note:** This is a work-in-progress demo for my final year project supervisors. Core functionality is complete — including AI-powered checkpoint generation.
+A web app that helps students stop leaving things to the last minute — by breaking down big assignments into AI-generated, time-bound checkpoints and actually holding them to it.
 
-## What This Is
+## Description
 
-This is my attempt at solving a problem every student faces: **procrastination and poor task management**. Instead of just building another to-do list app, I've created an AI-powered system that breaks down big academic assignments into manageable, time-bound checkpoints and holds you accountable.
+Most task management apps just give you a list. This one gives you a plan. You add a task — say, "Write a 3000-word history essay" — set a deadline, and the system calls an AI model (Meta's Llama 3.1 via NVIDIA NIM) to generate a realistic checkpoint roadmap tailored to your task type and timeline. Each checkpoint has a due date, a status, and a purpose. If you fall behind, it flags it. If you try to mark something done by accident, you've got 10 seconds to take it back.
 
-Think of it as a really organised study partner who plans your essay *before* the night before it's due — except it's a web app, and it runs on a genuine AI model.
+Built as my final year project, the core question I'm exploring is whether AI-assisted task decomposition can meaningfully reduce procrastination — compared to just writing a to-do list yourself. The system tracks completion rates, urgency patterns, and whether AI-generated plans actually outperform template-based ones. All the data lives in a Supabase backend with proper row-level security, so users only ever see their own stuff.
 
----
+It's a full-stack app: React 19 on the frontend, Supabase for auth/database/edge functions, GSAP for animations, Recharts for the analytics dashboard, and automated email reminders sent via Resend on an hourly pg_cron schedule.
 
-## Current Features ✨
+## Getting Started
 
-### 1. **AI-Powered Task Breakdown** *(New)*
-- Create a task (e.g. "Write 3000-word history essay")
-- The system calls an AI model (Meta's Llama 3.1 via NVIDIA NIM) with your title, task type, deadline, and notes
-- Llama generates a contextual checkpoint roadmap in 2–5 seconds
-- If the AI call fails for any reason, it silently falls back to a Supabase template table — task creation never breaks
-- Tasks with AI-generated checkpoints are marked with an **AI ✨** badge on the task list and detail pages
+### Dependencies
 
-### 2. **Smart Task Scheduling**
-- Checkpoints are spaced proportionally across your available time
-- Automatically adjusted to reasonable working hours (9 AM–9 PM)
-- Tight-deadline mode: if the deadline is less than 24 hours away, only one checkpoint is generated to avoid impossible timings
+- Node.js v18 or later
+- npm
+- A [Supabase](https://supabase.com) project (free tier is fine)
+- An [NVIDIA NIM API key](https://build.nvidia.com) — free to get, just sign up and grab one from any model page
+- A [Resend](https://resend.com) account (only needed if you want the email reminder feature)
+- Runs on Windows, macOS, or Linux — no OS-specific quirks
 
-### 3. **4-State Status System**
-A color-coded system that tells you exactly where you stand:
-- 🟢 **Completed** — Done!
-- 🔵 **Pending** — On track, you have time
-- 🟠 **Urgent** — Less than 24 hours left
-- 🔴 **Overdue** — Past due and not complete
+### Installing
 
-### 4. **Edit Task Management** *(New)*
-- Securely update task titles, types, deadlines, and notes
-- Meta-only updates: system preserves your existing checkpoint progress — no messy regeneration
-- Smart date validation: handles local timezones correctly and prevents past-deadlines
+Clone the repo and install dependencies:
 
-### 5. **Accountability Features**
-- **10-Second Undo Window**: Marked something complete by accident? You have 10 seconds to undo before it locks in permanently. This timer **survives page refreshes** via `sessionStorage`.
-- **Visual Progress Tracking**: Progress bar showing completed vs. remaining checkpoints per task
-- **Overdue Warnings**: Prominent banners you can't ignore
-
-### 6. **User Authentication & Security**
-- **Secure Sign In/Up**: Full authentication system using Supabase Auth
-- **Row-Level Security (RLS)**: Users can only see and modify their own tasks and checkpoints
-- **Data Integrity**: SQL check constraints ensure valid task types, statuses, and non-empty titles
-
-### 7. **Refined User Experience**
-- Mobile responsive (768px breakpoint) with **bottom-sheet interaction patterns** for new tasks
-- Loading spinners and skeleton states for all async operations
-- Fast, snappy animations powered by **GSAP** (choreographed modals, staggered checkpoint entrances, and dynamic number counters)
-- Dark/light mode with anti-FOUC (no flash on load)
-- Real-time connection status indicator
-
-### 8. **Automated Reminders** *(New)*
-- **Smart Triggers:** Edge Functions check every hour via `pg_cron` for checkpoints due within 24 hours or that are overdue.
-- **Idempotent Delivery:** The system tracks which emails have already been sent to prevent flooding users' inboxes.
-- **Reliable Dispatch:** Delivered securely via the Resend API.
-
-### 9. **Analytics Dashboard** *(New)*
-- **Summary Metrics**: Track total completed tasks, checkpoints, on-time completion rate, and completion streaks.
-- **AI Effectiveness**: Compare the on-time rate of AI-generated checkpoints vs. template fallbacks.
-- **Procrastination Index**: Measure how early or late you typically complete checkpoints, with visual distribution buckets.
-- **Visualisations**: Fully responsive data visualisations built with Recharts.
-
-### 10. **Premium & Settings Ecosystem** *(New)*
-- **Custom Working Hours**: Adjust when checkpoints are scheduled (e.g. 9 AM–9 PM).
-- **Data Export**: Export your task data as JSON.
-- **Payment Integration**: Stripe callback polling functionality for premium upgrades.
-- **Admin Dashboard**: System logging and observability for administrators.
-
----
-
-## Tech Stack 🛠️
-
-| Layer | Technology |
-|---|---|
-| Frontend | React 19.2.0 + Vite 7.3.1 |
-| Routing | React Router DOM 7.13.0 |
-| Backend / DB | Supabase (PostgreSQL, PostgREST, Edge Functions, pg_cron) |
-| Styling | Vanilla CSS — custom design system in `src/index.css` |
-| Animations | GSAP 3.x |
-| Charts | Recharts 3.x |
-| AI | NVIDIA NIM API — `meta/llama-3.1-8b-instruct` via plain `fetch` |
-| Email Service | Resend API |
-
-Core app uses pure Vanilla CSS. Landing pages use Tailwind CSS v4. No external state management (pure hooks).
-
----
-
-## How to Run This Thing
-
-### 1. Clone the repo
 ```bash
 git clone https://github.com/oyeludeelijah/elijah-fyp.git
-cd "Final year project"
-```
-
-### 2. Install dependencies
-```bash
+cd elijah-fyp
 npm install
 ```
 
-### 3. Set up environment variables
-Create a `.env` file in the root directory:
+Create a `.env` file in the root directory with your credentials:
+
 ```
 VITE_SUPABASE_URL=your_supabase_project_url
 VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
 VITE_NVIDIA_API_KEY=your_nvidia_nim_api_key
 ```
 
-- **Supabase credentials**: Get from your [Supabase Dashboard](https://app.supabase.com)
-- **NVIDIA NIM API key**: Get for free from [build.nvidia.com](https://build.nvidia.com) → any model page → "Get API Key"
-- **Note for supervisors**: Contact me directly if you need access to the demo database credentials.
+You'll also need the following tables set up in your Supabase project: `tasks`, `checkpoints`, `task_templates`, `subscriptions`, and `system_logs`. The schema is documented in detail below in the [Database section](#database-setup).
 
-### 4. Run the dev server
+> **Supervisors:** If you need access to the demo database credentials, just reach out directly — I can share a read-only key.
+
+### Executing the Program
+
+Start the development server:
+
 ```bash
 npm run dev
 ```
 
-### 5. Open your browser
-Go to `http://localhost:5173` (may use `5174` if the port is already in use)
+Then open your browser and go to:
 
-> **Note on the AI proxy:** The app uses a Vite dev-server proxy to forward AI requests to NVIDIA NIM without CORS issues. This is configured in `vite.config.js` and works automatically — no extra setup needed.
+```
+http://localhost:5173
+```
+
+(It may use port `5174` if `5173` is already taken — Vite will tell you in the terminal.)
+
+The Vite dev server automatically proxies AI requests to NVIDIA NIM, so you don't need to configure anything extra for the AI feature to work locally.
 
 ---
 
-## Database Setup 📊
+## Database Setup
 
-You'll need these tables in Supabase:
+Here's the schema you need in Supabase. RLS should be enabled on `tasks` and `checkpoints`.
 
-### `tasks`
+**`tasks`**
 | Column | Type | Notes |
 |---|---|---|
 | `id` | uuid | primary key |
@@ -142,7 +79,7 @@ You'll need these tables in Supabase:
 | `status` | text | `'active'` \| `'completed'` |
 | `created_at` | timestamptz | |
 
-### `checkpoints`
+**`checkpoints`**
 | Column | Type | Notes |
 |---|---|---|
 | `id` | uuid | primary key |
@@ -152,110 +89,65 @@ You'll need these tables in Supabase:
 | `due_date` | timestamptz | |
 | `status` | text | `'pending'` \| `'completed'` |
 | `completed_at` | timestamptz | nullable |
-| `created_at` | timestamptz | |
-| `ai_generated` | boolean | default `false` — set to `true` when AI generates the checkpoint |
-| `reminder_sent_urgent` | boolean | default `false` — prevents edge function from repeatedly emailing |
-| `reminder_sent_overdue` | boolean | default `false` — prevents edge function from repeatedly emailing |
+| `ai_generated` | boolean | default `false` |
+| `reminder_sent_urgent` | boolean | default `false` |
+| `reminder_sent_overdue` | boolean | default `false` |
 
-### `task_templates` *(fallback only — do not delete)*
-| Column | Type | Notes |
-|---|---|---|
-| `id` | uuid | primary key |
-| `task_type` | text | |
-| `checkpoint_sequence` | jsonb | Array of checkpoint definitions |
+**`task_templates`** — fallback only, do not delete  
+**`subscriptions`** — tracks Stripe subscription status  
+**`system_logs`** — used by the admin dashboard
 
-### `subscriptions`
-| Column | Type | Notes |
-|---|---|---|
-| `id` | uuid | primary key |
-| `user_id` | uuid | FK → auth.users(id) |
-| `status` | text | e.g. `'active'` |
-| `current_period_end` | timestamptz | |
-
-### `system_logs`
-| Column | Type | Notes |
-|---|---|---|
-| `id` | uuid | primary key |
-| `created_at` | timestamptz | |
-| `event` | text | |
-
-**No cascade deletes** — the app manually deletes checkpoints before the parent task.
-**RLS is enabled** — users can only see and manage their own data. Auth uses Supabase email/password.
+No cascade deletes — the app manually deletes checkpoints before removing a parent task.
 
 ---
 
-## Project Structure 📁
+## Help
 
-```
-src/
-├── App.jsx
-├── index.css                  # Full design system for core app
-├── supabaseClient.js
-├── contexts/
-│   └── AuthContext.jsx        # Singleton auth state provider
-├── pages/
-│   ├── LandingPage.jsx        # Public landing page (Tailwind CSS)
-│   ├── AuthPage.jsx           # Sign In / Sign Up page
-│   ├── TaskListPage.jsx       # Home — task list, grouping, urgency sections
-│   ├── TaskDetailPage.jsx     # Individual task — checkpoints, undo, progress
-│   ├── AnalyticsPage.jsx      # Metrics and Recharts visualisations
-│   ├── SettingsPage.jsx       # User settings and data export
-│   ├── AdminDashboard.jsx     # System intelligence logs
-│   ├── PaymentCallbackPage.jsx# Stripe subscription callback
-│   └── ResetPasswordPage.jsx  # Password reset flow
-├── components/
-│   ├── landing/               # Tailwind components for public pages
-│   ├── CreateTask.jsx         # Task creation form with AI integration
-│   ├── EditTask.jsx           # Task edit form (metadata only)
-│   ├── CheckpointCard.jsx     # Visual component for a checkpoint
-│   ├── TaskCard.jsx           # Visual component for a task preview
-│   ├── OverdueResolutionModal.jsx # Handle overdue tasks
-│   └── DeleteConfirmModal.jsx # Confirmation modal for task deletion
-├── hooks/
-│   ├── useAuth.js             # Consumes AuthContext
-│   ├── useReveal.js           # Intersection Observer scroll-reveal hook
-│   └── useTheme.js            # Dark/light mode hook with anti-FOUC
-└── utils/
-    ├── buildCheckpointPrompt.js # Logic for crafting AI prompts
-    ├── checkpointHelpers.js   # Status logic (getCheckpointStatus, etc.)
-    ├── generateCheckpoints.js # AI checkpoint generation orchestration
-    ├── normaliseDueDates.js   # Binds dates within working hours
-    └── nimApiClient.js        # NVIDIA NIM API client with retry and fallback logic
+**The AI isn't generating checkpoints.**  
+Check that your `VITE_NVIDIA_API_KEY` is set correctly in `.env` and that the dev server was restarted after you added it. The app will silently fall back to template-based checkpoints if the API key is missing or the call fails — so tasks will still be created, they just won't be AI-generated.
 
-vite.config.js                 # Dev proxy: /nvidia-api → NVIDIA NIM endpoint
-```
+**I'm getting a blank screen after sign-in.**  
+Make sure your Supabase URL and anon key are correct and that your RLS policies are set up. The app expects `auth.uid() = user_id` on the `tasks` table.
+
+**Vite is using port 5174 instead of 5173.**  
+That's fine — something else is already using 5173. The AI proxy still works on whatever port Vite picks.
+
+**The undo timer is slightly off after a page refresh.**  
+Known issue — there's a small amount of rounding drift from `Math.ceil`. It's functionally correct (you still get your 10 seconds), just cosmetically slightly off at the ms level.
 
 ---
 
-## What's Still Missing 🚧
+## Authors
 
-- **Gamification** — Points, streaks, achievements
-
----
-
-## Known Issues 🐛
-
-- Undo timer might drift slightly (ms level) after a refresh due to rounding, but it is functionally correct.
-- Very short deadlines (< 24h) can produce edge-case checkpoint timings.
+**Elijah Oyelude**  
+Final Year Computer Science Student  
+📧 Reach out via GitHub or your institution email
 
 ---
 
-## Why This Matters (For My Thesis)
+## Version History
 
-This project explores how AI-assisted task decomposition and time-bound checkpoints can improve student accountability and reduce procrastination. The system enforces a structured approach to task completion while remaining flexible across different task types (essays, problem sets, exam prep).
+- **0.3** — Analytics dashboard, admin panel, email reminders, premium/settings ecosystem, Stripe integration
+- **0.2** — Edit task support, AI badge on task cards, mobile responsiveness, dark/light mode anti-FOUC
+- **0.1** — Initial release: AI checkpoint generation, 4-state status system, 10-second undo, Supabase auth + RLS
 
-**Key research questions:**
-1. Does automated, AI-generated task breakdown reduce procrastination compared to manual planning?
-2. Can visual progress tracking and urgency cues improve checkpoint completion rates?
-3. What is the optimal checkpoint spacing for different academic task types?
-
----
-
-## Contact
-
-If you're a supervisor reading this and have questions (or found bugs), feel free to reach out!
+See [commit history](https://github.com/oyeludeelijah/elijah-fyp/commits/main) for the full changelog.
 
 ---
 
-**Last Updated**: May 2026
-**Status**: Demo / Prototype — AI integration and User Authentication complete.
+## License
+
+This project is submitted as part of a final year academic assessment. Not currently licensed for public redistribution.
+
+---
+
+## Acknowledgments
+
+A few things that genuinely helped:
+
+- [NVIDIA NIM](https://build.nvidia.com) — straightforward OpenAI-compatible API, free tier was enough to get this working
+- [Supabase](https://supabase.com) — made the backend side of this project approachable without needing a separate server
+- [GSAP](https://gsap.com) — the animation library that made the UI feel alive without a ton of effort
+- [Recharts](https://recharts.org) — clean, composable chart components that didn't fight React
+- [Resend](https://resend.com) — dead simple transactional email API
+- [awesome-readme](https://github.com/matiassingers/awesome-readme) — for the README template inspiration

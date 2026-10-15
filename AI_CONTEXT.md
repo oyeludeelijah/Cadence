@@ -120,7 +120,7 @@ Replaces `task_templates` as the checkpoint source. When a user creates a task, 
 ### Implementation details
 
 **Provider:** NVIDIA NIM (not Gemini — see dead ends below)
-**Model:** `meta/llama-3.1-8b-instruct` — fast 8B model, great at structured JSON, responds in 2–5 seconds
+**Model:** `nvidia/llama-3.1-nemotron-nano-8b-instruct` — `meta/llama-3.1-8b-instruct` EOL'd 2026-08-26
 **Endpoint:** `https://integrate.api.nvidia.com/v1/chat/completions` (OpenAI-compatible)
 **API key:** stored in `.env` as `VITE_NVIDIA_API_KEY` (starts with `nvapi-`)
 

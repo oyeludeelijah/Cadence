@@ -41,34 +41,21 @@ export default function TaskCard({ task, onDelete, onNavigate }) {
   return (
     <div
       ref={ref}
-      className="glass reveal"
+      className="glass reveal task-card"
       onClick={() => onNavigate(task.id)}
       style={{
         borderRadius: 'var(--r-lg)',
         borderLeft: `3px solid ${accentBorder}`,
         cursor: 'pointer',
-        padding: 'var(--s4)',
-        display: 'flex',
-        flexDirection: 'column',
-        gap: 'var(--s3)',
       }}
     >
       {/* Card Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 'var(--s2)' }}>
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <h3 style={{
-            fontSize: 'var(--text-lg)',
-            fontWeight: 600,
-            color: 'var(--text)',
-            marginBottom: '6px',
-            letterSpacing: '-0.01em',
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
-            whiteSpace: 'nowrap',
-          }}>
+      <div className="task-card-header">
+        <div className="task-card-info">
+          <h3 className="task-card-title">
             {task.title}
           </h3>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center' }}>
+          <div className="task-card-meta">
             <span className="badge badge-neutral" style={{ textTransform: 'capitalize' }}>
               {task.task_type.replaceAll('_', ' ')}
             </span>
@@ -77,11 +64,12 @@ export default function TaskCard({ task, onDelete, onNavigate }) {
                 AI ✨
               </span>
             )}
-            <span style={{
+            <span className="task-card-deadline" style={{
               fontSize: 'var(--text-xs)',
               color: isOverdue ? 'var(--danger)' : 'var(--text-3)',
             }}>
-              Final deadline: {new Date(task.final_deadline).toLocaleDateString('en-GB', {
+              <span className="task-card-deadline-label">Final deadline: </span>
+              {new Date(task.final_deadline).toLocaleDateString('en-GB', {
                 day: 'numeric', month: 'short', year: 'numeric'
               })}
               {isOverdue && ' · Overdue'}
@@ -89,8 +77,8 @@ export default function TaskCard({ task, onDelete, onNavigate }) {
           </div>
         </div>
 
-        {/* Right controls */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
+        {/* Right controls - Desktop only */}
+        <div className="task-card-controls">
           <span className={`badge ${task.isCompleted ? 'badge-success' : 'badge-accent'}`}>
             {task.isCompleted ? 'Done' : 'Active'}
           </span>
@@ -103,10 +91,15 @@ export default function TaskCard({ task, onDelete, onNavigate }) {
             ×
           </button>
         </div>
+
+        {/* Mobile progress - Mobile only ("x / y" progress) */}
+        <div className="task-card-mobile-progress">
+          {completedCount} / {total}
+        </div>
       </div>
 
-      {/* Progress */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+      {/* Progress - Desktop only */}
+      <div className="task-card-progress-desktop">
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <span style={{ fontSize: 'var(--text-xs)', color: 'var(--text-3)', fontWeight: 500 }}>
             PROGRESS
@@ -120,12 +113,12 @@ export default function TaskCard({ task, onDelete, onNavigate }) {
         </div>
       </div>
 
-      {/* Next checkpoint banner */}
+      {/* Next checkpoint banner - Desktop only */}
       {nextCp && !task.isCompleted && (() => {
         const isOverdueCp = nextStatus === 'overdue'
         const isUrgentCp  = nextStatus === 'urgent'
         if (!isOverdueCp && !isUrgentCp) return (
-          <div style={{
+          <div className="task-card-next" style={{
             padding: '10px var(--s2)',
             background: 'rgba(255,255,255,0.03)',
             borderRadius: 'var(--r-sm)',
@@ -140,7 +133,7 @@ export default function TaskCard({ task, onDelete, onNavigate }) {
           </div>
         )
         return (
-          <div className={`alert ${isOverdueCp ? 'alert-danger' : 'alert-warning'}`}>
+          <div className={`alert task-card-next ${isOverdueCp ? 'alert-danger' : 'alert-warning'}`}>
             <span style={{ flexShrink: 0 }}>{isOverdueCp ? '⚠️' : '⏰'}</span>
             <div style={{ minWidth: 0 }}>
               <div style={{ fontWeight: 600, marginBottom: '2px', wordBreak: 'break-word' }}>
@@ -153,17 +146,17 @@ export default function TaskCard({ task, onDelete, onNavigate }) {
         )
       })()}
 
-      {/* Completed state */}
+      {/* Completed state - Desktop only */}
       {task.isCompleted && (
-        <div className="alert alert-success">
+        <div className="alert alert-success task-card-completed">
           <span>✓</span>
           <span>All {total} checkpoints completed</span>
         </div>
       )}
 
-      {/* Notes */}
+      {/* Notes - Desktop only */}
       {task.notes && (
-        <p style={{
+        <p className="task-card-notes" style={{
           fontSize: 'var(--text-xs)',
           color: 'var(--text-3)',
           margin: 0,

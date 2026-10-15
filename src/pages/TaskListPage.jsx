@@ -202,7 +202,7 @@ function TaskListPage() {
   const navigateToTask = useCallback((id) => navigate(`/tasks/${id}`), [navigate])
 
   return (
-    <div ref={pageRef} style={{ maxWidth: 'var(--container-max)', margin: '0 auto' }}>
+    <div ref={pageRef} className="task-list-page" style={{ maxWidth: 'var(--container-max)', margin: '0 auto' }}>
       <div className="mesh-gradient" />
 
       {/* ── Delete Modal ───────────────────────────────────────────────────── */}
@@ -231,7 +231,7 @@ function TaskListPage() {
           </div>
 
           {/* Status pills + connection */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+          <div className="tasks-header-pills" style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
             {hasTasks && (
               <>
                 <span className="badge badge-accent">{visibleTasks.length} {activeTab === 'completed' ? 'completed' : 'active'}</span>
@@ -267,7 +267,7 @@ function TaskListPage() {
       </header>
 
       {/* ── Action Row ─────────────────────────────────────────────────────────── */}
-      <div style={{
+      <div className="tasks-action-row" style={{
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
@@ -288,10 +288,10 @@ function TaskListPage() {
           ))}
         </div>
 
-        {/* Primary CTA */}
-        <button className="btn-primary" onClick={handleCreateClick} style={{ gap: '8px' }}>
-          <span style={{ fontSize: '18px', lineHeight: 1 }}>+</span>
-          Create New Task
+        {/* Primary CTA / Floating Action Button on mobile */}
+        <button className="btn-primary tasks-fab" onClick={handleCreateClick} aria-label="Create New Task">
+          <span className="tasks-fab-icon">+</span>
+          <span className="tasks-fab-text">Create New Task</span>
         </button>
       </div>
 

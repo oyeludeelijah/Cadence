@@ -93,13 +93,24 @@ export default function CheckpointCard({ checkpoint, isCurrent, onToggle, checkp
                 color: 'var(--text)',
                 textDecoration: isCompleted ? 'line-through' : 'none',
                 textDecorationColor: 'var(--text-3)',
-                marginBottom: '4px',
+                marginBottom: checkpoint.rationale ? '3px' : '4px',
                 letterSpacing: '-0.01em',
                 textTransform: 'capitalize',
               }}>
                 {checkpoint.checkpoint_number}.{' '}
                 {checkpoint.checkpoint_type.replaceAll('_', ' ')}
               </h3>
+
+              {checkpoint.rationale && (
+                <p style={{
+                  fontSize: 'var(--text-sm)',
+                  color: 'var(--text-2)',
+                  margin: '0 0 4px',
+                  fontStyle: 'italic',
+                }}>
+                  {checkpoint.rationale}
+                </p>
+              )}
 
               <p style={{
                 fontSize: 'var(--text-sm)',
