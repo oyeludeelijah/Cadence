@@ -69,7 +69,37 @@ function TaskDetailPage() {
   const [undoableCheckpoint, setUndoable]   = useState(null)
   const [showDeleteConfirm, setShowDelete]  = useState(false)
   const [showEditModal, setShowEdit]        = useState(false)
+  const [showMenu, setShowMenu]             = useState(false)
   const [error, setError]                   = useState(null)
+
+  const menuRef = useRef(null)
+
+  // Close more menu on click outside or Escape
+  useEffect(() => {
+    if (!showMenu) return
+
+    function handleOutsideClick(e) {
+      if (menuRef.current && !menuRef.current.contains(e.target)) {
+        setShowMenu(false)
+      }
+    }
+
+    function handleKeyDown(e) {
+      if (e.key === 'Escape') {
+        setShowMenu(false)
+      }
+    }
+
+    document.addEventListener('mousedown', handleOutsideClick)
+    document.addEventListener('touchstart', handleOutsideClick)
+    document.addEventListener('keydown', handleKeyDown)
+
+    return () => {
+      document.removeEventListener('mousedown', handleOutsideClick)
+      document.removeEventListener('touchstart', handleOutsideClick)
+      document.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [showMenu])
 
   // useRef for timers — avoids extra re-renders from useState
   const undoTimeoutRef   = useRef(null)
@@ -404,15 +434,106 @@ function TaskDetailPage() {
         />
       )}
 
-      {/* ── Nav bar ───────────────────────────────────────────────────────────── */}
-      <div className="mobile-stack" style={{ display: 'flex', gap: 'var(--s2)', marginBottom: 'var(--s5)' }}>
-        <button className="btn-secondary" onClick={() => navigate('/')}>← Back to Tasks</button>
+      {/* ── Desktop Nav bar ─────────────────────────────────────────────────── */}
+      <div className="task-detail-nav-desktop" style={{ display: 'flex', gap: 'var(--s2)', marginBottom: 'var(--s5)', alignItems: 'center' }}>
+        <button className="btn-secondary" onClick={() => navigate('/')}>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '6px' }}>
+            <line x1="19" y1="12" x2="5" y2="12" />
+            <polyline points="12 19 5 12 12 5" />
+          </svg>
+          Back to Tasks
+        </button>
         <div style={{ flex: 1 }} />
         {progress === 100 && (
-          <button className="btn-secondary" onClick={reopenTask}>↩ Reopen</button>
+          <button className="btn-secondary" onClick={reopenTask}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '6px' }}>
+              <polyline points="1 4 1 10 7 10" />
+              <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10" />
+            </svg>
+            Reopen
+          </button>
         )}
-        <button className="btn-secondary" onClick={() => setShowEdit(true)}>✏️ Edit</button>
-        <button className="btn-danger" onClick={() => setShowDelete(true)}>🗑 Delete Task</button>
+        <button className="btn-secondary" onClick={() => setShowEdit(true)}>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '6px' }}>
+            <path d="M12 20h9" />
+            <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
+          </svg>
+          Edit
+        </button>
+        <button className="btn-danger" onClick={() => setShowDelete(true)}>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '6px' }}>
+            <polyline points="3 6 5 6 21 6" />
+            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+          </svg>
+          Delete Task
+        </button>
+      </div>
+
+      {/* ── Mobile Compact Top Bar ─────────────────────────────────────────── */}
+      <div className="task-detail-nav-mobile">
+        <button
+          className="btn-secondary task-detail-icon-btn"
+          onClick={() => navigate('/')}
+          aria-label="Back to tasks"
+        >
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <line x1="19" y1="12" x2="5" y2="12" />
+            <polyline points="12 19 5 12 12 5" />
+          </svg>
+        </button>
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', position: 'relative' }} ref={menuRef}>
+          {progress === 100 && (
+            <button
+              className="btn-secondary"
+              onClick={reopenTask}
+              style={{ minHeight: '44px', padding: '0 12px', fontSize: 'var(--text-xs)' }}
+              aria-label="Reopen task"
+            >
+              Reopen
+            </button>
+          )}
+
+          <button
+            className="btn-secondary task-detail-edit-btn"
+            onClick={() => setShowEdit(true)}
+            aria-label="Edit task"
+          >
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '6px' }}>
+              <path d="M12 20h9" />
+              <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
+            </svg>
+            Edit
+          </button>
+
+          <button
+            className="btn-secondary task-detail-icon-btn"
+            onClick={() => setShowMenu(o => !o)}
+            aria-label="More options"
+            aria-expanded={showMenu}
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="1.5" />
+              <circle cx="19" cy="12" r="1.5" />
+              <circle cx="5" cy="12" r="1.5" />
+            </svg>
+          </button>
+
+          {showMenu && (
+            <div className="task-detail-dropdown-menu glass">
+              <button
+                className="dropdown-menu-item dropdown-menu-item-danger"
+                onClick={() => { setShowMenu(false); setShowDelete(true); }}
+              >
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="3 6 5 6 21 6" />
+                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                </svg>
+                Delete Task
+              </button>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* ════════════════════════════════════════════════════════════════════════
@@ -434,15 +555,18 @@ function TaskDetailPage() {
         {/* Title row */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 'var(--s3)', gap: 'var(--s2)', flexWrap: 'wrap' }}>
           <div style={{ flex: 1 }}>
-            <p className="section-eyebrow" style={{ marginBottom: '8px' }}>Task Detail</p>
+            <p className="section-eyebrow" style={{ marginBottom: '8px', color: 'var(--text-2)' }}>Task Detail</p>
             <h1 style={{ fontSize: 'clamp(22px, 4vw, 36px)', fontWeight: 700, letterSpacing: '-0.02em', color: 'var(--text)' }}>
               {task.title}
             </h1>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             {checkpoints.some(cp => cp.ai_generated) && (
-              <span className="badge badge-accent" style={{ fontSize: '10px', padding: '2px 8px' }}>
-                AI ✨
+              <span className="badge badge-accent" style={{ fontSize: '10px', padding: '2px 8px', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/>
+                </svg>
+                AI
               </span>
             )}
             <span className={`badge ${
@@ -467,13 +591,11 @@ function TaskDetailPage() {
           borderBottom: '1px solid var(--border)',
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <span style={{ color: 'var(--text-3)' }}>Type</span>
-            <span style={{
+            <span style={{ color: 'var(--text-2)', fontSize: 'var(--text-xs)' }}>Type</span>
+            <span className="badge badge-neutral" style={{
               padding: '3px 10px',
-              background: 'var(--accent-dim)',
-              border: '1px solid transparent',
               borderRadius: 'var(--r-pill)',
-              color: 'var(--accent)',
+              color: 'var(--text)',
               fontWeight: 500,
               fontSize: 'var(--text-xs)',
               textTransform: 'capitalize',
@@ -482,7 +604,7 @@ function TaskDetailPage() {
             </span>
           </div>
           <div style={{ color: isTaskOverdue ? 'var(--danger)' : 'var(--text-2)', display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <span style={{ color: 'var(--text-3)' }}>Deadline</span>
+            <span style={{ color: 'var(--text-2)', fontSize: 'var(--text-xs)' }}>Deadline</span>
             <span>
               {new Date(task.final_deadline).toLocaleString('en-GB', {
                 weekday: 'short', day: 'numeric', month: 'short',
@@ -504,20 +626,20 @@ function TaskDetailPage() {
             fontSize: 'var(--text-sm)',
             color: 'var(--text-2)',
           }}>
-            <strong style={{ color: 'var(--text-3)', fontSize: 'var(--text-xs)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Notes</strong>
-            <p style={{ margin: '4px 0 0', lineHeight: 1.6, maxWidth: 'none' }}>{task.notes}</p>
+            <strong style={{ color: 'var(--text-2)', fontSize: 'var(--text-xs)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Notes</strong>
+            <p style={{ margin: '6px 0 0', lineHeight: 1.65, maxWidth: '65ch', color: 'var(--text)' }}>{task.notes}</p>
           </div>
         )}
 
         {/* Progress */}
         <div>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-            <span style={{ fontSize: 'var(--text-xs)', fontWeight: 600, color: 'var(--text-3)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+            <span style={{ fontSize: 'var(--text-xs)', fontWeight: 600, color: 'var(--text-2)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
               Progress
             </span>
             <span style={{ fontSize: 'var(--text-sm)', fontWeight: 600, color: 'var(--text-2)' }}>
               {completedCount} / {totalCount} checkpoints
-              {progress === 100 && <span style={{ color: 'var(--success)', marginLeft: '8px' }}>🎉 All done!</span>}
+              {progress === 100 && <span style={{ color: 'var(--success)', marginLeft: '8px' }}>✓ All done!</span>}
             </span>
           </div>
           <div className="progress-track">

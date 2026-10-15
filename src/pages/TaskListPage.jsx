@@ -289,7 +289,7 @@ function TaskListPage() {
         </div>
 
         {/* Primary CTA / Floating Action Button on mobile */}
-        <button className="btn-primary tasks-fab" onClick={handleCreateClick} aria-label="Create New Task">
+        <button className="btn-primary tasks-fab" onClick={handleCreateClick} aria-label="Create new task">
           <span className="tasks-fab-icon">+</span>
           <span className="tasks-fab-text">Create New Task</span>
         </button>

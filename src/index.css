@@ -159,9 +159,9 @@ input, select, textarea {
 
 /* ── Glassmorphism ────────────────────────────────────────────────────────── */
 .glass {
-  background: rgba(255, 255, 255, 0.035);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  background: rgba(11, 43, 38, 0.88);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
   border: 1px solid var(--border);
   box-shadow: 0 1px 0 rgba(255,255,255,0.04) inset, var(--card-shadow);
   transition: background var(--dur-fast) var(--ease-out),
@@ -171,7 +171,7 @@ input, select, textarea {
 }
 
 .glass:hover {
-  background: rgba(218, 241, 222, 0.055);
+  background: rgba(15, 52, 46, 0.94);
   border-color: var(--border-2);
   box-shadow: 0 1px 0 rgba(218,241,222,0.06) inset,
               0 16px 60px rgba(0, 0, 0, 0.5),
@@ -403,12 +403,13 @@ input, select, textarea {
   text-transform: uppercase;
 }
 .badge-success { background: var(--success-dim); color: var(--success); }
-.badge-warning { background: var(--warning-dim); color: var(--warning); }
+.badge-warning { background: var(--warning-dim); color: #fbbf24; }
 .badge-danger  { background: var(--danger-dim);  color: var(--danger);  }
-.badge-accent  { background: var(--accent-dim);  color: var(--accent);  }
+.badge-accent  { background: rgba(142, 182, 155, 0.16); color: var(--text); border: 1px solid rgba(142, 182, 155, 0.25); }
 .badge-neutral {
-  background: rgba(255,255,255,0.06);
-  color: var(--text-2);
+  background: rgba(255,255,255,0.08);
+  color: var(--text);
+  border: 1px solid rgba(255, 255, 255, 0.12);
 }
 
 /* ── Status Banners ───────────────────────────────────────────────────────── */
@@ -565,6 +566,17 @@ input, select, textarea {
   background: #0ea471;
   transform: scale(1.08);
 }
+.checkbox-btn.locked {
+  border-color: var(--border-2);
+  background: rgba(255, 255, 255, 0.04);
+  cursor: not-allowed;
+  color: var(--text-2);
+}
+.checkbox-btn.locked:hover {
+  border-color: var(--border-2);
+  background: rgba(255, 255, 255, 0.04);
+  transform: none;
+}
 .checkmark {
   color: #fff;
   font-size: 12px;
@@ -628,7 +640,7 @@ input, select, textarea {
   font-weight: 600;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: var(--accent);
+  color: var(--text-2);
 }
 
 /* ── Empty State ──────────────────────────────────────────────────────────── */
@@ -1011,10 +1023,20 @@ input, select, textarea {
   background: rgba(99, 102, 241, 0.06);
 }
 
-/* Badge neutral */
+/* Badge overrides for light theme */
+[data-theme="light"] .badge-warning {
+  background: rgba(245, 158, 11, 0.16);
+  color: #92400e;
+}
+[data-theme="light"] .badge-accent {
+  background: var(--accent-dim);
+  color: var(--accent);
+  border: 1px solid rgba(35, 83, 71, 0.20);
+}
 [data-theme="light"] .badge-neutral {
   background: rgba(0, 0, 0, 0.06);
-  color: var(--text-2);
+  color: var(--text);
+  border: 1px solid rgba(0, 0, 0, 0.10);
 }
 
 /* Modal */
@@ -2045,6 +2067,131 @@ input, select, textarea {
   .task-card-notes {
     display: none !important;
   }
+
+  /* Task Detail on mobile: compact top bar */
+  .task-detail-nav-desktop {
+    display: none !important;
+  }
+
+  .task-detail-nav-mobile {
+    display: flex !important;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--s3);
+    position: relative;
+    width: 100%;
+  }
+}
+
+/* ── Task Detail Page Navigation & Components ──────────────────────────────── */
+.task-detail-nav-desktop {
+  display: flex;
+}
+
+.task-detail-nav-mobile {
+  display: none;
+}
+
+.task-detail-icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0;
+  border-radius: var(--r-md);
+  color: var(--text);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border);
+  cursor: pointer;
+  touch-action: manipulation;
+  transition: background var(--dur-fast) var(--ease-out), border-color var(--dur-fast) var(--ease-out);
+}
+
+.task-detail-icon-btn:hover {
+  background: rgba(255, 255, 255, 0.10);
+  border-color: var(--border-2);
+}
+
+[data-theme="light"] .task-detail-icon-btn {
+  background: rgba(0, 0, 0, 0.04);
+  border-color: rgba(5, 31, 32, 0.12);
+  color: var(--text);
+}
+
+[data-theme="light"] .task-detail-icon-btn:hover {
+  background: rgba(0, 0, 0, 0.08);
+}
+
+.task-detail-edit-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 0 16px;
+  font-size: var(--text-sm);
+  font-weight: 500;
+  border-radius: var(--r-md);
+  touch-action: manipulation;
+}
+
+.task-detail-dropdown-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 50;
+  min-width: 170px;
+  padding: 6px;
+  border-radius: var(--r-md);
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.45);
+}
+
+.dropdown-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 44px;
+  padding: 10px 14px;
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--text);
+  background: transparent;
+  border: none;
+  border-radius: var(--r-sm);
+  cursor: pointer;
+  text-align: left;
+  touch-action: manipulation;
+  transition: background var(--dur-fast) var(--ease-out);
+}
+
+.dropdown-menu-item:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+[data-theme="light"] .dropdown-menu-item:hover {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.dropdown-menu-item-danger {
+  color: var(--danger);
+}
+
+.dropdown-menu-item-danger:hover {
+  background: var(--danger-dim);
+}
+
+/* ── Locked Checkpoint Cards ──────────────────────────────────────────────── */
+.checkpoint-card-locked {
+  background: rgba(11, 43, 38, 0.65) !important;
+  border-color: rgba(218, 241, 222, 0.05) !important;
+}
+
+[data-theme="light"] .checkpoint-card-locked {
+  background: rgba(240, 245, 242, 0.70) !important;
+  border-color: rgba(5, 31, 32, 0.05) !important;
 }
 
 
