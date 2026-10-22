@@ -321,6 +321,8 @@ input, select, textarea {
 .field-select,
 .field-textarea {
   width: 100%;
+  min-height: 42px;
+  box-sizing: border-box;
   padding: var(--s2) var(--s3);
   font-size: var(--text-base);
   font-family: 'Cantarell', sans-serif;
@@ -395,6 +397,28 @@ input, select, textarea {
 .date-picker-group:hover ::-webkit-calendar-picker-indicator,
 ::-webkit-calendar-picker-indicator:hover {
   filter: invert(1) brightness(1.2) opacity(1);
+}
+
+/* Ensure native date/datetime-local inputs match font, size, and padding */
+input[type="date"]::-webkit-datetime-edit,
+input[type="date"]::-webkit-datetime-edit-fields-wrapper,
+input[type="date"]::-webkit-datetime-edit-text,
+input[type="date"]::-webkit-datetime-edit-month-field,
+input[type="date"]::-webkit-datetime-edit-day-field,
+input[type="date"]::-webkit-datetime-edit-year-field,
+input[type="datetime-local"]::-webkit-datetime-edit,
+input[type="datetime-local"]::-webkit-datetime-edit-fields-wrapper,
+input[type="datetime-local"]::-webkit-datetime-edit-text,
+input[type="datetime-local"]::-webkit-datetime-edit-month-field,
+input[type="datetime-local"]::-webkit-datetime-edit-day-field,
+input[type="datetime-local"]::-webkit-datetime-edit-year-field,
+input[type="datetime-local"]::-webkit-datetime-edit-hour-field,
+input[type="datetime-local"]::-webkit-datetime-edit-minute-field,
+input[type="datetime-local"]::-webkit-datetime-edit-ampm-field {
+  font-family: 'Cantarell', sans-serif;
+  font-size: var(--text-base);
+  color: inherit;
+  padding: 0;
 }
 
 /* ── Badges ───────────────────────────────────────────────────────────────── */
@@ -911,6 +935,7 @@ input, select, textarea {
    Accent colour (#235347) unchanged — works on both surfaces.
    ══════════════════════════════════════════════════════════════════════════ */
 [data-theme="light"] {
+  color-scheme: light;
   --bg:         #eef7f0;   /* pale mint */
   --surface:    #ffffff;
   --surface-2:  #e0f0e5;
@@ -994,6 +1019,15 @@ input, select, textarea {
 [data-theme="light"] .field-select option {
   background-color: #ffffff;
   color: #0f0f1e;
+}
+
+/* Calendar picker indicator in light mode — un-inverted */
+[data-theme="light"] ::-webkit-calendar-picker-indicator {
+  filter: opacity(0.5);
+}
+[data-theme="light"] .date-picker-group:hover ::-webkit-calendar-picker-indicator,
+[data-theme="light"] ::-webkit-calendar-picker-indicator:hover {
+  filter: opacity(0.9);
 }
 
 /* Buttons */
