@@ -189,12 +189,12 @@ function AuthPage() {
                   alignItems: 'center', 
                   justifyContent: 'center', 
                   gap: '8px',
-                  padding: '8.8px',
-                  borderRadius: '8px',
+                  padding: 'var(--s2) var(--s4)',
+                  borderRadius: 'var(--r-md)',
                   border: '1px solid #e5e7eb',
                   background: '#f9fafb',
                   color: '#111827',
-                  fontSize: '11.2px',
+                  fontSize: 'var(--text-base)',
                   fontWeight: 500,
                   cursor: 'pointer',
                   marginBottom: '12.8px',
@@ -231,7 +231,7 @@ function AuthPage() {
                     setEmail(e.target.value)
                     if (message) setMessage(null)
                   }}
-                  placeholder="you@university.ac.uk"
+                  placeholder="you@school.edu"
                   autoComplete="email"
                   disabled={loading}
                 />
@@ -291,7 +291,7 @@ function AuthPage() {
                   setEmail(e.target.value)
                   if (message) setMessage(null)
                 }}
-                placeholder="you@university.ac.uk"
+                placeholder="you@school.edu"
                 autoComplete="email"
                 disabled={loading}
               />
@@ -312,7 +312,8 @@ function AuthPage() {
                   <button
                     type="button"
                     onClick={() => { setMode('forgot'); setMessage(null) }}
-                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-3)', fontWeight: 400, fontSize: 'var(--text-xs)', padding: 0, textDecoration: 'underline', textUnderlineOffset: '3px' }}
+                    className="auth-forgot-link"
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--accent)', fontWeight: 600, fontSize: 'var(--text-sm)', padding: 0, textDecoration: 'underline', textUnderlineOffset: '3px' }}
                   >
                     Forgot password?
                   </button>

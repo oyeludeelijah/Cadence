@@ -1767,38 +1767,47 @@ input, select, textarea {
 .auth-right .alert-danger  { background: #fef2f2; border-color: #fca5a5; color: #b91c1c; }
 .auth-right .alert-success { background: #f0fdf4; border-color: #86efac; color: #15803d; }
 
-/* Submit button — full-width pill */
+/* Submit button — matches standard app button radius and height */
 .auth-submit {
   width: 100%;
-  padding: 13px var(--s4) !important;
+  padding: var(--s2) var(--s4) !important;
   font-size: var(--text-base) !important;
   font-weight: 600 !important;
-  border-radius: var(--r-pill) !important;
+  border-radius: var(--r-md) !important;
   letter-spacing: 0.01em;
 }
 
-/* ── Mobile: stack vertically ─────────────────────────────────────────────── */
+.auth-forgot-link:hover {
+  color: var(--accent-hover) !important;
+}
+
+/* ── Mobile: clean card presentation without grey band ────────────────────── */
 @media (max-width: 768px) {
-  .auth-layout { padding: 0; background: #e8f0eb; }
+  .auth-layout {
+    padding: var(--s4);
+    background: #e8f0eb;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
   .auth-device-frame {
     grid-template-columns: 1fr;
-    grid-template-rows: 180px 1fr;
-    border-radius: 0;
+    grid-template-rows: 1fr;
+    border-radius: 20px;
     border: none;
-    box-shadow: none;
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
     height: auto;
-    min-height: 100vh;
-    background-image: none; /* remove background image from full frame on mobile */
-    background: #e8f0eb;
+    min-height: unset;
+    background-image: none;
+    background: transparent;
+    max-width: 420px;
   }
   .auth-left {
-    background-image: url('/auth-bg.png');
-    background-size: cover;
-    background-position: center;
+    display: none;
   }
   .auth-right {
-    padding: 24px 16px;
-    margin: 16px;
+    padding: 24px 20px;
+    margin: 0;
     background: #ffffff;
     border-radius: 20px;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);

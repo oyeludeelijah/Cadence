@@ -1,11 +1,9 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../supabaseClient'
 import { useAuth } from '../hooks/useAuth'
-import { useTheme } from '../hooks/useTheme'
 
 export default function SettingsPage() {
   const { user } = useAuth()
-  const { theme, toggle } = useTheme()
   const defaultHours = { start: 9, end: 21 }
   const [workingHours, setWorkingHours] = useState(user?.user_metadata?.working_hours || defaultHours)
   const [isSaving, setIsSaving] = useState(false)
@@ -75,8 +73,15 @@ export default function SettingsPage() {
   }
 
   return (
-    <div style={{ maxWidth: '700px', margin: '0 auto', padding: 'var(--s8) var(--s4)' }}>
-      <h1 style={{ fontSize: 'var(--text-3xl)', fontWeight: 700, marginBottom: 'var(--s8)' }}>Settings</h1>
+    <div style={{ maxWidth: 'var(--container-max)', margin: '0 auto', paddingBottom: 'var(--s8)' }}>
+      <header style={{ marginBottom: 'var(--s6)', paddingBottom: 'var(--s4)', borderBottom: '1px solid var(--border)' }}>
+        <div>
+          <p className="section-eyebrow" style={{ marginBottom: '6px' }}>Preferences</p>
+          <h1 style={{ fontSize: 'clamp(22px, 3vw, 32px)', fontWeight: 800, letterSpacing: '-0.03em', color: 'var(--text)', lineHeight: 1.1 }}>
+            Settings
+          </h1>
+        </div>
+      </header>
       
       {/* 1. Working Hours */}
       <section className="glass" style={{ padding: 'var(--s6)', borderRadius: 'var(--r-xl)', marginBottom: 'var(--s6)' }}>
@@ -121,26 +126,7 @@ export default function SettingsPage() {
         </button>
       </section>
 
-      {/* 2. Theme Preference */}
-      <section className="glass" style={{ padding: 'var(--s6)', borderRadius: 'var(--r-xl)', marginBottom: 'var(--s6)' }}>
-        <h2 style={{ fontSize: 'var(--text-xl)', fontWeight: 600, marginBottom: 'var(--s2)' }}>Appearance</h2>
-        <p style={{ color: 'var(--text-2)', fontSize: 'var(--text-sm)', marginBottom: 'var(--s4)' }}>
-          Toggle your light/dark mode preference. The system handles system preference automatically if not explicitly set.
-        </p>
-        
-        <button 
-          className="btn-primary" 
-          onClick={toggle}
-          style={{ 
-            background: 'var(--glass-border)', 
-            color: 'var(--text)' 
-          }}
-        >
-          {theme === 'dark' ? '☀️ Switch to Light Mode' : '🌙 Switch to Dark Mode'}
-        </button>
-      </section>
-
-      {/* 3. Account & Data Management */}
+      {/* 2. Account & Data Management */}
       <section className="glass" style={{ padding: 'var(--s6)', borderRadius: 'var(--r-xl)', marginBottom: 'var(--s6)', borderTop: '2px solid rgba(239,68,68,0.2)' }}>
         <h2 style={{ fontSize: 'var(--text-xl)', fontWeight: 600, marginBottom: 'var(--s2)', color: 'var(--danger)' }}>Data & Privacy</h2>
         <p style={{ color: 'var(--text-2)', fontSize: 'var(--text-sm)', marginBottom: 'var(--s4)' }}>
