@@ -43,8 +43,10 @@ const clientSource = readFileSync(clientPath, 'utf8')
 assert(clientSource.includes('export async function callNim'), 'nimApiClient exports callNim')
 assert(clientSource.includes('AbortController'), 'nimApiClient uses AbortController')
 assert(clientSource.includes('clearTimeout'), 'nimApiClient clears the abort timeout in finally')
-assert(clientSource.includes("Bearer"), 'nimApiClient sets Authorization header')
-assert(clientSource.includes('llama-3.1-8b-instruct'), 'nimApiClient configures the model')
+assert(!clientSource.includes("Bearer"), 'nimApiClient does not set Authorization header')
+assert(clientSource.includes('nvidia/nemotron-3.5-lightning-30b-a3b'), 'nimApiClient configures the model')
+assert(clientSource.includes('enable_thinking'), 'nimApiClient sets enable_thinking')
+assert(clientSource.includes('false'), 'nimApiClient disables thinking')
 assert(clientSource.includes('temperature'), 'nimApiClient sets temperature')
 assert(clientSource.includes('max_tokens'), 'nimApiClient sets max_tokens')
 assert(clientSource.includes('JSON.parse'), 'nimApiClient parses JSON response')
@@ -74,8 +76,8 @@ assert(
   'generateCheckpoints.js no longer sets Authorization header directly'
 )
 assert(
-  genSource.includes('await callNim(prompt, apiKey)'),
-  'generateCheckpoints.js calls callNim with prompt and apiKey'
+  genSource.includes('await callNim(prompt)'),
+  'generateCheckpoints.js calls callNim without apiKey'
 )
 
 // ── Behaviour test: markdown fence stripping (pure logic, no network) ─────────

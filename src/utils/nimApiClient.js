@@ -14,15 +14,17 @@
 
 const NVIDIA_ENDPOINT = '/nvidia-api/chat/completions'
 
+const MODEL_ID = 'nvidia/nemotron-3.5-lightning-30b-a3b'
+
 const MODEL_CONFIG = {
-  model:       'nvidia/nemotron-3.5-lightning-30b-a3b', // Testing lightning variant
+  model:       MODEL_ID,
   temperature: 0.3,
-  max_tokens:  1024, // Lightning model needs smaller token limits to complete before timeout
+  max_tokens:  768,
   stream:      false,
 }
 
-// NIM can be slow. Allow 90s per attempt to prevent premature aborts.
-const TIMEOUT_MS  = 90_000
+// NIM can be slow. Allow 45s per attempt to prevent premature aborts.
+const TIMEOUT_MS  = 45_000
 
 // Retry config — exponential backoff with jitter
 const MAX_RETRIES           = 3
@@ -59,7 +61,7 @@ function classifyLatency(durationMs) {
  * Performs one HTTP attempt to the NVIDIA NIM endpoint.
  * Returns the raw Response object. Throws on network-level errors.
  */
-async function attemptFetch(prompt, apiKey) {
+async function attemptFetch(prompt) {
   const controller = new AbortController()
   const timeoutId  = setTimeout(() => controller.abort(), TIMEOUT_MS)
 
@@ -68,13 +70,13 @@ async function attemptFetch(prompt, apiKey) {
       method: 'POST',
       signal: controller.signal,
       headers: {
-        'Authorization': `Bearer ${apiKey}`,
         'Content-Type':  'application/json',
         'Accept':        'application/json',
       },
       body: JSON.stringify({
         ...MODEL_CONFIG,
         messages: [{ role: 'user', content: prompt }],
+        chat_template_kwargs: { enable_thinking: false },
       }),
     })
   } finally {
@@ -86,13 +88,12 @@ async function attemptFetch(prompt, apiKey) {
  * Calls the NVIDIA NIM chat completions endpoint with retry + exponential backoff.
  *
  * @param {string} prompt  - The fully-formed user message string
- * @param {string} apiKey  - NVIDIA NIM API key (nvapi-…)
  *
  * @returns {Promise<{plan_title: string, plan_summary: string, checkpoints: Array}>} Parsed plan object
  * @throws  {Error}         On permanent failure, exhausted retries, malformed JSON,
  *                          or a response that fails structural validation
  */
-export async function callNim(prompt, apiKey) {
+export async function callNim(prompt) {
   let lastError
   const startTime = Date.now()
 
@@ -114,7 +115,7 @@ export async function callNim(prompt, apiKey) {
     const attemptStart = Date.now()
     
     try {
-      response = await attemptFetch(prompt, apiKey)
+      response = await attemptFetch(prompt)
     } catch (networkErr) {
       const attemptDuration = Date.now() - attemptStart
       lastError = networkErr
@@ -159,11 +160,10 @@ export async function callNim(prompt, apiKey) {
     // ── Success path ─────────────────────────────────────────────────────────
     const data = await response.json()
 
-    // DEBUG — log full response structure to diagnose model-specific formats (remove once stable)
-    console.log('[nimApiClient] Raw response data:', JSON.stringify(data?.choices?.[0]?.message, null, 2))
 
     // reasoning_content is the model's internal thinking scratchpad — the actual answer is always in content
     const raw = data?.choices?.[0]?.message?.content?.trim()
+    const finishReason = data?.choices?.[0]?.finish_reason
     const usage = data?.usage || {}
 
     console.info(JSON.stringify({
@@ -181,6 +181,10 @@ export async function callNim(prompt, apiKey) {
       }
     }, null, 2))
     
+    if (finishReason === 'length') {
+      throw new Error('NVIDIA response truncated: max_tokens limit reached (finish_reason: length)')
+    }
+
     if (!raw) {
       throw new Error('Empty content in NVIDIA response')
     }

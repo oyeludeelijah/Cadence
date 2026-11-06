@@ -7,7 +7,8 @@
     "dev": "vite --host",
     "build": "vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "check:bundle": "node scripts/checkBundle.js"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.95.3",

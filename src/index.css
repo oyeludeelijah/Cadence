@@ -2139,6 +2139,20 @@ input[type="datetime-local"]::-webkit-datetime-edit-ampm-field {
     position: relative;
     width: 100%;
   }
+
+  /* Analytics on mobile: 2-column cards grid and compact chart card */
+  .analytics-stats-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: var(--s2) !important;
+  }
+
+  .analytics-stat-card {
+    padding: 12px 14px !important;
+  }
+
+  .analytics-chart-card {
+    padding: var(--s4) var(--s3) !important;
+  }
 }
 
 /* ── Task Detail Page Navigation & Components ──────────────────────────────── */

@@ -4,7 +4,7 @@ A web app that helps students stop leaving things to the last minute — by brea
 
 ## Description
 
-Most task management apps just give you a list. This one gives you a plan. You add a task — say, "Write a 3000-word history essay" — set a deadline, and the system calls an AI model (Meta's Llama 3.1 via NVIDIA NIM) to generate a realistic checkpoint roadmap tailored to your task type and timeline. Each checkpoint has a due date, a status, and a purpose. If you fall behind, it flags it. If you try to mark something done by accident, you've got 10 seconds to take it back.
+Most task management apps just give you a list. This one gives you a plan. You add a task — say, "Write a 3000-word history essay" — set a deadline, and the system calls an AI model (NVIDIA Nemotron via NVIDIA NIM) to generate a realistic checkpoint roadmap tailored to your task type and timeline. Each checkpoint has a due date, a status, and a purpose. If you fall behind, it flags it. If you try to mark something done by accident, you've got 10 seconds to take it back.
 
 Built as my final year project, the core question I'm exploring is whether AI-assisted task decomposition can meaningfully reduce procrastination — compared to just writing a to-do list yourself. The system tracks completion rates, urgency patterns, and whether AI-generated plans actually outperform template-based ones. All the data lives in a Supabase backend with proper row-level security, so users only ever see their own stuff.
 
@@ -36,7 +36,7 @@ Create a `.env` file in the root directory with your credentials:
 ```
 VITE_SUPABASE_URL=your_supabase_project_url
 VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
-VITE_NVIDIA_API_KEY=your_nvidia_nim_api_key
+NVIDIA_API_KEY=your_nvidia_nim_api_key
 ```
 
 You'll also need the following tables set up in your Supabase project: `tasks`, `checkpoints`, `task_templates`, `subscriptions`, and `system_logs`. The schema is documented in detail below in the [Database section](#database-setup).
@@ -104,7 +104,7 @@ No cascade deletes — the app manually deletes checkpoints before removing a pa
 ## Help
 
 **The AI isn't generating checkpoints.**  
-Check that your `VITE_NVIDIA_API_KEY` is set correctly in `.env` and that the dev server was restarted after you added it. The app will silently fall back to template-based checkpoints if the API key is missing or the call fails — so tasks will still be created, they just won't be AI-generated.
+Check that your `NVIDIA_API_KEY` is set correctly in `.env` and that the dev server was restarted after you added it. The app will silently fall back to template-based checkpoints if the API key is missing or the call fails — so tasks will still be created, they just won't be AI-generated.
 
 **I'm getting a blank screen after sign-in.**  
 Make sure your Supabase URL and anon key are correct and that your RLS policies are set up. The app expects `auth.uid() = user_id` on the `tasks` table.

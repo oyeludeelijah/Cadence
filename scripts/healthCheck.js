@@ -2,11 +2,11 @@ import fetch from 'node-fetch'; // Requires node-fetch if using older Node, or n
 
 /**
  * Run this script periodically via cron or a cloud scheduler.
- * Set VITE_NVIDIA_API_KEY in your environment before running.
+ * Set NVIDIA_API_KEY in your environment before running.
  */
 
 const NVIDIA_ENDPOINT = 'https://integrate.api.nvidia.com/v1/chat/completions';
-const MODEL = 'meta/llama-3.1-8b-instruct';
+const MODEL = 'nvidia/nemotron-3.5-lightning-30b-a3b';
 
 function classifyLatency(durationMs) {
   if (durationMs > 25000) return 'VERY SLOW';
@@ -16,9 +16,9 @@ function classifyLatency(durationMs) {
 }
 
 async function checkHealth() {
-  const apiKey = process.env.VITE_NVIDIA_API_KEY;
+  const apiKey = process.env.NVIDIA_API_KEY;
   if (!apiKey) {
-    console.error('Missing VITE_NVIDIA_API_KEY environment variable.');
+    console.error('Missing NVIDIA_API_KEY environment variable.');
     process.exit(1);
   }
 
@@ -37,6 +37,7 @@ async function checkHealth() {
         messages: [{ role: 'user', content: 'Say hello in one word.' }],
         max_tokens: 5,
         stream: false,
+        chat_template_kwargs: { enable_thinking: false },
       }),
     });
 

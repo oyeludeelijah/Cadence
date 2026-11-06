@@ -25,20 +25,13 @@ import { clampToWorkingHours, validateAndRepairDueDates } from './normaliseDueDa
  *   or null on any failure (caller falls back to task_templates).
  */
 export async function generateCheckpoints(taskTitle, taskType, deadlineDate, notes, workingHours = { start: 9, end: 21 }) {
-  // In production, the Vercel proxy (api/nvidia.js) injects NVIDIA_API_KEY server-side
-  // and ignores whatever the client sends — so VITE_NVIDIA_API_KEY is only needed locally.
+  // Both dev and prod authenticate server-side (Vite proxy header / api/nvidia.js).
   // We gate the feature with VITE_AI_ENABLED=true (safe to expose, it's just a boolean).
   const aiEnabled = import.meta.env.VITE_AI_ENABLED === 'true'
   if (!aiEnabled) {
-    console.warn('[generateCheckpoints] No NVIDIA API key — skipping AI generation.')
+    console.warn('[generateCheckpoints] AI disabled (VITE_AI_ENABLED != true) - falling back to templates.')
     return null
   }
-
-  // apiKey may be undefined in production — that's fine, the proxy handles auth.
-  const apiKey = import.meta.env.VITE_NVIDIA_API_KEY
-
-  // Debug: confirm key is loaded locally (first 8 chars only), undefined in prod is expected.
-  console.log('[generateCheckpoints] Key prefix:', apiKey?.substring(0, 8) ?? '(prod — proxy handles auth)')
 
   const currentTime = new Date().toISOString()
   const deadlineISO = deadlineDate.toISOString()
@@ -53,7 +46,7 @@ export async function generateCheckpoints(taskTitle, taskType, deadlineDate, not
   )
 
   try {
-    const parsed = await callNim(prompt, apiKey)
+    const parsed = await callNim(prompt)
 
     // Normalise — enforce status:'pending', ensure checkpoint_number exists.
     // RULE: For major tasks (> 36h away), we fix the time for consistency. 

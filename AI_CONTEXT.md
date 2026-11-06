@@ -1,9 +1,9 @@
-You are helping me build my final year project — a web app called the AI Accountability System. Here is everything you need to know.
+You are helping me build my final year project — a web app called Cadencee (AI Accountability System). Here is everything you need to know.
 
 ---
 
 ## What the app does
-Helps students break large academic tasks (essays, problem sets, exam prep) into time-bound checkpoints automatically. User creates a task with title, type, and deadline — system generates a checkpoint roadmap. Tracks urgency (pending → urgent → overdue → completed) and enforces accountability through a 10-second undo window that locks out after expiry.
+Helps students break large academic tasks (essays, problem sets, exam prep) into time-bound checkpoints automatically. User creates a task with title, type, and deadline — system generates a checkpoint roadmap via AI. Tracks urgency (pending → urgent → overdue → completed) and enforces accountability through a 10-second undo window that locks out after expiry.
 
 ---
 
@@ -11,236 +11,245 @@ Helps students break large academic tasks (essays, problem sets, exam prep) into
 
 - React 19.2.0 + Vite 7.3.1
 - React Router DOM 7.13.0
-- GSAP 3.x (JavaScript animation engine for modals, stagger effects, counters)
+- GSAP 3.x (animation engine — modals, stagger effects, counters, sidebar collapse)
 - Recharts 3.x (Analytics visualisations)
-- Supabase (PostgreSQL + PostgREST) — backend and database
-- Core app uses Vanilla CSS (`src/index.css`). Landing pages use Tailwind CSS v4
-- React Context API used for centralized state (e.g. `AuthContext` to prevent redundant auth subscriptions)
+- Supabase (PostgreSQL + PostgREST) — backend, database, auth, and Edge Functions
+- Core app uses Vanilla CSS (`src/index.css`). Landing pages use Tailwind CSS v4 (`src/pages/landing.css`, `src/pages/landing-gold.css`)
+- React Context API for centralised auth state (`AuthContext`) — prevents redundant subscriptions
 - No external state management library (Redux, Zustand) — pure useState, useEffect, useCallback, useRef
 - JavaScript/JSX throughout
 - **No extra AI packages** — AI calls use plain `fetch` via a Vite proxy (see AI section below)
 - **Supabase Edge Functions + pg_cron** with Resend for hourly automated email reminders
+- **Paystack** for subscription payments (not Stripe — see payment section)
 
 ---
 
 ## File structure
 
+```
 api/
 └── nvidia.js                  # Vercel serverless proxy for production AI
 src/
-├── App.jsx                    # Route guard
-├── index.css                  # Full design system for core app
+├── App.jsx                    # Route guard + authenticated layout
+├── App.css                    # Base resets
+├── index.css                  # Full design system for core app (source of truth)
 ├── supabaseClient.js
+├── constants/
+│   └── taskTypes.js           # TASK_TYPE_OPTIONS array shared by CreateTask + EditTask
 ├── contexts/
 │   └── AuthContext.jsx        # Single source of truth for Supabase auth state
 ├── pages/
 │   ├── LandingPage.jsx        # Public landing page (Tailwind CSS)
-│   ├── AuthPage.jsx           # Sign In / Sign Up page
-│   ├── TaskListPage.jsx       # Home — task list, grouping, urgency sections
+│   ├── AuthPage.jsx           # Sign In / Sign Up / Forgot Password
+│   ├── TaskListPage.jsx       # Home — task list, urgency grouping, floating create button
 │   ├── TaskDetailPage.jsx     # Individual task — checkpoints, undo, progress
 │   ├── AnalyticsPage.jsx      # Metrics computation and Recharts visualisations
-│   ├── SettingsPage.jsx       # User settings, working hours, and data export
+│   ├── SettingsPage.jsx       # Working hours, data export, account deletion
 │   ├── AdminDashboard.jsx     # System intelligence and logging
-│   ├── PaymentCallbackPage.jsx# Stripe subscription callback polling
+│   ├── PaymentCallbackPage.jsx# Paystack subscription callback polling
 │   └── ResetPasswordPage.jsx  # Password reset flow
 ├── components/
 │   ├── landing/               # Tailwind components for public pages
+│   ├── AppShell.jsx           # Persistent layout wrapper (sidebar + main + mobile topbar)
+│   ├── Sidebar.jsx            # Nav, theme toggle (pill), sign out, GSAP collapse
 │   ├── CreateTask.jsx         # Form to create tasks with AI integration
 │   ├── EditTask.jsx           # Pre-filled edit form (metadata only)
-│   ├── CheckpointCard.jsx     # UI for individual checkpoints
 │   ├── TaskCard.jsx           # Task preview card in lists
-│   ├── UrgencyGroup.jsx       # Task grouping by urgency
-│   ├── CreateModalPanel.jsx   # Slide-out panel for creation
-│   ├── AppShell.jsx           # Persistent layout wrapper (sidebar + main)
-│   ├── Sidebar.jsx            # User email, Sign Out, GSAP collapse animation
-│   ├── DeleteConfirmModal.jsx # Confirmation for deletions
-│   ├── OverdueResolutionModal.jsx # Resolves overdue items
-│   ├── UpgradeModal.jsx       # Premium subscription trigger
+│   ├── CheckpointCard.jsx     # UI for individual checkpoints
+│   ├── UrgencyGroup.jsx       # Task grouping section by urgency label
+│   ├── CreateModalPanel.jsx   # Slide-out panel wrapping CreateTask
+│   ├── DeleteConfirmModal.jsx # Confirmation for task deletions
+│   ├── OverdueResolutionModal.jsx # Resolves overdue items before new task creation
+│   ├── UpgradeModal.jsx       # Premium subscription intercept (50 active task limit)
 │   ├── ErrorBoundary.jsx      # Global error catching
 │   ├── AnimatedCounter.jsx    # GSAP number scrubber for analytics
 │   └── AnimatedToast.jsx      # Generic toast notification system
 ├── hooks/
-│   ├── useAuth.js             # Consumes AuthContext
-│   ├── useReveal.js           # CSS scroll reveal
-│   ├── useTheme.js            # Dark/light mode
-│   ├── useTaskForm.js         # Logic for task creation/editing
-│   ├── useModalAnimation.js   # GSAP modal enter/exit logic
+│   ├── useAuth.js             # Consumes AuthContext (session, user, loading)
+│   ├── useReveal.js           # CSS scroll reveal (IntersectionObserver)
+│   ├── useTheme.js            # Dark/light mode toggle + localStorage
+│   ├── useTaskForm.js         # Controlled form logic for task creation/editing
+│   ├── useModalAnimation.js   # GSAP modal enter/exit physics
 │   └── usePageTransition.js   # GSAP page fade-in
 └── utils/
-    ├── checkpointHelpers.js   # Status logic
-    ├── buildCheckpointPrompt.js # Constructs the prompt for the LLM
-    ├── generateCheckpoints.js # Orchestrates AI checkpoint generation
-    ├── normaliseDueDates.js   # Adjusts times to working hours
-    ├── taskGrouping.js        # Helper for grouping tasks by urgency
-    └── nimApiClient.js        # NVIDIA NIM HTTP client with backoff
+    ├── checkpointHelpers.js   # getCheckpointStatus, getTimeUntilDue, getOverdueText
+    ├── buildCheckpointPrompt.js # Constructs the LLM prompt string
+    ├── generateCheckpoints.js # Orchestrates AI checkpoint generation + date normalisation
+    ├── normaliseDueDates.js   # clampToWorkingHours + validateAndRepairDueDates
+    ├── taskGrouping.js        # groupTasks(tasks) → { dueToday, dueThisWeek, dueLater }
+    └── nimApiClient.js        # NVIDIA NIM HTTP client (fetch, AbortController, backoff)
 
-vite.config.js                 # Has proxy config for local dev AI
-vercel.json                    # Rewrite rule for production AI proxy
-.env                           # VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY (Local dev only: VITE_NVIDIA_API_KEY)
+vite.config.js                 # Dev proxy: /nvidia-api → NVIDIA NIM endpoint
+vercel.json                    # SPA fallback + rewrite rule for production AI proxy
+.env                           # VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY, VITE_AI_ENABLED
 supabase/
 └── functions/
-    └── send-reminders/
-        └── index.ts           # Edge Function pinged via pg_cron hourly to send Resend emails
+    ├── send-reminders/index.ts      # Hourly Edge Function via pg_cron → Resend emails
+    ├── paystack-checkout/index.ts   # Initiates Paystack payment session
+    └── paystack-webhook/index.ts    # Processes Paystack webhook events → subscriptions table
+docs/
+└── design-audit.md            # Visual audit notes (reference only)
+tests/
+└── test-*.mjs                 # Node --test unit tests for utilities and component contracts
+```
 
-⚠️ `DESIGN_SYSTEM.md` is stale — ignore it. Source of truth is `src/index.css`
+⚠️ `DESIGN_SYSTEM.md` is stale — ignore it. Source of truth is `src/index.css`.
+⚠️ `AboutPage.jsx`, `ContactPage.jsx`, `FeaturesPage.jsx` were deleted — do not recreate them.
 
 ---
 
 ## Database
 
-- **tasks** — `id`, `user_id` (FK to auth.users), `title`, `task_type` ('essay'|'problem_set'|'exam_prep'), `final_deadline`, `notes`, `status` ('active'|'completed'), `created_at`
-- **checkpoints** — `id`, `task_id` (FK), `checkpoint_number`, `checkpoint_type`, `due_date`, `status` ('pending'|'completed'), `completed_at`, `created_at`, `ai_generated` (boolean, default false), `reminder_sent_urgent` (boolean, default false), `reminder_sent_overdue` (boolean, default false)
-- **task_templates** — `id`, `task_type`, `checkpoint_sequence` (JSONB) — fallback only, do not remove
-- **subscriptions** — tracks user subscription status and `current_period_end`
-- **system_logs** — tracks system events for the admin dashboard
+- **tasks** — `id`, `user_id` (FK to auth.users), `title`, `task_type` ('essay'|'problem_set'|'exam_prep'), `final_deadline`, `notes`, `status` ('active'|'completed'), `plan_title` (nullable text), `plan_summary` (nullable text), `created_at`
+- **checkpoints** — `id`, `task_id` (FK), `checkpoint_number`, `checkpoint_type`, `due_date`, `status` ('pending'|'completed'), `completed_at`, `created_at`, `ai_generated` (boolean, default false), `rationale` (nullable text), `reminder_sent_urgent` (boolean, default false), `reminder_sent_overdue` (boolean, default false)
+- **task_templates** — `id`, `task_type`, `checkpoint_sequence` (JSONB) — AI fallback only, do not remove
+- **subscriptions** — `user_id`, `status`, `current_period_end`, `paystack_customer_code` — tracks subscription state
+- **webhook_events** — idempotency table for Paystack webhook processing
+- **system_logs** — tracks system events for AdminDashboard
 
 - No cascade deletes — app manually deletes checkpoints before task
-- **RLS is enabled** on both `tasks` and `checkpoints` tables
-  - `tasks_owner` policy: `auth.uid() = user_id`
-  - `checkpoints_owner` policy: via parent task's `user_id`
-- Auth uses Supabase email/password (email confirmation disabled for prototype)
-- `tasks` has a `user_id uuid` column referencing `auth.users(id)`
+- **RLS enabled** on `tasks`, `checkpoints`, `subscriptions`
+- Auth: Supabase email/password (email confirmation disabled for prototype)
 - Task list uses joined query: `select('*, checkpoints(*)')`
 
-**Check Constraints (applied directly in Supabase SQL editor):**
-- `tasks`: title not empty, `task_type` must be `'essay'|'problem_set'|'exam_prep'`, `status` must be `'active'|'completed'`
-- `checkpoints`: `checkpoint_number > 0`, `status` must be `'pending'|'completed'`, `checkpoint_type` not empty
+**Custom RPC:**
+- `create_task_with_checkpoints(p_task, p_checkpoints)` — atomic Postgres transaction; raises `P0001 FREE_TIER_LIMIT` if free user has ≥ 50 active tasks
+- `get_pending_reminders(time_window_iso TEXT)` — `SECURITY DEFINER` for email Edge Function
 
-**Custom SQL / Ext:**
-- `pg_cron` enabled for hourly jobs
-- `get_pending_reminders(time_window_iso TEXT)`: An RPC using `SECURITY DEFINER` to safely perform cross-schema joins (`public.checkpoints` -> `auth.users`) to get emails securely for edge functions.
+**Check Constraints:** title not empty, task_type/status in enum, checkpoint_number > 0, checkpoint_type not empty
+
+**Extensions:** `pg_cron` enabled for hourly jobs
 
 ---
 
 ## AI feature — COMPLETE AND WORKING
 
-### What it does
-Replaces `task_templates` as the checkpoint source. When a user creates a task, the app calls the NVIDIA NIM API to generate a contextual checkpoint plan. If the call fails for any reason, it silently falls back to the `task_templates` Supabase query.
+**Provider:** NVIDIA NIM  
+**Model:** `nvidia/nemotron-3.5-lightning-30b-a3b`  
+**Endpoint:** `https://integrate.api.nvidia.com/v1/chat/completions`  
+**Feature flag:** `VITE_AI_ENABLED=true` in `.env`  
+**API key:** `NVIDIA_API_KEY` (dev proxy + prod both read server-side; never in browser bundle)
 
-### Implementation details
+**CORS solution:**
+- Local: Vite proxy in `vite.config.js` → `/nvidia-api/...`
+- Prod: `api/nvidia.js` serverless function; `vercel.json` rewrite
 
-**Provider:** NVIDIA NIM (not Gemini — see dead ends below)
-**Model:** `nvidia/llama-3.1-nemotron-nano-8b-instruct` — `meta/llama-3.1-8b-instruct` EOL'd 2026-08-26
-**Endpoint:** `https://integrate.api.nvidia.com/v1/chat/completions` (OpenAI-compatible)
-**API key:** stored in `.env` as `VITE_NVIDIA_API_KEY` (starts with `nvapi-`)
+**Production URL:** `elijah-fyp.vercel.app`
 
-**CORS solution:** NVIDIA NIM does not allow direct browser-to-API requests.
-- **Local Development:** A Vite dev-server proxy is configured in `vite.config.js`. The fetch call in `generateCheckpoints.js` uses `/nvidia-api/chat/completions` — the proxy rewrites it to NVIDIA's endpoint.
-- **Production (Vercel):** Since Vite proxies don't exist in production, the app uses a Vercel serverless function (`api/nvidia.js`) as a proxy. A `vercel.json` rewrite rule maps `/nvidia-api/(.*)` to `/api/nvidia`, maintaining the same fetch path used in local development.
-
-**Production URL:** `elijah-fyp.vercel.app` (AI feature confirmed working in production)
-
-**Deployment Requirements:**
-- `api/nvidia.js` must exist as the server-side proxy
-- `vercel.json` must contain the rewrite rule
-- `NVIDIA_API_KEY` must be set in Vercel environment variables (server-side only, no `VITE_` prefix)
-
-**Key files:** `src/utils/generateCheckpoints.js` and `src/utils/nimApiClient.js`
-- Exports: `generateCheckpoints(taskTitle, taskType, deadlineDate, notes)`
-- Returns: array of `{ checkpoint_type, checkpoint_number, due_date, status: 'pending' }` or `null` on failure
-- Uses a robust exponential backoff strategy: 45-second per-attempt timeout, max 3 retries, and a 100-second maximum total time budget. If exhausted, it silently returns `null`
-- Strips stray markdown fences from the model response before `JSON.parse`
-- Validates response shape before returning — aborts if malformed
-
-**Request config:**
+**`generateCheckpoints()` return shape (success):**
 ```js
-model:       'meta/llama-3.1-8b-instruct'
+{
+  planTitle:   string,
+  planSummary: string,
+  checkpoints: [{ checkpoint_type, rationale, checkpoint_number, due_date, status: 'pending' }]
+}
+// null on failure → caller falls back to task_templates
+```
+
+**Model config (in `nimApiClient.js`):**
+```js
+model:       'nvidia/nemotron-3.5-lightning-30b-a3b'
 temperature: 0.3
-max_tokens:  512
+max_tokens:  1024
 stream:      false
 ```
 
-**`ai_generated` column:** Set to `true` on each checkpoint row when NVIDIA is used. Set to `false` (implicitly) when falling back to templates.
+**Retry config:** TIMEOUT_MS=90000, MAX_RETRIES=3, MAX_TOTAL_BUDGET_MS=100000. Retries on 408/429/500/502/503/504.
 
-### UI changes for AI
+**`ai_generated`:** true per checkpoint when NVIDIA path used.  
+**`rationale`:** AI explanation per checkpoint, stored in DB.  
+**`plan_title`/`plan_summary`:** stored on tasks row.
 
-**`CreateTask.jsx`:**
-- `aiActive` state → true while NVIDIA is generating
-- Button shows `"AI is planning your task…"` (with spinner) when `aiActive` is true
-- Button shows `"Creating checkpoints…"` when `loading` is true (fallback path)
-- After success: `setTimeout(() => onTaskCreated(), 1800)` — 1.8s delay so the success message is visible before the modal closes
-- Success message: `"X checkpoints generated by AI ✨"` (AI path) or `"X checkpoints created"` (fallback)
+**Date normalisation (in `generateCheckpoints.js`):**
+- Long-term (>36h): fix to `workingHours.end - 1` hour
+- Short-term (<36h): trust AI proportional timing
+- Final pass: `validateAndRepairDueDates()` enforces monotonic ordering
 
-**`TaskListPage.jsx`:**
-- Tasks where any checkpoint has `ai_generated: true` show a small `AI ✨` badge next to the task type badge
+### Dead ends — do NOT revisit
+- **Gemini API:** 429 Quota (limit: 0). Do not suggest.
+- **deepseek-ai/deepseek-v3.2:** 1–5 min per request on free tier.
+- **meta/llama-3.1-8b-instruct:** EOL'd 2026-08-26.
+- **nvidia/llama-3.1-nemotron-nano-8b-instruct:** Too slow; replaced.
 
-**`TaskDetailPage.jsx`:**
-- Same `AI ✨` badge shown in the task header next to the status badge
+---
 
-### Dead ends — do NOT revisit these
+## Payment — Paystack (NOT Stripe)
 
-- **Gemini API (`@google/generative-ai`):** Attempted first. Failed with `429 Quota Exceeded, limit: 0` on every Google Cloud project tried — even after enabling the Generative Language API in the console and creating fresh keys. Root cause: free-tier quota was never provisioned for the specific project/region. **Do not suggest going back to Gemini.**
-- **`deepseek-ai/deepseek-v3.2` on NVIDIA NIM:** Works, but takes 1–5 minutes per request on the free tier (671B model). Replaced with `llama-3.1-8b-instruct`.
-- **`gemini-1.5-flash`:** Returns 404 on the `v1beta` endpoint used by the SDK. Not supported.
+- Flow: `UpgradeModal` → `paystack-checkout` Edge Function → Paystack hosted page → webhook → `subscriptions` table
+- Free tier: 50 active tasks (enforced in RPC + client-side pre-check in `TaskListPage.jsx`)
+- Callback: `PaymentCallbackPage.jsx` polls every 3s up to 2 min
+- ⚠️ Do NOT suggest Stripe.
 
 ---
 
 ## Core logic
 
-**Checkpoint status (`getCheckpointStatus()`):**
-- `completed` → green
-- `pending` → indigo
-- `urgent` → amber (< 24h until due)
-- `overdue` → red (past due, not complete)
+**Checkpoint status:** completed→green, pending→indigo, urgent→amber (<24h), overdue→red
 
-**Undo system:** 10s countdown toast → locks out after expiry → timer in `useRef`. Persisted to `sessionStorage` (keyed by task ID) so it survives page refreshes.
+**Task grouping (`groupTasks()`):** strictly `if…else if…else` — a task can NEVER be in two buckets simultaneously. Uses `nextCheckpoint.due_date` or `final_deadline` as `urgDate`.
 
-**Task reconciliation:** On fetch, if all checkpoints are done but `task.status` is `'active'` → updates DB to `'completed'`
+**Undo:** 10s countdown → locks after expiry. `useRef` for timer. `sessionStorage` persistence (keyed by task ID).
 
-**`adjustToWorkingHours(rawDate, deadline, spanMs)`** in `CreateTask.jsx`:
-- Clamps checkpoint times to 9 AM–9 PM.
-- Skips/relaxes adjustment entirely if deadline span < 24h (to avoid pushing checkpoints past the deadline).
-- Safety net: ensures adjusted time is in the future and strictly before the final deadline; otherwise defaults to safe proportional fallback.
+**Task reconciliation:** all checkpoints done but status 'active' → auto-update DB to 'completed'.
 
-**AI Normalization** in `generateCheckpoints.js`:
-- For long-term tasks (> 36h), dynamically sets to 1 hour before custom working hours end (e.g., 8 PM if working hours end at 9 PM) for consistency.
-- For short-term tasks (< 36h), trusts the AI's proportional timing to prevent "impossible" deadlines.
+**Free tier check** in `TaskListPage.handleCreateClick`: parallel queries for subscription + active count; if `!isPro && activeCount >= 50` → `UpgradeModal`. RPC also enforces with P0001.
+
+---
+
+## UI
+
+**Auth (`AuthPage.jsx`):** placeholder `you@school.edu`; "Forgot password?" styled accent color + weight 600 + underline; buttons use `var(--r-md)` radius.
+
+**Settings (`SettingsPage.jsx`):** eyebrow "Preferences"; `var(--container-max)` container; no duplicate theme toggle.
+
+**Create task (`CreateTask.jsx`):** deadline input `type="datetime-local"` (NOT `type="date"`); parsed by `new Date(form.dueDate)`; styled via `.field-input` CSS + `webkit-datetime-edit` pseudo-elements.
+
+**Sidebar:** theme toggle reachable on mobile (inside drawer opened by hamburger in `AppShell.jsx`).
 
 ---
 
 ## What's fully working
 
-Task creation (AI + fallback), **Edit task (metadata updates — Confirmed ✅)**, urgency grouping, tab switching, checkpoint toggle, 10s undo (survives refresh), deletion with user-visible errors, progress bars, 4-state status, dark/light mode + anti-FOUC, scroll-reveal, mobile responsive (768px), connection indicator, loading/error states, AI badge on task cards and detail page, **user authentication (email/password sign-up + sign-in + sign-out via Context API)**, **RLS — users only see their own tasks**, **Automated Email Notifications (Supabase Edge function via pg_cron + Resend)** with anti-spam database tracking, **Analytics Dashboard (Recharts visualisations)**, **Premium GSAP Animations** (counters, staggered entry for checkpoints, standardized modal physics), **User Settings** (custom working hours, data export), **Payment Integration** (Stripe polling via `subscriptions`), and an **Admin Dashboard** (`system_logs`).
+Task creation (AI + fallback), edit task, urgency grouping, tab switching, checkpoint toggle, 10s undo (survives refresh), deletion, progress bars, 4-state status, dark/light mode + anti-FOUC, scroll-reveal, mobile responsive (768px), connection indicator, AI badge on cards/detail, auth (sign-up/in/out/forgot/reset), RLS, automated email reminders, analytics, GSAP animations, user settings, Paystack payment, Admin Dashboard.
 
 ---
 
-## Known bugs — do not make these worse
+## Known bugs — do not make worse
 
-- Undo timer might drift slightly (ms level) after a refresh due to `Math.ceil` rounding, but functionally correct.
+- Undo timer may drift slightly after refresh (ms level, functionally correct).
+- **Debug `console.log('[taskGroups]', {...})` at `TaskListPage.jsx` ~line 150** — added to help reproduce duplicate-task symptom. **Remove before committing.**
+- 29 pre-existing ESLint errors (hooks after early return in `TiltCard.jsx`, setState in effect in `AnimatedToast.jsx`/`Sidebar.jsx`, unused imports in `TaskDetailPage.jsx`/`TaskListPage.jsx`). Do not introduce new ones.
 
 ---
 
 ## Not built yet
 
-- Gamification
+- Gamification / streak system
 
 ---
 
 ## Design rules — non-negotiable
 
-- Core app uses Vanilla CSS only via `index.css`. Public landing pages use Tailwind CSS v4.
-- Use CSS custom property tokens from `index.css` for core app components — never hardcode values
-- Background `#080810`, accent `#6366f1`, glassmorphism cards
-- Fonts: Outfit (headings), Inter (body)
-- 8px grid — `--s1` through `--s16`
-- Dark/light mode must work at all times
-- Mobile responsive always
+- Core app: Vanilla CSS via `src/index.css` only. Landing: Tailwind CSS v4.
+- Use CSS custom property tokens — never hardcode values in core app.
+- Background `#080810`, accent `var(--accent)` (indigo `#6366f1`), glassmorphism (`.glass`)
+- Fonts: Outfit (headings), Cantarell/Inter (body/inputs)
+- 8px spacing grid: `--s1` through `--s16`
+- Dark/light mode always; mobile responsive always (768px)
 
 ---
 
 ## Coding conventions
 
-- No external state libraries
-- `useRef` for timer IDs
-- Supabase errors surface as user-readable messages
-- Reusable UI → `src/components/`
-- Pure logic → `src/utils/`
-- Custom hooks → `src/hooks/`
+- No external state libraries; `useRef` for timers; Supabase errors → user-readable messages
+- Reusable UI → `src/components/`; pure logic → `src/utils/`; hooks → `src/hooks/`; constants → `src/constants/`
 
 ---
 
 ## Environment
 
-App runs locally at `http://localhost:5173` (may shift to `5174` if port is busy). Dev server: `npm run dev`.
+Local: `http://localhost:5173`. Dev server: `npm run dev`.
+
+**`.env` keys:** `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`, `VITE_AI_ENABLED`
 
 **Ask me which feature we're working on before touching anything.**

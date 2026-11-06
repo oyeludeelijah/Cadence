@@ -13,10 +13,11 @@ try {
       'Content-Type':  'application/json',
     },
     body: JSON.stringify({
-      model:      'meta/llama-3.1-8b-instruct',
+      model:      'nvidia/nemotron-3.5-lightning-30b-a3b',
       messages:   [{ role: 'user', content: 'Reply with just the single word: OK' }],
       max_tokens: 10,
       stream:     false,
+      chat_template_kwargs: { enable_thinking: false },
     }),
   });
 

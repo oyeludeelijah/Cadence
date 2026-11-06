@@ -53,7 +53,7 @@ assert(result.includes(FIXED_DEADLINE), 'Contains deadline ISO')
 assert(result.includes('Focus on WWI and WWII causes'), 'Contains notes')
 assert(result.includes(FIXED_TIME), 'Uses injected currentTimeISO (deterministic)')
 assert(result.includes('9:00-21:00'), 'Contains working hours range')
-assert(result.includes('JSON array'), 'Instructs model to return JSON array')
+assert(result.includes('JSON object'), 'Instructs model to return JSON object')
 
 // ── Test 2: No notes falls back to 'None' ───────────────────────────────────
 const noNotes = buildCheckpointPrompt('Task', 'exam_prep', FIXED_DEADLINE, '', { start: 8, end: 20 }, FIXED_TIME)
